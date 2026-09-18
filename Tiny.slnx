@@ -1,0 +1,16 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/apps/">
+    <Project Path="apps/TinyPlayground/TinyPlayground.vcxproj" Id="5a17c7bd-5eb1-4385-adf8-be67445754b6" />
+  </Folder>
+  <Folder Name="/libs/">
+    <Project Path="libs/TinyCore/TinyCore.vcxproj" Id="8069f973-b184-4a58-9631-912768f141d0" />
+    <Project Path="libs/TinyGraphics/TinyGraphics.vcxproj" Id="883793fc-149c-422b-abe5-a5c064aeb0ce" />
+    <Project Path="libs/TinyPlatform/TinyPlatform.vcxproj" Id="12346bb2-c791-49e6-bdda-48bfe28266a3" />
+    <Project Path="libs/TinyUI/TinyUI.vcxproj" Id="5cee01a8-4399-42f6-ad0b-31ea70b029c9" />
+  </Folder>
+  <Folder Name="/tests/" />
+</Solution>

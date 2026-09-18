@@ -1,0 +1,216 @@
+#include <cstdio>
+#include <memory>
+#include <vector>
+#include <string>
+
+#include <Windows.h>
+
+#include <tiny/core/Color.h>
+#include <tiny/core/Rect.h>
+#include <tiny/core/Subscription.h>
+
+#include <tiny/core/input/Pointer.h>
+
+#include <tiny/graphics/Canvas.h>
+#include <tiny/graphics/GraphicsContext.h>
+#include <tiny/graphics/WindowRenderer.h>
+#include <tiny/graphics/TextStyle.h>
+
+#include <tiny/platform/Platform.h>
+#include <tiny/platform/Window.h>
+#include <tiny/platform/SystemClipboard.h>
+#include <tiny/platform/WindowTextInputContext.h>
+
+#include <tiny/ui/UIRoot.h>
+#include <tiny/ui/widgets/Box.h>
+#include <tiny/ui/widgets/Button.h>
+#include <tiny/ui/widgets/Center.h>
+#include <tiny/ui/widgets/Column.h>
+#include <tiny/ui/widgets/Padding.h>
+#include <tiny/ui/widgets/Row.h>
+#include <tiny/ui/widgets/SizedBox.h>
+#include <tiny/ui/widgets/Text.h>
+#include <tiny/ui/widgets/TextBox.h>
+
+namespace {
+	struct PlaygroundState {
+		int count = 0;
+
+		std::u32string text;
+	};
+}
+
+int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previousInstance, PWSTR commandLine, int showCommand) {
+	tiny::initializePlatform();
+
+	int result = 0;
+	{
+		tiny::WindowCreateInfo createInfo;
+		createInfo.title = L"Tiny Playground";
+		createInfo.width = 1280;
+		createInfo.height = 720;
+		createInfo.resizable = true;
+
+		tiny::Window window(createInfo);
+
+		tiny::GraphicsContext graphicsContext;
+		tiny::WindowRenderer renderer(graphicsContext, window);
+
+		PlaygroundState state;
+
+		tiny::WindowTextInputContext textInputContext(window);
+		tiny::SystemClipboard clipboard;
+
+		tiny::UIRoot uiRoot;
+		uiRoot.setClipboard(clipboard);
+		uiRoot.setTextInputContext(textInputContext);
+
+		tiny::Subscription uiRepaintSubscription = uiRoot.repaintRequested.subscribe([&window]() {
+			window.requestRepaint();
+		});
+
+		uiRoot.setBuilder(
+			tiny::UIBuilder([&state, &uiRoot]() -> std::unique_ptr<tiny::Widget> {
+			tiny::TextStyle titleStyle;
+			titleStyle.fontFamily = L"Segoe UI";
+			titleStyle.fontSize = 32.0f;
+			titleStyle.bold = true;
+
+			tiny::TextStyle bodyStyle;
+			bodyStyle.fontFamily = L"Segoe UI";
+			bodyStyle.fontSize = 18.0f;
+
+			tiny::ButtonStyle buttonStyle;
+			buttonStyle.textStyle.fontSize = 16.0f;
+			buttonStyle.padding = tiny::Thickness(20.0f, 10.0f);
+
+			tiny::TextBoxStyle textBoxStyle;
+			textBoxStyle.width = 300.0f;
+			textBoxStyle.textStyle.fontSize = 18.0f;
+
+			std::vector<std::unique_ptr<tiny::Widget>> children;
+
+			children.push_back(
+				std::make_unique<tiny::Text>(
+					U"Tiny UI",
+					tiny::Color::fromRgb(205, 214, 244),
+					titleStyle,
+					tiny::Key("title")
+				)
+			);
+
+			std::string countAscii = std::to_string(state.count);
+			std::u32string countText = U"Count: ";
+			for (char value : countAscii)
+				countText.push_back(static_cast<char32_t>(value));
+
+			children.push_back(
+				std::make_unique<tiny::Text>(
+					std::move(countText),
+					tiny::Color::fromRgb(166, 173, 200),
+					bodyStyle,
+					tiny::Key("counter")
+				)
+			);
+
+			children.push_back(
+				std::make_unique<tiny::Button>(U"Add", [&state, &uiRoot]() {
+				++state.count;
+
+				uiRoot.requestRebuild();
+			}, buttonStyle, tiny::Key("increment-button")));
+
+			children.push_back(
+				std::make_unique<tiny::TextBox>(state.text, [&state, &uiRoot](const std::u32string& text) {
+				state.text = text;
+
+				uiRoot.requestRebuild();
+			}, textBoxStyle, tiny::Key("main-text-box")));
+
+			return std::make_unique<tiny::Center>(
+				std::make_unique<tiny::Padding>(
+					tiny::Thickness(24.0f),
+					std::make_unique<tiny::Column>(
+						std::move(children),
+						16.0f,
+						tiny::CrossAxisAlignment::Center,
+						tiny::Key("content")
+					)
+				)
+			);
+		}
+			)
+		);
+
+		tiny::Subscription paintSubscription = window.paintRequested.subscribe([&window, &graphicsContext, &renderer, &uiRoot]() {
+			tiny::Size pixelSize = window.clientSize();
+			float scale = window.dpiScale();
+
+			tiny::Size logicalSize(pixelSize.width / scale, pixelSize.height / scale);
+			uiRoot.layout(graphicsContext, logicalSize);
+
+			renderer.render([&uiRoot](tiny::Canvas& canvas) {
+				canvas.clear(tiny::Color::fromRgb(30, 30, 46));
+				uiRoot.paint(canvas);
+			});
+		});
+
+		tiny::Subscription pointerMovedSubscription = window.pointerMoved.subscribe([&uiRoot](const tiny::PointerEvent& event) {
+			uiRoot.pointerMoved(event);
+		});
+
+		tiny::Subscription pointerPressedSubscription = window.pointerPressed.subscribe([&window, &uiRoot](const tiny::PointerEvent& event) {
+			bool handled = uiRoot.pointerPressed(event);
+			if (handled)
+				window.capturePointer();
+		});
+
+		tiny::Subscription pointerReleasedSubscription = window.pointerReleased.subscribe([&window, &uiRoot](const tiny::PointerEvent& event) {
+			uiRoot.pointerReleased(event);
+
+			if (window.hasPointerCapture())
+				window.releasePointerCapture();
+		});
+
+		tiny::Subscription pointerExitedSubscription = window.pointerExited.subscribe([&uiRoot]() {
+			uiRoot.pointerExited();
+		});
+
+		tiny::Subscription pointerCaptureLostSubscription = window.pointerCaptureLost.subscribe([&uiRoot]() {
+			uiRoot.pointerCaptureLost();
+		});
+
+		tiny::Subscription keyPressedSubscription = window.keyPressed.subscribe([&uiRoot](tiny::KeyEvent& event) {
+			bool handled = uiRoot.keyPressed(event);
+			if (handled)
+				event.handled = true;
+		});
+
+		tiny::Subscription keyReleasedSubscription = window.keyReleased.subscribe([&uiRoot](tiny::KeyEvent& event) {
+			bool handled = uiRoot.keyReleased(event);
+			if (handled)
+				event.handled = true;
+		});
+
+		tiny::Subscription textInputSubscription = window.textInput.subscribe([&uiRoot](tiny::TextInputEvent& event) {
+			bool handled = uiRoot.textInput(event);
+			if (handled)
+				event.handled = true;
+		});
+
+		tiny::Subscription textCompositionSubscription = window.textComposition.subscribe([&uiRoot](tiny::TextCompositionEvent& event) {
+			bool handled = uiRoot.textComposition(event);
+			if (handled)
+				event.handled = true;
+		});
+
+		window.show();
+		window.requestRepaint();
+
+		result = tiny::runMessageLoop();
+	}
+
+	tiny::shutdownPlatform();
+
+	return result;
+}
