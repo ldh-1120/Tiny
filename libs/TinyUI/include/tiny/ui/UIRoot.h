@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <unordered_set>
 
 #include <tiny/core/Event.h>
 #include <tiny/core/Size.h>
@@ -9,9 +10,11 @@
 #include <tiny/core/input/Keyboard.h>
 #include <tiny/core/input/TextInput.h>
 #include <tiny/core/input/TextComposition.h>
+#include <tiny/core/FrameEvent.h>
 
 #include <tiny/ui/FocusManager.h>
 #include <tiny/ui/UIBuilder.h>
+#include <tiny/ui/focus/FocusReason.h>
 
 namespace tiny {
 	class Canvas;
@@ -60,6 +63,14 @@ namespace tiny {
 		void setClipboard(Clipboard& clipboard);
 		void setTextInputContext(TextInputContext& context);
 
+		Event<bool> frameDemandChanged;
+
+		void onFrame(const FrameEvent& event);
+
+		bool needsFrameUpdates() const;
+
+		bool focusVisibility() const;
+
 	private:
 		Element* hitTest(const Point& position);
 
@@ -70,7 +81,7 @@ namespace tiny {
 		void invalidatePaint();
 		void invalidateLayout();
 
-		bool requestFocus(Element* element);
+		bool requestFocus(Element* element, FocusReason reason);
 		bool moveFocus(bool forward);
 
 		void elementWillUnmount(Element* element);
@@ -81,6 +92,13 @@ namespace tiny {
 
 		Clipboard* clipboardService();
 		TextInputContext* textInputContextService();
+
+		void registerFrameElement(Element* element);
+		void unregisterFrameElement(Element* element);
+
+		void setFocusVisibility(bool visible);
+
+		void applyFocusReason(FocusReason reason);
 
 	private:
 		std::unique_ptr<Widget> rootWidget;
@@ -102,6 +120,10 @@ namespace tiny {
 		bool hasLayoutSize = false;
 
 		Size lastLayoutSize;
+
+		std::unordered_set<Element*> frameElements;
+
+		bool focusVisibilityValue = false;
 
 		friend class Element;
 	};

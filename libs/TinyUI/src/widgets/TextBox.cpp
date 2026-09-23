@@ -25,6 +25,8 @@
 #include <tiny/ui/Element.h>
 #include <tiny/ui/LayoutContext.h>
 #include <tiny/ui/layout/Constraints.h>
+#include <tiny/ui/animation/AnimationController.h>
+#include <tiny/ui/visual/FocusRing.h>
 
 #include <tiny/ui/text/TextEditingModel.h>
 #include <tiny/ui/text/TextSelection.h>
@@ -114,46 +116,57 @@ namespace tiny {
 				float contentWidth = std::max(measuredSize.width - textBoxStyle.padding.horizontal(), 0.0f);
 
 				std::u32string displayText = buildDisplayText();
-				textLayout = graphicsContext.createTextLayout(displayText, textBoxStyle.textStyle, contentWidth);
+				textLayout = graphicsContext.createTextLayout(displayText, textBoxStyle.textStyle, std::numeric_limits<float>::infinity());
 
 				return measuredSize;
 			}
 
-			void paintOverride(Canvas& canvas) override {
-				Color borderColor = hasFocus() ? textBoxStyle.focusedBorderColor : textBoxStyle.borderColor;
-				float borderWidth = hasFocus() ? textBoxStyle.focusedBorderWidth : textBoxStyle.borderWidth;
+			void arrangeOverride(const Rect& finalBounds) override {
+				Rect contentBounds = getContentBounds();
 
+				clampHorizontalScroll(contentBounds);
+
+				ensureCaretVisible(contentBounds);
+			}
+
+			void paintOverride(Canvas& canvas) override {
 				canvas.fillRect(bounds(), textBoxStyle.background);
-				canvas.drawRect(bounds(), borderColor, borderWidth);
+				canvas.drawRect(bounds(), textBoxStyle.borderColor, textBoxStyle.borderWidth);
 
 				Rect contentBounds = getContentBounds();
-				paintSelection(canvas, contentBounds);
+				ensureCaretVisible(contentBounds);
 
 				Point textOrigin = getTextOrigin(contentBounds);
+
+				canvas.pushClip(contentBounds);
+
+				paintSelection(canvas, contentBounds);
+
+				Point textDrawOrigin = getTextDrawOrigin(contentBounds);
 				if (textLayout)
-					canvas.drawTextLayout(*textLayout, textOrigin, textBoxStyle.textColor);
+					canvas.drawTextLayout(*textLayout, textDrawOrigin, textBoxStyle.textColor);
 
 				paintCompositionUnderline(canvas, contentBounds);
 
-				if (!hasFocus())
-					return;
+				if (hasFocus() && caretVisible) {
+					std::size_t caretIndex = displayCaretIndex();
 
-				std::size_t caretIndex = displayCaretIndex();
+					TextPositionMetrics caretMetrics { };
+					if (textLayout)
+						caretMetrics = textLayout->hitTestTextPosition(caretIndex);
 
-				TextPositionMetrics caretMetrics { };
-				if (textLayout)
-					caretMetrics = textLayout->hitTestTextPosition(caretIndex);
+					Rect visualBounds = getTextVisualBounds(contentBounds);
 
-				float caretX = textOrigin.x + caretMetrics.position.x;
+					float caretX = textOrigin.x + caretMetrics.position.x;
+					canvas.fillRect(Rect(caretX, visualBounds.y, textBoxStyle.caretWidth, visualBounds.height), textBoxStyle.caretColor);
+				}
 
-				float caretHeight = std::min(lineHeight, contentBounds.height);
-				if (caretHeight <= 0.0f)
-					caretHeight = std::min(lineHeight, contentBounds.height);
+				canvas.popClip();
 
-				float caretY = textOrigin.y + caretMetrics.position.y;
-				canvas.fillRect(Rect(caretX, caretY, textBoxStyle.caretWidth, caretHeight), textBoxStyle.caretColor);
+				paintFocusRing(canvas, bounds(), textBoxStyle.focusedBorderColor, textBoxStyle.focusedBorderWidth, focusAnimation.value());
 
-				updateNativeCaretRect(contentBounds); //temporary
+				if (hasFocus())
+					updateNativeCaretRect(contentBounds); //temporary
 			}
 
 			bool pointerDownOverride(const PointerEvent& event) override {
@@ -201,16 +214,32 @@ namespace tiny {
 				pointerSelecting = false;
 			}
 
+			void focusGainedOverride() override {
+				resetCaretBlink();
+				updateFocusAnimation(isFocusVisible());
+			}
+
 			void focusLostOverride() override {
+				caretVisible = false;
+				caretBlinkElapsed = 0.0f;
+
+				updateFocusAnimation(false);
+
 				pointerSelecting = false;
 
-				if (compositionActive) {
-					compositionActive = false;
-					compositionText.clear();
-					compositionCaret = 0;
+				compositionActive = false;
+				compositionText.clear();
+				compositionCaret = 0;
 
-					markNeedsLayout();
-				}
+				updateFrameDemand();
+				markNeedsLayout();
+			}
+
+			void focusVisibilityChangedOverride(bool visible) override {
+				if (!hasFocus())
+					return;
+
+				updateFocusAnimation(visible);
 			}
 
 			bool textInputOverride(const TextInputEvent& event) override {
@@ -296,6 +325,27 @@ namespace tiny {
 				}
 			}
 
+			void frameOverride(const FrameEvent& event) override {
+				bool needsPaint = false;
+				if (hasFocus()) {
+					caretBlinkElapsed += event.delta.count();
+					while (caretBlinkElapsed >= CaretBlinkInterval) {
+						caretBlinkElapsed -= CaretBlinkInterval;
+						caretVisible = !caretVisible;
+
+						needsPaint = true;
+					}
+				}
+
+				if (focusAnimation.advance(event.delta.count()))
+					needsPaint = true;
+
+				if (needsPaint)
+					markNeedsPaint();
+
+				updateFrameDemand();
+			}
+
 		private:
 			Rect getContentBounds() const {
 				float width = std::max(bounds().width - textBoxStyle.padding.horizontal(), 0.0f);
@@ -334,6 +384,7 @@ namespace tiny {
 			}
 
 			void notifyTextChanged() {
+				resetCaretBlink();
 				markNeedsLayout();
 
 				TextBox::ChangedCallback callback = changedCallback;
@@ -392,6 +443,8 @@ namespace tiny {
 			}
 
 			bool moveCaretLeft(bool extendSelection) {
+				resetCaretBlink();
+
 				const TextSelection& selection = editingModel.selection();
 
 				if (!extendSelection) {
@@ -416,6 +469,8 @@ namespace tiny {
 			}
 
 			bool moveCaretRight(bool extendSelection) {
+				resetCaretBlink();
+
 				const TextSelection& selection = editingModel.selection();
 
 				if (!extendSelection) {
@@ -440,6 +495,8 @@ namespace tiny {
 			}
 
 			bool moveCaretHome(bool extendSelection) {
+				resetCaretBlink();
+
 				if (editingModel.moveHome(extendSelection))
 					markNeedsPaint();
 
@@ -447,6 +504,8 @@ namespace tiny {
 			}
 
 			bool moveCaretEnd(bool extendSelection) {
+				resetCaretBlink();
+
 				if (editingModel.moveEnd(extendSelection))
 					markNeedsPaint();
 
@@ -479,11 +538,13 @@ namespace tiny {
 				if (!textLayout)
 					return;
 
-				std::vector<Rect> rectangles = textLayout->hitTestRange(selection.start(), selection.length());
-
 				Point textOrigin = getTextOrigin(contentBounds);
+
+				Rect visualBounds = getTextVisualBounds(contentBounds);
+
+				std::vector<Rect> rectangles = textLayout->hitTestRange(selection.start(), selection.length());
 				for (const Rect& rectangle : rectangles)
-					canvas.fillRect(Rect(textOrigin.x + rectangle.x, textOrigin.y + rectangle.y, rectangle.width, rectangle.height), textBoxStyle.selectionColor);
+					canvas.fillRect(Rect(textOrigin.x + rectangle.x, visualBounds.y, rectangle.width, visualBounds.height), textBoxStyle.selectionColor);
 			}
 
 			bool selectAll() {
@@ -633,12 +694,14 @@ namespace tiny {
 				if (!textLayout)
 					return;
 
-				std::vector<Rect> rectangles = textLayout->hitTestRange(compositionStart, compositionText.size());
-
 				Point textOrigin = getTextOrigin(contentBounds);
+
+				Rect visualBounds = getTextVisualBounds(contentBounds);
+
+				std::vector<Rect> rectangles = textLayout->hitTestRange(compositionStart, compositionText.size());
 				for (const Rect& rectangle : rectangles) {
 					float y = textOrigin.y + rectangle.y + rectangle.height - 1.0f;
-					canvas.fillRect(Rect(textOrigin.x + rectangle.x, y, rectangle.width, 1.0f), textBoxStyle.textColor);
+					canvas.fillRect(Rect(textOrigin.x + rectangle.x, visualBounds.y + visualBounds.height - 1.0f, rectangle.width, 1.0f), textBoxStyle.textColor);
 				}
 			}
 
@@ -653,33 +716,104 @@ namespace tiny {
 				std::size_t caretIndex = displayCaretIndex();
 
 				TextPositionMetrics metrics = textLayout->hitTestTextPosition(caretIndex);
-
-				float caretHeight = metrics.height;
-				if (caretHeight <= 0.0f)
-					caretHeight = lineHeight;
+				Rect visualBounds = getTextVisualBounds(contentBounds);
 					
 				Point textOrigin = getTextOrigin(contentBounds);
-				context->setCaretRect(Rect(textOrigin.x + metrics.position.x, textOrigin.y + metrics.position.y, textBoxStyle.caretWidth, caretHeight));
+				context->setCaretRect(Rect(textOrigin.x + metrics.position.x, textOrigin.y + metrics.position.y, textBoxStyle.caretWidth, visualBounds.height));
 			}
 
 			Point getTextOrigin(const Rect& contentBounds) const {
-				float ascent = fontMetrics.ascent;
-				float descent = fontMetrics.descent;
+				Rect visualBounds = getTextVisualBounds(contentBounds);
 
-				if (ascent <= 0.0f && descent <= 0.0f)
-					return Point(contentBounds.x, contentBounds.y);
+				float baselineY = visualBounds.y + fontMetrics.ascent;
 
-				float contentCenterY = contentBounds.y + contentBounds.height * 0.5f;
-
-				float targetBaseline = contentCenterY + (ascent - descent) * 0.5f;
-				float layoutBaseline = ascent;
-
+				float layoutBaseline = fontMetrics.ascent;
 				if (textLayout && textLayout->baseline() > 0.0f)
 					layoutBaseline = textLayout->baseline();
 
-				float originY = targetBaseline - layoutBaseline;
+				return Point(contentBounds.x - horizontalScroll, baselineY - layoutBaseline);
+			}
 
-				return Point(contentBounds.x, originY);
+			Point getTextDrawOrigin(const Rect& contentBounds) const {
+				if (!textLayout)
+					return Point(contentBounds.x - horizontalScroll, contentBounds.y);
+
+				float layoutHeight = textLayout->size().height;
+
+				float y = contentBounds.y + (contentBounds.height - layoutHeight) * 0.5f;
+
+				return Point(contentBounds.x - horizontalScroll, y);
+			}
+
+			Rect getTextVisualBounds(const Rect& contentBounds) const {
+				float ascent = fontMetrics.ascent;
+				float descent = fontMetrics.descent;
+
+				float height = ascent + descent;
+				if (height <= 0.0f)
+					height = std::min(lineHeight, contentBounds.height);
+
+				height = std::min(height, contentBounds.height);
+
+				float y = contentBounds.y + (contentBounds.height - height) * 0.5f;
+				return Rect(contentBounds.x - horizontalScroll, y, contentBounds.width, height);
+			}
+
+			float maximumHorizontalScroll(const Rect& contentBounds) const {
+				if (!textLayout)
+					return 0.0f;
+
+				float textWidth = textLayout->size().width;
+
+				return std::max(textWidth - contentBounds.width + 4.0f, 0.0f);
+			}
+
+			void clampHorizontalScroll(const Rect& contentBounds) {
+				horizontalScroll = std::clamp(horizontalScroll, 0.0f, maximumHorizontalScroll(contentBounds));
+			}
+
+			void ensureCaretVisible(const Rect& contentBounds) {
+				if (!textLayout)
+					return;
+
+				std::size_t caretIndex = displayCaretIndex();
+
+				TextPositionMetrics metrics = textLayout->hitTestTextPosition(caretIndex);
+
+				float caretLeft = metrics.position.x;
+				float caretRight = caretLeft + textBoxStyle.caretWidth;
+				
+				float viewportLeft = horizontalScroll;
+				float viewportRight = horizontalScroll + contentBounds.width;
+
+				if (caretLeft < viewportLeft)
+					horizontalScroll = caretLeft;
+				else if (caretRight > viewportRight)
+					horizontalScroll = caretRight - contentBounds.width;
+
+				clampHorizontalScroll(contentBounds);
+			}
+
+			void resetCaretBlink() {
+				caretVisible = true;
+				caretBlinkElapsed = 0.0f;
+				
+				updateFrameDemand();
+				markNeedsPaint();
+			}
+
+			void updateFrameDemand() {
+				bool caretBlinkNeeded = hasFocus();
+				bool focusAnimationNeeded = focusAnimation.isRunning();
+
+				setFrameUpdatesEnabled(caretBlinkNeeded || focusAnimationNeeded);
+			}
+
+			void updateFocusAnimation(bool focused) {
+				focusAnimation.animateTo(focused ? 1.0f : 0.0f, 0.16f, Easing::EaseOutCubic);
+
+				updateFrameDemand();
+				markNeedsPaint();
 			}
 
 		private:
@@ -701,6 +835,15 @@ namespace tiny {
 			std::unique_ptr<TextLayout> textLayout;
 
 			float lineHeight = 0.0f;
+
+			float horizontalScroll = 0.0f;
+
+			bool caretVisible = true;
+			float caretBlinkElapsed = 0.0f;
+
+			static constexpr float CaretBlinkInterval = 0.5f;
+
+			AnimationController focusAnimation;
 		};
 	}
 

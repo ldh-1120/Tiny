@@ -30,6 +30,9 @@ namespace tiny {
 		parentElement = parent;
 		mounted = true;
 
+		if (frameUpdatesEnabledValue)
+			rootOwner->registerFrameElement(this);
+
 		mountOverride();
 	}
 
@@ -40,6 +43,9 @@ namespace tiny {
 		UIRoot* owner = rootOwner;
 		if (owner)
 			owner->elementWillUnmount(this);
+
+		if (frameUpdatesEnabledValue && rootOwner)
+			rootOwner->unregisterFrameElement(this);
 
 		unmountOverride();
 
@@ -74,7 +80,7 @@ namespace tiny {
 		if (!rootOwner)
 			return false;
 
-		return rootOwner->requestFocus(this);
+		return rootOwner->requestFocus(this, FocusReason::Programmatic);
 	}
 
 	bool Element::keyDown(const KeyEvent& event) {
@@ -320,6 +326,32 @@ namespace tiny {
 		return rootOwner->textInputContextService();
 	}
 
+	void Element::setFrameUpdatesEnabled(bool enabled) {
+		if (frameUpdatesEnabledValue == enabled)
+			return;
+
+		frameUpdatesEnabledValue = enabled;
+
+		if (!mounted)
+			return;
+
+		if (!rootOwner)
+			return;
+
+		if (enabled)
+			rootOwner->registerFrameElement(this);
+		else
+			rootOwner->unregisterFrameElement(this);
+	}
+
+	void Element::frameOverride(const FrameEvent& event) { }
+
+	bool Element::isFocusVisible() const {
+		return hasFocus() && rootOwner && rootOwner->focusVisibility();
+	}
+
+	void Element::focusVisibilityChangedOverride(bool visible) { }
+
 	void Element::setFocused(bool value) {
 		if (focused == value)
 			return;
@@ -331,5 +363,22 @@ namespace tiny {
 			focusLostOverride();
 
 		markNeedsPaint();
+	}
+
+	void Element::dispatchFrame(const FrameEvent& event) {
+		if (!mounted)
+			return;
+
+		if (!frameUpdatesEnabledValue)
+			return;
+
+		frameOverride(event);
+	}
+
+	void Element::dispatchFocusVisibilityChanged(bool visible) {
+		if (!mounted)
+			return;
+
+		focusVisibilityChangedOverride(visible);
 	}
 }

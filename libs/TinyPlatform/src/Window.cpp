@@ -6,6 +6,7 @@
 #include <utility>
 #include <string>
 #include <optional>
+#include <chrono>
 
 #include <Windows.h>
 #include <windowsx.h>
@@ -213,6 +214,9 @@ namespace {
 }
 
 namespace tiny {
+	constexpr UINT_PTR FrameTimerId = 1;
+	constexpr UINT FrameTimerIntervalMilliseconds = 16;
+
 	class Window::Impl {
 	public:
 		explicit Impl(Window& owner, const WindowCreateInfo& createInfo);
@@ -238,6 +242,10 @@ namespace tiny {
 
 		bool isVisible() const;
 		bool isClosed() const;
+
+		bool frameUpdatesEnabledValue = false;
+
+		std::chrono::steady_clock::time_point lastFrameTime;
 
 	private:
 		static LRESULT CALLBACK windowProcedure(HWND windowHandle, UINT message, WPARAM wParam, LPARAM lParam);
@@ -568,6 +576,23 @@ namespace tiny {
 				return DefWindowProcW(handle, message, wParam, lParam);
 			}
 
+			case WM_TIMER: {
+				if (wParam != FrameTimerId || !frameUpdatesEnabledValue)
+					break;
+
+				std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
+
+				FrameEvent event;
+				event.now = now;
+				event.delta = now - lastFrameTime;
+
+				lastFrameTime = now;
+
+				owner.frame.emit(event);
+
+				return 0;
+			}
+
 			case WM_KILLFOCUS:
 				pendingHighSurrogate = 0;
 				break;
@@ -738,6 +763,30 @@ namespace tiny {
 
 	bool Window::isClosed() const {
 		return impl->isClosed();
+	}
+
+	void Window::setFrameUpdatesEnabled(bool enabled) {
+		if (impl->frameUpdatesEnabledValue == enabled)
+			return;
+
+		if (enabled) {
+			impl->lastFrameTime = std::chrono::steady_clock::now();
+			UINT_PTR result = SetTimer(static_cast<HWND>(nativeHandle()), FrameTimerId, FrameTimerIntervalMilliseconds, nullptr);
+			if (result == 0)
+				return;
+
+			impl->frameUpdatesEnabledValue = true;
+
+			return;
+		}
+
+		KillTimer(static_cast<HWND>(nativeHandle()), FrameTimerId);
+		
+		impl->frameUpdatesEnabledValue = false;
+	}
+
+	bool Window::frameUpdatesEnabled() const {
+		return impl->frameUpdatesEnabledValue;
 	}
 
 	void Window::Impl::show() {

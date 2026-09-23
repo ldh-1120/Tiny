@@ -153,6 +153,7 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\animation\AnimationController.cpp" />
     <ClCompile Include="src\Element.cpp" />
     <ClCompile Include="src\FocusManager.cpp" />
     <ClCompile Include="src\MultiChildElement.cpp" />
@@ -161,6 +162,7 @@
     <ClCompile Include="src\TinyUI.cpp" />
     <ClCompile Include="src\UIBuilder.cpp" />
     <ClCompile Include="src\UIRoot.cpp" />
+    <ClCompile Include="src\visual\FocusRing.cpp" />
     <ClCompile Include="src\widgets\Box.cpp" />
     <ClCompile Include="src\widgets\Button.cpp" />
     <ClCompile Include="src\widgets\Center.cpp" />
@@ -181,8 +183,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\tiny\TinyUI.h" />
+    <ClInclude Include="include\tiny\ui\animation\AnimationController.h" />
+    <ClInclude Include="include\tiny\ui\animation\Easing.h" />
     <ClInclude Include="include\tiny\ui\Element.h" />
     <ClInclude Include="include\tiny\ui\FocusManager.h" />
+    <ClInclude Include="include\tiny\ui\focus\FocusReason.h" />
     <ClInclude Include="include\tiny\ui\Key.h" />
     <ClInclude Include="include\tiny\ui\LayoutContext.h" />
     <ClInclude Include="include\tiny\ui\layout\Alignment.h" />
@@ -193,6 +198,7 @@
     <ClInclude Include="include\tiny\ui\text\TextSelection.h" />
     <ClInclude Include="include\tiny\ui\UIBuilder.h" />
     <ClInclude Include="include\tiny\ui\UIRoot.h" />
+    <ClInclude Include="include\tiny\ui\visual\FocusRing.h" />
     <ClInclude Include="include\tiny\ui\Widget.h" />
     <ClInclude Include="include\tiny\ui\widgets\Box.h" />
     <ClInclude Include="include\tiny\ui\widgets\Button.h" />

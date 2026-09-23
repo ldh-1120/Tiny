@@ -204,6 +204,15 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previousInstance, PWSTR comman
 				event.handled = true;
 		});
 
+		tiny::Subscription frameSubscription = window.frame.subscribe([&uiRoot](const tiny::FrameEvent& event) {
+			uiRoot.onFrame(event);
+		});
+
+		window.setFrameUpdatesEnabled(uiRoot.needsFrameUpdates());
+		tiny::Subscription frameDemandSubscription = uiRoot.frameDemandChanged.subscribe([&window](bool needed) {
+			window.setFrameUpdatesEnabled(needed);
+		});
+
 		window.show();
 		window.requestRepaint();
 

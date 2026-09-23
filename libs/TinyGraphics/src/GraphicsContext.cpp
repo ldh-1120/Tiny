@@ -82,7 +82,7 @@ namespace tiny {
 
 		Microsoft::WRL::ComPtr<IDWriteTextFormat> textFormat;
 
-		HRESULT hr = impl->dwriteFactory->CreateTextFormat(style.fontFamily.c_str(), nullptr, style.bold ? DWRITE_FONT_WEIGHT_BOLD : DWRITE_FONT_WEIGHT_NORMAL, style.italic ? DWRITE_FONT_STYLE_ITALIC : DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, style.fontSize, L"ko_KR", &textFormat);
+		HRESULT hr = impl->dwriteFactory->CreateTextFormat(style.fontFamily.c_str(), nullptr, style.bold ? DWRITE_FONT_WEIGHT_BOLD : DWRITE_FONT_WEIGHT_NORMAL, style.italic ? DWRITE_FONT_STYLE_ITALIC : DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, style.fontSize, L"ko-KR", &textFormat);
 		if (FAILED(hr))
 			return nullptr;
 
@@ -116,7 +116,7 @@ namespace tiny {
 		UINT lineCount = 0;
 
 		HRESULT lineResult = layoutImpl->nativeLayout->GetLineMetrics(nullptr, 0, &lineCount);
-		if (lineResult == E_NOT_SUFFICIENT_BUFFER && lineCount > 0) {
+		if (lineCount > 0) {
 			std::vector<DWRITE_LINE_METRICS> lineMetrics(lineCount);
 
 			lineResult = layoutImpl->nativeLayout->GetLineMetrics(lineMetrics.data(), lineCount, &lineCount);
@@ -159,7 +159,7 @@ namespace tiny {
 
 		Microsoft::WRL::ComPtr<IDWriteTextFormat> textFormat;
 
-		HRESULT hr = impl->dwriteFactory->CreateTextFormat(style.fontFamily.c_str(), nullptr, style.bold ? DWRITE_FONT_WEIGHT_BOLD : DWRITE_FONT_WEIGHT_NORMAL, style.italic ? DWRITE_FONT_STYLE_ITALIC : DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, style.fontSize, L"ko_KR", &textFormat);
+		HRESULT hr = impl->dwriteFactory->CreateTextFormat(style.fontFamily.c_str(), nullptr, style.bold ? DWRITE_FONT_WEIGHT_BOLD : DWRITE_FONT_WEIGHT_NORMAL, style.italic ? DWRITE_FONT_STYLE_ITALIC : DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, style.fontSize, L"ko-KR", &textFormat);
 		if (FAILED(hr))
 			return result;
 

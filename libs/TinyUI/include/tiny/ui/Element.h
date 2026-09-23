@@ -5,6 +5,7 @@
 
 #include <tiny/core/Rect.h>
 #include <tiny/core/Size.h>
+#include <tiny/core/FrameEvent.h>
 
 #include <tiny/core/input/Pointer.h>
 #include <tiny/core/input/Keyboard.h>
@@ -123,8 +124,22 @@ namespace tiny {
 		Clipboard* clipboard();
 		TextInputContext* textInputContext();
 
+		void setFrameUpdatesEnabled(bool enabled);
+
+		virtual void frameOverride(const FrameEvent& event);
+
+		bool isFocusVisible() const;
+
+		virtual void focusVisibilityChangedOverride(bool visible);
+
 	private:
 		void setFocused(bool value);
+
+		void dispatchFrame(const FrameEvent& event);
+
+		void dispatchFocusVisibilityChanged(bool visible);
+
+		friend class UIRoot;
 
 	private:
 		std::type_index widgetType;
@@ -138,6 +153,8 @@ namespace tiny {
 
 		Size measuredSize;
 		Rect arrangedBounds;
+
+		bool frameUpdatesEnabledValue = false;
 
 		friend class FocusManager;
 	};

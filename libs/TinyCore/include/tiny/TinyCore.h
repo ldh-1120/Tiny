@@ -8,6 +8,7 @@
 #include <tiny/core/Size.h>
 #include <tiny/core/Subscription.h>
 #include <tiny/core/Thickness.h>
+#include <tiny/core/FrameEvent.h>
 
 #include <tiny/core/input/Keyboard.h>
 #include <tiny/core/input/Pointer.h>

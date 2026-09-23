@@ -17,6 +17,8 @@
 #include <tiny/ui/Element.h>
 #include <tiny/ui/LayoutContext.h>
 #include <tiny/ui/layout/Constraints.h>
+#include <tiny/ui/animation/AnimationController.h>
+#include <tiny/ui/visual/FocusRing.h>
 
 namespace tiny {
 	namespace {
@@ -59,13 +61,11 @@ namespace tiny {
 			}
 
 			void paintOverride(Canvas& canvas) override {
-				Color background = buttonStyle.background;
+				Color background = lerpColor(buttonStyle.background, buttonStyle.hoveredBackground, hoverAnimation.value());
 
 				bool visuallyPressed = keyboardPressedState || (pointerPressedState && hovered);
 				if (visuallyPressed)
 					background = buttonStyle.pressedBackground;
-				else if (hovered)
-					background = buttonStyle.hoveredBackground;
 
 				canvas.fillRect(bounds(), background);
 
@@ -75,8 +75,7 @@ namespace tiny {
 					canvas.drawTextLayout(*textLayout, textOrigin, buttonStyle.textColor);
 				}
 
-				if (hasFocus())
-					canvas.drawRect(bounds(), buttonStyle.focusBorderColor, buttonStyle.focusBorderWidth);
+				paintFocusRing(canvas, bounds(), buttonStyle.focusBorderColor, buttonStyle.focusBorderWidth, focusAnimation.value());
 			}
 
 			bool acceptsPointerEvents() const override {
@@ -89,18 +88,20 @@ namespace tiny {
 				if (hovered)
 					return;
 
-				hovered = true;
-
-				markNeedsPaint();
+				if (!hovered) {
+					hovered = true;
+					updateHoverAnimation(true);
+				}
 			}
 
 			void pointerLeaveOverride() override {
 				if (!hovered)
 					return;
 
-				hovered = false;
-
-				markNeedsPaint();
+				if (hovered) {
+					hovered = false;
+					updateHoverAnimation(false);
+				}
 			}
 
 			bool pointerDownOverride(const PointerEvent& event) override {
@@ -197,13 +198,42 @@ namespace tiny {
 				return true;
 			}
 
+			void frameOverride(const FrameEvent& event) override {
+				float deltaSeconds = event.delta.count();
+
+				bool needsPaint = false;
+				if (focusAnimation.advance(deltaSeconds))
+					needsPaint = true;
+
+				if (hoverAnimation.advance(deltaSeconds))
+					needsPaint = true;
+
+				if (needsPaint)
+					markNeedsPaint();
+
+				updateFrameDemand();
+			}
+
+			void focusGainedOverride() override {
+				updateFocusAnimation(isFocusVisible());
+			}
+
  			void focusLostOverride() override {
+				updateFocusAnimation(false);
+
 				if (!keyboardPressedState)
 					return;
 
 				keyboardPressedState = false;
 
 				markNeedsPaint();
+			}
+
+			void focusVisibilityChangedOverride(bool visible) override {
+				if (!hasFocus())
+					return;
+
+				updateFocusAnimation(visible);
 			}
 
 			Rect getContentBounds() const {
@@ -224,6 +254,24 @@ namespace tiny {
 				return Point(x, y);
 			}
 
+			void updateFocusAnimation(bool focused) {
+				focusAnimation.animateTo(focused ? 1.0f : 0.0f, 0.16f, Easing::EaseOutCubic);
+
+				updateFrameDemand();
+				markNeedsPaint();
+			}
+
+			void updateHoverAnimation(bool hovered) {
+				hoverAnimation.animateTo(hovered ? 1.0f : 0.0f, 0.12f, Easing::EaseOutCubic);
+
+				updateFrameDemand();
+				markNeedsPaint();
+			}
+
+			void updateFrameDemand() {
+				setFrameUpdatesEnabled(focusAnimation.isRunning() || hoverAnimation.isRunning());
+			}
+
 		private:
 			std::u32string textValue;
 
@@ -238,6 +286,9 @@ namespace tiny {
 			bool hovered = false;
 			bool pointerPressedState = false;
 			bool keyboardPressedState = false;
+
+			AnimationController hoverAnimation;
+			AnimationController focusAnimation;
 		};
 	}
 

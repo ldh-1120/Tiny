@@ -10,6 +10,7 @@
 #include <tiny/core/input/Keyboard.h>
 #include <tiny/core/input/TextInput.h>
 #include <tiny/core/input/TextComposition.h>
+#include <tiny/core/FrameEvent.h>
 
 #include <tiny/platform/NativeWindowHandle.h>
 #include <tiny/platform/WindowEvents.h>
@@ -74,6 +75,12 @@ namespace tiny {
 
 		Event<WindowClosingEvent&> closing;
 		Event<> closed;
+
+		Event<const FrameEvent&> frame;
+
+		void setFrameUpdatesEnabled(bool enabled);
+
+		bool frameUpdatesEnabled() const;
 
 	private:
 		class Impl;

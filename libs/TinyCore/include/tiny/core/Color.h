@@ -21,4 +21,22 @@ namespace tiny {
 			return Color(static_cast<float>(r) / 255.0f, static_cast<float>(g) / 255.0f, static_cast<float>(b) / 255.0f, static_cast<float>(a) / 255.0f);
 		}
 	};
+
+	inline Color lerpColor(const Color& from, const Color& to, float progress) {
+		float t = std::clamp(progress, 0.0f, 1.0f);
+
+		return Color {
+			from.r + (to.r - from.r) * t,
+			from.g + (to.g - from.g) * t,
+			from.b + (to.b - from.b) * t,
+			from.a + (to.a - from.a) * t,
+		};
+	}
+
+	inline Color withOpacity(const Color& color, float opacity) {
+		Color result = color;
+		result.a *= std::clamp(opacity, 0.0f, 1.0f);
+
+		return result;
+	}
 }

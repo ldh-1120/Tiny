@@ -133,6 +133,24 @@ namespace tiny {
 		textInputContextValue = &context;
 	}
 
+	void UIRoot::onFrame(const FrameEvent& event) {
+		std::vector<Element*> snapshot(frameElements.begin(), frameElements.end());
+		for (Element* element : snapshot) {
+			if (!frameElements.contains(element))
+				continue;
+
+			element->dispatchFrame(event);
+		}
+	}
+
+	bool UIRoot::needsFrameUpdates() const {
+		return !frameElements.empty();
+	}
+
+	bool UIRoot::focusVisibility() const {
+		return focusVisibilityValue;
+	}
+
 	Element* UIRoot::hitTest(const Point& position) {
 		if (!rootElement)
 			return nullptr;
@@ -166,6 +184,8 @@ namespace tiny {
 	bool UIRoot::pointerPressed(const PointerEvent& event) {
 		Element* target = hitTest(event.position);
 		updateHoveredElement(target, event);
+
+		requestFocus(target, FocusReason::Pointer);
 
 		if (!target) {
 			if (event.button == PointerButton::Left)
@@ -237,11 +257,15 @@ namespace tiny {
 		repaintRequested.emit();
 	}
 
-	bool UIRoot::requestFocus(Element* element) {
+	bool UIRoot::requestFocus(Element* element, FocusReason reason) {
+		applyFocusReason(reason);
+
 		return focusManager.requestFocus(element);
 	}
 
 	bool UIRoot::moveFocus(bool forward) {
+		applyFocusReason(FocusReason::Keyboard);
+
 		if (!rootElement)
 			return false;
 
@@ -339,5 +363,55 @@ namespace tiny {
 
 	TextInputContext* UIRoot::textInputContextService() {
 		return textInputContextValue;
+	}
+
+	void UIRoot::registerFrameElement(Element* element) {
+		if (!element)
+			return;
+
+		if (frameElements.contains(element))
+			return;
+
+		bool wasEmpty = frameElements.empty();
+		frameElements.insert(element);
+
+		if (wasEmpty)
+			frameDemandChanged.emit(true);
+	}
+
+	void UIRoot::unregisterFrameElement(Element* element) {
+		std::unordered_set<Element*>::iterator iterator = frameElements.find(element);
+		if (iterator == frameElements.end())
+			return;
+
+		frameElements.erase(iterator);
+		if (frameElements.empty())
+			frameDemandChanged.emit(false);
+	}
+
+	void UIRoot::setFocusVisibility(bool visible) {
+		if (focusVisibilityValue == visible)
+			return;
+
+		focusVisibilityValue = visible;
+
+		Element* focusedElement = focusManager.focusedElement();
+		if (focusedElement)
+			focusedElement->dispatchFocusVisibilityChanged(visible);
+	}
+
+	void UIRoot::applyFocusReason(FocusReason reason) {
+		switch (reason)		{
+			case tiny::FocusReason::Pointer:
+				setFocusVisibility(false);
+				break;
+
+			case tiny::FocusReason::Keyboard:
+				setFocusVisibility(true);
+				break;
+
+			case tiny::FocusReason::Programmatic:
+				break;
+		}
 	}
 }

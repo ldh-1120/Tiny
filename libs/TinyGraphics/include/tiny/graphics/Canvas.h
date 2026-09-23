@@ -19,10 +19,11 @@ namespace tiny {
 		void clear(const Color& color);
 
 		void fillRect(const Rect& rect, const Color& color);
-
 		void drawRect(const Rect& rect, const Color& color, float strokeWidth = 1.0f);
-
 		void drawTextLayout(const TextLayout& layout, const Point& origin, const Color& color);
+
+		void pushClip(const Rect& rect);
+		void popClip();
 
 	private:
 		Canvas(void* renderTarget, void* textFactory, void* solidBrush);

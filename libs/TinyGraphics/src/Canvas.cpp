@@ -56,4 +56,16 @@ namespace tiny {
 		D2D1_POINT_2F nativeOrigin = { origin.x, origin.y };
 		target->DrawTextLayout(nativeOrigin, layout.impl->nativeLayout.Get(), brush, D2D1_DRAW_TEXT_OPTIONS_CLIP);
 	}
+
+	void Canvas::pushClip(const Rect& rect) {
+		D2D1_RECT_F nativeRect = { rect.x, rect.y, rect.x + rect.width, rect.y + rect.height };
+
+		ID2D1RenderTarget* target = static_cast<ID2D1RenderTarget*>(renderTarget);
+		target->PushAxisAlignedClip(nativeRect, D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
+	}
+
+	void Canvas::popClip() {
+		ID2D1RenderTarget* target = static_cast<ID2D1RenderTarget*>(renderTarget);
+		target->PopAxisAlignedClip();
+	}
 }
