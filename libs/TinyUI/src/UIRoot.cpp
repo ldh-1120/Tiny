@@ -88,7 +88,7 @@ namespace tiny {
 	}
 
 	bool UIRoot::keyPressed(const KeyEvent& event) {
-		if (event.key == KeyCode::Tab && !event.repeated)
+		if (event.key == KeyCode::Tab && !event.modifiers.control && !event.modifiers.alt && !event.repeated)
 			return moveFocus(!event.modifiers.shift);
 
 		Element* focused = focusManager.focusedElement();
@@ -99,7 +99,7 @@ namespace tiny {
 	}
 
 	bool UIRoot::keyReleased(const KeyEvent& event) {
-		if (event.key == KeyCode::Tab)
+		if (event.key == KeyCode::Tab && !event.modifiers.control && !event.modifiers.alt)
 			return focusManager.focusedElement() != nullptr;
 
 		Element* focused = focusManager.focusedElement();

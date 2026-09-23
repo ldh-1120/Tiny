@@ -113,12 +113,37 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previousInstance, PWSTR comman
 				)
 			);
 
-			children.push_back(
+			std::vector<std::unique_ptr<tiny::Widget>> actionChildren;
+
+			actionChildren.push_back(
 				std::make_unique<tiny::Button>(U"Add", [&state, &uiRoot]() {
 				++state.count;
 
 				uiRoot.requestRebuild();
 			}, buttonStyle, tiny::Key("increment-button")));
+
+			actionChildren.push_back(
+				std::make_unique<tiny::Button>(U"Decrease", [&state, &uiRoot]() {
+				--state.count;
+
+				uiRoot.requestRebuild();
+			}, buttonStyle, tiny::Key("decrement-button")));
+
+			actionChildren.push_back(
+				std::make_unique<tiny::Button>(U"Reset", [&state, &uiRoot]() {
+				state.count = 0;
+
+				uiRoot.requestRebuild();
+			}, buttonStyle, tiny::Key("reset-button")));
+
+			children.push_back(
+				std::make_unique<tiny::Row>(
+					std::move(actionChildren),
+					12.0f,
+					tiny::CrossAxisAlignment::Center,
+					tiny::Key("actions-row")
+				)
+			);
 
 			children.push_back(
 				std::make_unique<tiny::TextBox>(state.text, [&state, &uiRoot](const std::u32string& text) {
