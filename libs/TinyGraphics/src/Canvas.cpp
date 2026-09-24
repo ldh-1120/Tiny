@@ -1,13 +1,14 @@
-#include <tiny/graphics/Canvas.h>
-#include <tiny/graphics/TextStyle.h>
-#include <tiny/graphics/TextLayout.h>
-
 #include "TextLayoutInternal.h"
 
 #include <d2d1.h>
 #include <d2d1helper.h>
 #include <dwrite.h>
 #include <wrl/client.h>
+
+#include <tiny/graphics/Canvas.h>
+#include <tiny/graphics/TextStyle.h>
+#include <tiny/graphics/TextLayout.h>
+#include <tiny/graphics/PngIcon.h>
 
 namespace {
 	D2D1_COLOR_F toD2DColor(const tiny::Color& color) {
@@ -67,5 +68,21 @@ namespace tiny {
 	void Canvas::popClip() {
 		ID2D1RenderTarget* target = static_cast<ID2D1RenderTarget*>(renderTarget);
 		target->PopAxisAlignedClip();
+	}
+
+	void Canvas::drawImage(const PngIcon& image, const Rect& destination) {
+		if (destination.width <= 0.0f || destination.height <= 0.0f)
+			return;
+
+		ID2D1RenderTarget* target = static_cast<ID2D1RenderTarget*>(renderTarget);
+		if (!target)
+			return;
+
+		ID2D1Bitmap* bitmap = static_cast<ID2D1Bitmap*>(image.nativeBitmap(renderTarget));
+		if (!bitmap)
+			return;
+
+		D2D1_RECT_F destinationRect = D2D1::RectF(destination.x, destination.y, destination.x + destination.width, destination.y + destination.height);
+		target->DrawBitmap(bitmap, destinationRect, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE_LINEAR);
 	}
 }

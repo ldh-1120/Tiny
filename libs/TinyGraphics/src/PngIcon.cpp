@@ -8,6 +8,9 @@
 #include <Windows.h>
 #include <wincodec.h>
 #include <wrl/client.h>
+#include <d2d1.h>
+#include <d2d1helper.h>
+#include <dxgiformat.h>
 
 #include <tiny/core/Color.h>
 #include <tiny/core/Rect.h>
@@ -17,6 +20,14 @@
 #pragma comment(lib, "windowscodecs.lib")
 
 namespace tiny {
+	struct PngIcon::BitmapCache {
+		Microsoft::WRL::ComPtr<ID2D1RenderTarget> target;
+		Microsoft::WRL::ComPtr<ID2D1Bitmap> bitmap;
+	};
+
+	PngIcon::PngIcon() = default;
+	PngIcon::~PngIcon() = default;
+
 	std::shared_ptr<PngIcon> PngIcon::load(const std::wstring& path) {
 		HRESULT initializedResult = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
 		if (FAILED(initializedResult) && initializedResult != RPC_E_CHANGED_MODE)
@@ -63,7 +74,7 @@ namespace tiny {
 		if (FAILED(result))
 			return nullptr;
 
-		result = converter->Initialize(scaler.Get(), GUID_WICPixelFormat32bppRGBA, WICBitmapDitherTypeNone, nullptr, 0.0, WICBitmapPaletteTypeCustom);
+		result = converter->Initialize(scaler.Get(), GUID_WICPixelFormat32bppPBGRA, WICBitmapDitherTypeNone, nullptr, 0.0, WICBitmapPaletteTypeCustom);
 		if (FAILED(result))
 			return nullptr;
 
@@ -83,31 +94,30 @@ namespace tiny {
 		if (displaySize <= 0.0f)
 			return;
 
-		float pixelWidth = displaySize / static_cast<float>(Width);
-		float pixelHeight = displaySize / static_cast<float>(Height);
+		canvas.drawImage(*this, Rect(position.x, position.y, displaySize, displaySize));
+	}
 
-		constexpr int backgroundRed = 24;
-		constexpr int backgroundGreen = 24;
-		constexpr int backgroundBlue = 37;
+	void* PngIcon::nativeBitmap(void* renderTarget) const {
+		ID2D1RenderTarget* target = static_cast<ID2D1RenderTarget*>(renderTarget);
+		if (!target)
+			return nullptr;
 
-		for (std::uint32_t y = 0; y < Height; ++y) {
-			for (std::uint32_t x = 0; x < Width; ++x) {
-				std::uint32_t index = (y * Width + x) * 4;
+		if (!bitmapCache)
+			bitmapCache = std::make_unique<BitmapCache>();
 
-				int red = pixels[index + 0];
-				int green = pixels[index + 1];
-				int blue = pixels[index + 2];
-
-				int alpha = pixels[index + 3];
-				if (alpha == 0)
-					continue;
-
-				red = (red * alpha + backgroundRed * (255 - alpha) + 127) / 255;
-				green = (green * alpha + backgroundGreen * (255 - alpha) + 127) / 255;
-				blue = (blue * alpha + backgroundBlue * (255 - alpha) + 127) / 255;
-
-				canvas.fillRect(Rect(position.x + static_cast<float>(x) * pixelWidth, position.y + static_cast<float>(y) * pixelHeight, pixelWidth, pixelHeight), Color::fromRgb(static_cast<std::uint8_t>(red), static_cast<std::uint8_t>(green), static_cast<std::uint8_t>(blue)));
-			}
+		if (bitmapCache->target.Get() != target) {
+			bitmapCache->bitmap.Reset();
+			bitmapCache->target = target;
 		}
+
+		if (bitmapCache->bitmap)
+			return bitmapCache->bitmap.Get();
+
+		D2D1_BITMAP_PROPERTIES properties = D2D1::BitmapProperties(D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED), 96.0f, 96.0f);
+		HRESULT result = target->CreateBitmap(D2D1::SizeU(Width, Height), pixels.data(), Width * 4, properties, bitmapCache->bitmap.GetAddressOf());
+		if (FAILED(result))
+			return nullptr;
+
+		return bitmapCache->bitmap.Get();
 	}
 }

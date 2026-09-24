@@ -10,6 +10,7 @@
 namespace tiny {
 	class WindowRenderer;
 	class TextLayout;
+	class PngIcon;
 
 	class Canvas {
 	public:
@@ -24,6 +25,8 @@ namespace tiny {
 
 		void pushClip(const Rect& rect);
 		void popClip();
+
+		void drawImage(const PngIcon& image, const Rect& destination);
 
 	private:
 		Canvas(void* renderTarget, void* textFactory, void* solidBrush);
