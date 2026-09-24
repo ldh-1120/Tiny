@@ -187,7 +187,7 @@ namespace tiny {
 				canvas.fillRect(titleArea, styleValue.background);
 				
 				if (titleLayout) {
-					float textY = area.y + (heightValue - titleLayout->size().height * 0.5f);
+					float textY = area.y + (heightValue - titleLayout->size().height) * 0.5f;
 					canvas.drawTextLayout(*titleLayout, Point(area.x + 14.0f, textY), styleValue.textColor);
 				}
 
