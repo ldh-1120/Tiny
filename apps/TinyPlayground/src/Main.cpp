@@ -37,6 +37,7 @@
 #include <tiny/ui/widgets/TextBox.h>
 #include <tiny/ui/widgets/TitleBar.h>
 #include <tiny/ui/widgets/ImageView.h>
+#include <tiny/ui/widgets/ImageViewer.h>
 
 namespace {
 	struct PlaygroundState {
@@ -173,13 +174,13 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previousInstance, PWSTR comman
 			}, tiny::ButtonStyle(), tiny::Key("toolbar-reset")));
 
 			children.push_back(
-				std::make_unique<tiny::ImageView>(
+				std::make_unique<tiny::ImageViewer>(
 					previewImage,
-					tiny::Size(240.0f, 160.0f),
-					tiny::ImageFit::Contain,
+					tiny::Size(360.0f, 220.0f),
 					tiny::ImageInterpolation::Linear,
-					tiny::Key("preview-image"),
-					tiny::ImageAlignment::TopRight));
+					tiny::Key("image-viewer")
+				)
+			);
 
 			std::unique_ptr<tiny::Widget> toolbar = std::make_unique<tiny::Row>(std::move(toolbarChildren), 8.0f, tiny::CrossAxisAlignment::Center, tiny::Key("title-toolbar-row"));
 

@@ -78,6 +78,9 @@
     <ClCompile Include="src\widgets\ImageView.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\widgets\ImageViewer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\tiny\ui\layout\Constraints.h">
@@ -165,6 +168,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\tiny\ui\widgets\ImageView.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\tiny\ui\widgets\ImageViewer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
