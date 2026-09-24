@@ -93,7 +93,7 @@ namespace tiny {
 			void arrangeOverride(const Rect& finalBounds) override {
 				float brandWidth = effectiveBrandWidth(finalBounds.width);
 
-				float toolbarAvailableWidth = std::max(brandWidth - buttonWidthValue * 3.0f, 0.0f);
+				float toolbarAvailableWidth = std::max(finalBounds.width - brandWidth - buttonWidthValue * 3.0f, 0.0f);
 				if (children()[0]) {
 					const Size& desired = children()[0]->desiredSize();
 					
@@ -108,6 +108,112 @@ namespace tiny {
 					float contentHeight = std::max(finalBounds.height - heightValue, 0.0f);
 					children()[1]->arrange(Rect(finalBounds.x, finalBounds.y + heightValue, finalBounds.width, contentHeight));
 				}
+			}
+
+			void paintOverride(Canvas& canvas) override {
+				const Rect& area = bounds();
+
+				Rect titleArea(area.x, area.y, area.width, heightValue);
+				canvas.fillRect(titleArea, styleValue.background);
+
+				float brandWidth = effectiveBrandWidth(area.width);
+
+				float iconSize = std::min(styleValue.iconSize, heightValue);
+				float iconX = area.x + styleValue.iconLeftPadding;
+				float iconY = area.y + (heightValue - iconSize) * 0.5f;
+
+				if (iconSize > 0.0f && iconX + iconSize <= area.x + brandWidth)
+					canvas.fillRect(Rect(iconX, iconY, iconSize, iconSize), styleValue.iconColor);
+
+				if (titleLayout && brandWidth > 0.0f) {
+					float textY = area.y + (heightValue - titleLayout->size().height) * 0.5f;
+
+					Rect brandClip(area.x, area.y, brandWidth, heightValue);
+					canvas.pushClip(brandClip);
+
+					canvas.drawTextLayout(*titleLayout, Point(area.x + styleValue.titleLeftPadding, textY), styleValue.textColor);
+
+					canvas.popClip();
+				}
+
+				float totalWidth = buttonWidthValue * 3.0f;
+				if (area.width < totalWidth)
+					return;
+
+				bool maximized = false;
+				if (maximizedCallback)
+					maximized = maximizedCallback();
+
+				if (children()[1])
+					children()[1]->paint(canvas);
+
+				float toolbarAvailableWidth = std::max(area.width - brandWidth - buttonWidthValue * 3.0f, 0.0f);
+				if (children()[0] && toolbarAvailableWidth > 0.0f) {
+					Rect toolbarClip(area.x + brandWidth, area.y, toolbarAvailableWidth, heightValue);
+					canvas.pushClip(toolbarClip);
+
+					children()[0]->paint(canvas);
+
+					canvas.popClip();
+				}
+
+				for (int index = 0; index < 3; ++index) {
+					CaptionButton button = CaptionButton::None;
+					switch (index) {
+						case 0:
+							button = CaptionButton::Minimize;
+							break;
+
+						case 1:
+							button = CaptionButton::Maximize;
+							break;
+
+						case 2:
+							button = CaptionButton::Close;
+							break;
+					}
+
+					float buttonX = area.x + area.width - totalWidth + static_cast<float>(index) * buttonWidthValue;
+					Rect buttonBounds(buttonX, area.y, buttonWidthValue, heightValue);
+
+					bool hovered = hoveredButton == button;
+					bool pressed = pressedButton == button && hovered;
+
+					Color background = styleValue.background;
+					if (button == CaptionButton::Close) {
+						if (pressed)
+							background = styleValue.closePressedBackground;
+						else if (hovered)
+							background = styleValue.closeHoveredBackground;
+					} else {
+						if (pressed)
+							background = styleValue.pressedBackground;
+						else if (hovered)
+							background = styleValue.hoveredBackground;
+					}
+
+					canvas.fillRect(buttonBounds, background);
+
+					float centerX = buttonX + buttonWidthValue * 0.5f;
+					float centerY = area.y + heightValue * 0.5f;
+
+					if (button == CaptionButton::Minimize)
+						canvas.fillRect(Rect(centerX - 5.0f, centerY, 10.0f, 1.0f), styleValue.textColor);
+					else if (button == CaptionButton::Maximize) {
+						if (maximized) {
+							canvas.drawRect(Rect(centerX - 3.0f, centerY - 5.0f, 9.0f, 9.0f), styleValue.textColor, 1.0f);
+							canvas.drawRect(Rect(centerX - 6.0f, centerY - 2.0f, 9.0f, 9.0f), styleValue.textColor, 1.0f);
+						} else
+							canvas.drawRect(Rect(centerX - 5.0f, centerY - 5.0f, 10.0f, 10.0f), styleValue.textColor, 1.0f);
+					} else if (button == CaptionButton::Close && closeIconLayout) {
+						float iconX = centerX - closeIconLayout->size().width * 0.5f;
+						float iconY = centerY - closeIconLayout->size().height * 0.5f;
+
+						canvas.drawTextLayout(*closeIconLayout, Point(iconX, iconY), styleValue.textColor);
+					}
+				}
+
+				canvas.fillRect(Rect(area.x, area.y + heightValue - 1.0f, area.width, 1.0f), styleValue.borderColor);
 			}
 
 			bool hitTestSelf(const Point& position) const override {
@@ -199,112 +305,6 @@ namespace tiny {
 				pressedButton = CaptionButton::None;
 
 				markNeedsPaint();
-			}
-
-			void paintOverride(Canvas& canvas) override {
-				const Rect& area = bounds();
-
-				Rect titleArea(area.x, area.y, area.width, heightValue);
-				canvas.fillRect(titleArea, styleValue.background);
-
-				float brandWidth = effectiveBrandWidth(area.width);
-
-				float iconSize = std::min(styleValue.iconSize, heightValue);
-				float iconX = area.x + styleValue.iconLeftPadding;
-				float iconY = area.y + (heightValue - iconSize) * 0.5f;
-
-				if (iconSize > 0.0f && iconX + iconSize <= area.x + brandWidth)
-					canvas.fillRect(Rect(iconX, iconY, iconSize, iconSize), styleValue.iconColor);
-				
-				if (titleLayout && brandWidth > 0.0f) {
-					float textY = area.y + (heightValue - titleLayout->size().height) * 0.5f;
-
-					Rect brandClip(area.x, area.y, brandWidth, heightValue);
-					canvas.pushClip(brandClip);
-
-					canvas.drawTextLayout(*titleLayout, Point(area.x + styleValue.titleLeftPadding, textY), styleValue.textColor);
-
-					canvas.popClip();
-				}
-
-				float totalWidth = buttonWidthValue * 3.0f;
-				if (area.width < totalWidth)
-					return;
-
-				bool maximized = false;
-				if (maximizedCallback)
-					maximized = maximizedCallback();
-
-				if (children()[1])
-					children()[1]->paint(canvas);
-
-				float toolbarAvailableWidth = std::max(area.width - brandWidth - buttonWidthValue * 3.0f, 0.0f);
-				if (children()[0] && toolbarAvailableWidth > 0.0f) {
-					Rect toolbarClip(area.x + brandWidth, area.y, toolbarAvailableWidth, heightValue);
-					canvas.pushClip(toolbarClip);
-
-					children()[0]->paint(canvas);
-
-					canvas.popClip();
-				}
-
-				for (int index = 0; index < 3; ++index) {
-					CaptionButton button = CaptionButton::None;
-					switch (index) {
-						case 0:
-							button = CaptionButton::Minimize;
-							break;
-
-						case 1:
-							button = CaptionButton::Maximize;
-							break;
-
-						case 2:
-							button = CaptionButton::Close;
-							break;
-					}
-
-					float buttonX = area.x + area.width - totalWidth + static_cast<float>(index) * buttonWidthValue;
-					Rect buttonBounds(buttonX, area.y, buttonWidthValue, heightValue);
-
-					bool hovered = hoveredButton == button;
-					bool pressed = pressedButton == button && hovered;
-
-					Color background = styleValue.background;
-					if (button == CaptionButton::Close) {
-						if (pressed)
-							background = styleValue.closePressedBackground;
-						else if (hovered)
-							background = styleValue.closeHoveredBackground;
-					} else {
-						if (pressed)
-							background = styleValue.pressedBackground;
-						else if (hovered)
-							background = styleValue.hoveredBackground;
-					}
-
-					canvas.fillRect(buttonBounds, background);
-
-					float centerX = buttonX + buttonWidthValue * 0.5f;
-					float centerY = area.y + heightValue * 0.5f;
-
-					if (button == CaptionButton::Minimize)
-						canvas.fillRect(Rect(centerX - 5.0f, centerY, 10.0f, 1.0f), styleValue.textColor);
-					else if (button == CaptionButton::Maximize) {
-						if (maximized) {
-							canvas.drawRect(Rect(centerX - 3.0f, centerY - 5.0f, 9.0f, 9.0f), styleValue.textColor, 1.0f);
-							canvas.drawRect(Rect(centerX - 6.0f, centerY - 2.0f, 9.0f, 9.0f), styleValue.textColor, 1.0f);
-						} else
-							canvas.drawRect(Rect(centerX - 5.0f, centerY - 5.0f, 10.0f, 10.0f), styleValue.textColor, 1.0f);
-					} else if (button == CaptionButton::Close && closeIconLayout) {
-						float iconX = centerX - closeIconLayout->size().width * 0.5f;
-						float iconY = centerY - closeIconLayout->size().height * 0.5f;
-
-						canvas.drawTextLayout(*closeIconLayout, Point(iconX, iconY), styleValue.textColor);
-					}
-				}
-
-				canvas.fillRect(Rect(area.x, area.y + heightValue - 1.0f, area.width, 1.0f), styleValue.borderColor);
 			}
 
 		private:
