@@ -19,7 +19,7 @@ namespace tiny {
 		class ImageViewElement final : public Element {
 		public:
 			explicit ImageViewElement(const ImageView& widget)
-				: Element(widget), imageValue(widget.image()), requestedSizeValue(widget.requestedSize()), fitValue(widget.fit()), interpolationValue(widget.interpolation()), useIntrinsicSizeValue(widget.usesIntrinsicSize()) { }
+				: Element(widget), imageValue(widget.image()), requestedSizeValue(widget.requestedSize()), fitValue(widget.fit()), interpolationValue(widget.interpolation()), useIntrinsicSizeValue(widget.usesIntrinsicSize()), alignmentValue(widget.alignment()) { }
 
 		protected:
 			void updateOverride(const Widget& widget) override {
@@ -30,6 +30,7 @@ namespace tiny {
 				fitValue = imageView.fit();
 				interpolationValue = imageView.interpolation();
 				useIntrinsicSizeValue = imageView.usesIntrinsicSize();
+				alignmentValue = imageView.alignment();
 
 				markNeedsPaint();
 			}
@@ -97,8 +98,10 @@ namespace tiny {
 				float drawWidth = imageWidth * scale;
 				float drawHeight = imageHeight * scale;
 
-				float drawX = area.x + (area.width - drawWidth) * 0.5f;
-				float drawY = area.y + (area.height - drawHeight) * 0.5f;
+				Point factors = alignmentFactors();
+
+				float drawX = area.x + (area.width - drawWidth) * factors.x;
+				float drawY = area.y + (area.height - drawHeight) * factors.y;
 
 				Rect destination(drawX, drawY, drawWidth, drawHeight);
 				canvas.drawImage(*imageValue, destination, interpolationValue);
@@ -121,10 +124,66 @@ namespace tiny {
 				else
 					sourceHeight = imageWidth / areaAspect;
 
-				float sourceX = (imageWidth - sourceWidth) * 0.5f;
-				float sourceY = (imageHeight - sourceHeight) * 0.5f;
+				Point factors = alignmentFactors();
+
+				float sourceX = (imageWidth - sourceWidth) * factors.x;
+				float sourceY = (imageHeight - sourceHeight) * factors.y;
 
 				return Rect(sourceX, sourceY, sourceWidth, sourceHeight);
+			}
+
+			Point alignmentFactors() const {
+				float x = 0.5f;
+				float y = 0.5f;
+
+				switch (alignmentValue) {
+					case ImageAlignment::TopLeft:
+						x = 0.0f;
+						y = 0.0f;
+						break;
+
+					case ImageAlignment::TopCenter:
+						x = 0.5f;
+						y = 0.0f;
+						break;
+
+					case ImageAlignment::TopRight:
+						x = 1.0f;
+						y = 0.0f;
+						break;
+
+					case ImageAlignment::CenterLeft:
+						x = 0.0f;
+						y = 0.5f;
+						break;
+
+					case ImageAlignment::Center:
+						x = 0.5f;
+						y = 0.5f;
+						break;
+
+					case ImageAlignment::CenterRight:
+						x = 1.0f;
+						y = 0.5f;
+						break;
+
+					case ImageAlignment::BottomLeft:
+						x = 0.0f;
+						y = 1.0f;
+						break;
+
+					case ImageAlignment::BottomCenter:
+						x = 0.5f;
+						y = 1.0f;
+						break;
+
+					case ImageAlignment::BottomRight:
+						x = 1.0f;
+						y = 1.0f;
+						break;
+				}
+
+				return Point(x, y);
 			}
 
 		private:
@@ -133,18 +192,18 @@ namespace tiny {
 			Size requestedSizeValue;
 
 			ImageFit fitValue = ImageFit::Contain;
-
 			ImageInterpolation interpolationValue = ImageInterpolation::Linear;
+			ImageAlignment alignmentValue = ImageAlignment::Center;
 
 			bool useIntrinsicSizeValue = false;
 		};
 	}
 
-	ImageView::ImageView(std::shared_ptr<Image> image, const Size& size, ImageFit fit, ImageInterpolation interpolation, Key key) 
-		: Widget(std::move(key)), imageValue(std::move(image)), requestedSizeValue(std::max(size.width, 0.0f), std::max(size.height, 0.0f)), fitValue(fit), interpolationValue(interpolation) { }
+	ImageView::ImageView(std::shared_ptr<Image> image, const Size& size, ImageFit fit, ImageInterpolation interpolation, Key key, ImageAlignment alignment)
+		: Widget(std::move(key)), imageValue(std::move(image)), requestedSizeValue(std::max(size.width, 0.0f), std::max(size.height, 0.0f)), fitValue(fit), interpolationValue(interpolation), alignmentValue(alignment), useIntrinsicSizeValue(false) { }
 
-	ImageView::ImageView(std::shared_ptr<Image> image, ImageFit fit, ImageInterpolation interpolation, Key key)
-		: Widget(std::move(key)), imageValue(std::move(image)), requestedSizeValue(), fitValue(fit), interpolationValue(interpolation), useIntrinsicSizeValue(true) { }
+	ImageView::ImageView(std::shared_ptr<Image> image, ImageFit fit, ImageInterpolation interpolation, Key key, ImageAlignment alignment)
+		: Widget(std::move(key)), imageValue(std::move(image)), requestedSizeValue(), fitValue(fit), interpolationValue(interpolation), alignmentValue(alignment), useIntrinsicSizeValue(true) { }
 
 	const std::shared_ptr<Image>& ImageView::image() const {
 		return imageValue;
@@ -164,6 +223,10 @@ namespace tiny {
 
 	bool ImageView::usesIntrinsicSize() const {
 		return useIntrinsicSizeValue;
+	}
+
+	ImageAlignment ImageView::alignment() const {
+		return alignmentValue;
 	}
 
 	std::unique_ptr<Element> ImageView::createElement() const {

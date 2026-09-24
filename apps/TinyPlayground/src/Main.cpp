@@ -175,9 +175,11 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previousInstance, PWSTR comman
 			children.push_back(
 				std::make_unique<tiny::ImageView>(
 					previewImage,
-					tiny::ImageFit::Stretch,
+					tiny::Size(240.0f, 160.0f),
+					tiny::ImageFit::Contain,
 					tiny::ImageInterpolation::Linear,
-					tiny::Key("preview-image")));
+					tiny::Key("preview-image"),
+					tiny::ImageAlignment::TopRight));
 
 			std::unique_ptr<tiny::Widget> toolbar = std::make_unique<tiny::Row>(std::move(toolbarChildren), 8.0f, tiny::CrossAxisAlignment::Center, tiny::Key("title-toolbar-row"));
 

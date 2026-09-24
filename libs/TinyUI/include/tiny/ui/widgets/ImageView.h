@@ -16,18 +16,32 @@ namespace tiny {
 		Stretch
 	};
 
+	enum class ImageAlignment {
+		TopLeft,
+		TopCenter,
+		TopRight,
+
+		CenterLeft,
+		Center,
+		CenterRight,
+
+		BottomLeft,
+		BottomCenter,
+		BottomRight
+	};
+
 	class ImageView : public Widget {
 	public:
-		ImageView(std::shared_ptr<Image> image, const Size& size, ImageFit fit = ImageFit::Contain, ImageInterpolation interpolation = ImageInterpolation::Linear, Key key = Key());
-		ImageView(std::shared_ptr<Image> image, ImageFit fit = ImageFit::Contain, ImageInterpolation interpolation = ImageInterpolation::Linear, Key key = Key());
+		ImageView(std::shared_ptr<Image> image, const Size& size, ImageFit fit = ImageFit::Contain, ImageInterpolation interpolation = ImageInterpolation::Linear, Key key = Key(), ImageAlignment alignment = ImageAlignment::Center);
+		ImageView(std::shared_ptr<Image> image, ImageFit fit = ImageFit::Contain, ImageInterpolation interpolation = ImageInterpolation::Linear, Key key = Key(), ImageAlignment alignment = ImageAlignment::Center);
 
 		const std::shared_ptr<Image>& image() const;
 
 		const Size& requestedSize() const;
 
 		ImageFit fit() const;
-
 		ImageInterpolation interpolation() const;
+		ImageAlignment alignment() const;
 
 		bool usesIntrinsicSize() const;
 
@@ -39,8 +53,8 @@ namespace tiny {
 		Size requestedSizeValue;
 
 		ImageFit fitValue = ImageFit::Contain;
-
 		ImageInterpolation interpolationValue = ImageInterpolation::Linear;
+		ImageAlignment alignmentValue = ImageAlignment::Center;
 
 		bool useIntrinsicSizeValue = false;
 	};
