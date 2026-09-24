@@ -250,9 +250,12 @@ namespace tiny {
 		bool isVisible() const;
 		bool isClosed() const;
 
-		bool frameUpdatesEnabledValue = false;
+		void setCaptionClientHitTest(std::function<bool(const Point&)> callback);
 
+	public:
 		std::chrono::steady_clock::time_point lastFrameTime;
+
+		bool frameUpdatesEnabledValue = false;
 
 	private:
 		static LRESULT CALLBACK windowProcedure(HWND windowHandle, UINT message, WPARAM wParam, LPARAM lParam);
@@ -282,6 +285,8 @@ namespace tiny {
 		bool resizable = true;
 
 		float titleBarHeight = 40.0f;
+
+		std::function<bool(const Point&)> captionClientHitTest;
 	};
 
 	void Window::Impl::ensureWindowClassRegistered() {
@@ -817,6 +822,8 @@ namespace tiny {
 				scale = 1.0f;
 
 			Point logicalPoint(static_cast<float>(clientPoint.x) / scale, static_cast<float>(clientPoint.y) / scale);
+			if (captionClientHitTest && captionClientHitTest(logicalPoint))
+				return HTCLIENT;
 
 			WindowCaptionButton button = captionButtonAt(logicalPoint);
 			if (button != WindowCaptionButton::None)
@@ -923,6 +930,10 @@ namespace tiny {
 
 	bool Window::frameUpdatesEnabled() const {
 		return impl->frameUpdatesEnabledValue;
+	}
+
+	void Window::setCaptionClientHitTest(std::function<bool(const Point&)> callback) {
+		impl->setCaptionClientHitTest(std::move(callback));
 	}
 
 	void Window::Impl::show() {
@@ -1072,6 +1083,10 @@ namespace tiny {
 
 	bool Window::Impl::isClosed() const {
 		return closed;
+	}
+
+	void Window::Impl::setCaptionClientHitTest(std::function<bool(const Point&)> callback) {
+		captionClientHitTest = std::move(callback);
 	}
 
 	Window::Impl::~Impl() {

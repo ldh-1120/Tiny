@@ -116,13 +116,6 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previousInstance, PWSTR comman
 				uiRoot.requestRebuild();
 			}, buttonStyle, tiny::Key("increment-button"), state.addEnabled));
 
-			children.push_back(
-				std::make_unique<tiny::Button>(U"Toggle Add", [&state, &uiRoot]() {
-				state.addEnabled = !state.addEnabled;
-
-				uiRoot.requestRebuild();
-			}, buttonStyle, tiny::Key("toggle-add-button")));
-
 			actionChildren.push_back(
 				std::make_unique<tiny::Button>(U"Decrease", [&state, &uiRoot]() {
 				--state.count;
@@ -174,8 +167,16 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previousInstance, PWSTR comman
 			},
 				[&window]() {
 				return window.isMaximized();
-			}, createInfo.titleBarHeight, tiny::WindowCaptionButtonWidth, tiny::TitleBarStyle(), tiny::Key("window-title-bar"));
-		}));
+			},
+				createInfo.titleBarHeight, tiny::WindowCaptionButtonWidth, tiny::TitleBarStyle(), tiny::Key("window-title-bar"),
+				std::make_unique<tiny::Button>(U"Toggle Add", [&state, &uiRoot]() {
+				state.addEnabled = !state.addEnabled;
+
+				uiRoot.requestRebuild();
+			},
+					tiny::ButtonStyle(), tiny::Key("title-toolbar-toggle")));
+		}
+			));
 
 		tiny::Subscription paintSubscription = window.paintRequested.subscribe([&window, &graphicsContext, &renderer, &uiRoot]() {
 			tiny::Size pixelSize = window.clientSize();
@@ -246,6 +247,10 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previousInstance, PWSTR comman
 		window.setFrameUpdatesEnabled(uiRoot.needsFrameUpdates());
 		tiny::Subscription frameDemandSubscription = uiRoot.frameDemandChanged.subscribe([&window](bool needed) {
 			window.setFrameUpdatesEnabled(needed);
+		});
+
+		window.setCaptionClientHitTest([&uiRoot](const tiny::Point& position) {
+			return uiRoot.isInteractiveAt(position);
 		});
 
 		window.show();

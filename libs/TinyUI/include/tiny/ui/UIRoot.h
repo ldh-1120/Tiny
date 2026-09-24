@@ -11,6 +11,7 @@
 #include <tiny/core/input/TextInput.h>
 #include <tiny/core/input/TextComposition.h>
 #include <tiny/core/FrameEvent.h>
+#include <tiny/core/Point.h>
 
 #include <tiny/ui/FocusManager.h>
 #include <tiny/ui/UIBuilder.h>
@@ -70,6 +71,8 @@ namespace tiny {
 		bool needsFrameUpdates() const;
 
 		bool focusVisibility() const;
+
+		bool isInteractiveAt(const Point& position);
 
 	private:
 		Element* hitTest(const Point& position);

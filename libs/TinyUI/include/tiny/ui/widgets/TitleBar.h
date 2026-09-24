@@ -35,11 +35,12 @@ namespace tiny {
 		using ActionCallback = std::function<void(TitleBarAction)>;
 		using MaximizedCallback = std::function<bool()>;
 
-		TitleBar(std::u32string title, std::unique_ptr<Widget> child, ActionCallback onAction, MaximizedCallback isMaximized, float height = 40.0f, float buttonWidth = 46.0f, TitleBarStyle style = TitleBarStyle(), Key key = Key());
+		TitleBar(std::u32string title, std::unique_ptr<Widget> child, ActionCallback onAction, MaximizedCallback isMaximized, float height = 40.0f, float buttonWidth = 46.0f, TitleBarStyle style = TitleBarStyle(), Key key = Key(), std::unique_ptr<Widget> toolbar = nullptr);
 
 		const std::u32string& title() const;
 
 		const Widget* child() const;
+		const Widget* toolbar() const;
 
 		const ActionCallback& onAction() const;
 		const MaximizedCallback& isMaximized() const;
@@ -55,6 +56,7 @@ namespace tiny {
 		std::u32string titleValue;
 
 		std::unique_ptr<Widget> childWidget;
+		std::unique_ptr<Widget> toolbarWidget;
 
 		ActionCallback actionCallback;
 		MaximizedCallback maximizedCallback;

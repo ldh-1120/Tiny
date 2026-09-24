@@ -4,6 +4,7 @@
 #include <functional>
 #include <memory>
 #include <utility>
+#include <vector>
 
 #include <tiny/core/Point.h>
 #include <tiny/core/Rect.h>
@@ -17,6 +18,7 @@
 #include <tiny/ui/Element.h>
 #include <tiny/ui/LayoutContext.h>
 #include <tiny/ui/SingleChildElement.h>
+#include <tiny/ui/MultiChildElement.h>
 #include <tiny/ui/layout/Constraints.h>
 
 namespace tiny {
@@ -28,10 +30,10 @@ namespace tiny {
 			Close
 		};
 
-		class TitleBarElement final : public SingleChildElement {
+		class TitleBarElement final : public MultiChildElement {
 		public:
 			explicit TitleBarElement(const TitleBar& widget)
-				: SingleChildElement(widget, createChild(widget)), titleValue(widget.title()), actionCallback(widget.onAction()), maximizedCallback(widget.isMaximized()), heightValue(widget.height()), buttonWidthValue(widget.buttonWidth()), styleValue(widget.style()) { }
+				: MultiChildElement(widget, createChildren(widget)), titleValue(widget.title()), actionCallback(widget.onAction()), maximizedCallback(widget.isMaximized()), heightValue(widget.height()), buttonWidthValue(widget.buttonWidth()), styleValue(widget.style()) { }
 
 		protected:
 			void updateOverride(const Widget& widget) override {
@@ -47,27 +49,34 @@ namespace tiny {
 
 				styleValue = titleBar.style();
 
-				updateChild(titleBar.child());
+				updateChildren(std::vector<const Widget*> { titleBar.toolbar(), titleBar.child() });
 			}
 
 			Size measureOverride(LayoutContext& context, const Constraints& constraints) override {
 				float availableWidth = constraints.maxWidth();
-				float availableHeight = constraints.maxHeight();
+				float contentHeight = constraints.hasBoundedHeight() ? std::max(constraints.maxHeight() - heightValue, 0.0f) : constraints.maxHeight();
 
 				Size contentSize;
-				if (hasChild()) {
-					Constraints childConstraints(0.0f, availableWidth, 0.0f, availableHeight);
-					contentSize = child()->measure(context, childConstraints);
+				if (children()[1]) {
+					Constraints childConstraints(0.0f, availableWidth, 0.0f, contentHeight);
+					contentSize = children()[1]->measure(context, childConstraints);
 				}
 
-				float width = constraints.hasBoundedWidth() ? availableWidth : contentSize.width;
-				float height = constraints.hasBoundedHeight() ? availableHeight : contentSize.height;
+				float width = constraints.hasBoundedWidth() ? constraints.maxWidth() : contentSize.width;
+				float toolbarAvailableWidth = std::max(width - 160.0f - buttonWidthValue * 3.0f, 0.0f);
+
+				if (children()[0]) {
+					Constraints toolbarConstraints(0.0f, toolbarAvailableWidth, 0.0f, heightValue);
+					children()[0]->measure(context, toolbarConstraints);
+				}
+
+				float height = constraints.hasBoundedHeight() ? constraints.maxHeight() : contentSize.height + heightValue;
 
 				TextStyle titleStyle;
 				titleStyle.fontFamily = L"Segoe UI";
 				titleStyle.fontSize = 14.0f;
 
-				float titleWidth = std::max(width - buttonWidthValue * 3.0f - 28.0f, 0.0f);
+				float titleWidth = std::max(std::min(132.0f, width - buttonWidthValue * 3.0f - 28.0f), 0.0f);
 				titleLayout = context.graphicsContext().createTextLayout(titleValue, titleStyle, titleWidth);
 
 				TextStyle iconStyle;
@@ -80,11 +89,23 @@ namespace tiny {
 			}
 
 			void arrangeOverride(const Rect& finalBounds) override {
-				if (!hasChild())
-					return;
+				float toolbarStartX = finalBounds.x + 160.0f;
 
-				float contentHeight = std::max(finalBounds.height - heightValue, 0.0f);
-				child()->arrange(Rect(finalBounds.x, finalBounds.y + heightValue, finalBounds.width, contentHeight));
+				float toolbarAvailableWidth = std::max(finalBounds.width - 160.0f - buttonWidthValue * 3.0f, 0.0f);
+				if (children()[0]) {
+					const Size& desired = children()[0]->desiredSize();
+					
+					float toolbarWidth = std::min(desired.width, toolbarAvailableWidth);
+					float toolbarHeight = std::min(desired.height, heightValue);
+
+					float toolbarY = finalBounds.y + (heightValue - toolbarHeight) * 0.5f;
+					children()[0]->arrange(Rect(toolbarStartX, toolbarY, toolbarWidth, toolbarHeight));
+				}
+
+				if (children()[1]) {
+					float contentHeight = std::max(finalBounds.height - heightValue, 0.0f);
+					children()[1]->arrange(Rect(finalBounds.x, finalBounds.y + heightValue, finalBounds.width, contentHeight));
+				}
 			}
 
 			bool hitTestSelf(const Point& position) const override {
@@ -179,8 +200,6 @@ namespace tiny {
 			}
 
 			void paintOverride(Canvas& canvas) override {
-				SingleChildElement::paintOverride(canvas);
-
 				const Rect& area = bounds();
 
 				Rect titleArea(area.x, area.y, area.width, heightValue);
@@ -198,6 +217,8 @@ namespace tiny {
 				bool maximized = false;
 				if (maximizedCallback)
 					maximized = maximizedCallback();
+
+				MultiChildElement::paintOverride(canvas);
 
 				for (int index = 0; index < 3; ++index) {
 					CaptionButton button = CaptionButton::None;
@@ -259,12 +280,20 @@ namespace tiny {
 			}
 
 		private:
-			static std::unique_ptr<Element> createChild(const TitleBar& widget) {
-				const Widget* content = widget.child();
-				if (!content)
+			static std::unique_ptr<Element> createElementFor(const Widget* widget) {
+				if (!widget)
 					return nullptr;
 
-				return content->createElement();
+				return widget->createElement();
+			}
+
+			static std::vector<std::unique_ptr<Element>> createChildren(const TitleBar& widget) {
+				std::vector<std::unique_ptr<Element>> result;
+
+				result.push_back(createElementFor(widget.toolbar()));
+				result.push_back(createElementFor(widget.child()));
+
+				return result;
 			}
 
 			CaptionButton buttonAt(const Point& position) const {
@@ -320,8 +349,8 @@ namespace tiny {
 		};
 	}
 
-	TitleBar::TitleBar(std::u32string title, std::unique_ptr<Widget> child, ActionCallback onAction, MaximizedCallback isMaximized, float height, float buttonWidth, TitleBarStyle style, Key key)
-		: Widget(std::move(key)), titleValue(std::move(title)), childWidget(std::move(child)), actionCallback(std::move(onAction)), maximizedCallback(std::move(isMaximized)), heightValue(std::max(height, 0.0f)), buttonWidthValue(std::max(buttonWidth, 1.0f)), styleValue(std::move(style)) { }
+	TitleBar::TitleBar(std::u32string title, std::unique_ptr<Widget> child, ActionCallback onAction, MaximizedCallback isMaximized, float height, float buttonWidth, TitleBarStyle style, Key key, std::unique_ptr<Widget> toolbar)
+		: Widget(std::move(key)), titleValue(std::move(title)), childWidget(std::move(child)), toolbarWidget(std::move(toolbar)), actionCallback(std::move(onAction)), maximizedCallback(std::move(isMaximized)), heightValue(std::max(height, 0.0f)), buttonWidthValue(std::max(buttonWidth, 1.0f)), styleValue(std::move(style)) {}
 
 	const std::u32string& TitleBar::title() const {
 		return titleValue;
@@ -329,6 +358,10 @@ namespace tiny {
 
 	const Widget* TitleBar::child() const {
 		return childWidget.get();
+	}
+
+	const Widget* TitleBar::toolbar() const {
+		return toolbarWidget.get();
 	}
 
 	const tiny::TitleBar::ActionCallback& TitleBar::onAction() const {

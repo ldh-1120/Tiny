@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <string>
+#include <functional>
 
 #include <tiny/core/Event.h>
 #include <tiny/core/Size.h>
@@ -103,6 +104,8 @@ namespace tiny {
 		void setFrameUpdatesEnabled(bool enabled);
 
 		bool frameUpdatesEnabled() const;
+
+		void setCaptionClientHitTest(std::function<bool(const Point&)> callback);
 
 	private:
 		class Impl;

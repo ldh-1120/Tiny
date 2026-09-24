@@ -151,6 +151,13 @@ namespace tiny {
 		return focusVisibilityValue;
 	}
 
+	bool UIRoot::isInteractiveAt(const Point& position) {
+		if (!rootElement || !hasLayoutSize || layoutDirty)
+			return false;
+
+		return rootElement->hitTest(position) != nullptr;
+	}
+
 	Element* UIRoot::hitTest(const Point& position) {
 		if (!rootElement)
 			return nullptr;

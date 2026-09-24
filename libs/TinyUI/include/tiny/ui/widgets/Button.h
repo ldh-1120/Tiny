@@ -33,7 +33,7 @@ namespace tiny {
 
     class Button : public Widget {
     public:
-        Button(std::u32string  text, std::function<void()> onClick, ButtonStyle style = ButtonStyle(), Key key = Key(), bool enabled = true);
+        Button(std::u32string text, std::function<void()> onClick, ButtonStyle style = ButtonStyle(), Key key = Key(), bool enabled = true);
 
         const std::u32string& text() const;
 
