@@ -5,6 +5,7 @@
 
 #include <tiny/core/Event.h>
 #include <tiny/core/Size.h>
+#include <tiny/core/Point.h>
 
 #include <tiny/core/input/Pointer.h>
 #include <tiny/core/input/Keyboard.h>
@@ -28,6 +29,15 @@ namespace tiny {
 		float titleBarHeight = 40.0f;
 	};
 
+	enum class WindowCaptionButton {
+		None,
+		Minimize,
+		Maximize,
+		Close
+	};
+
+	inline constexpr float WindowCaptionButtonWidth = 46.0f;
+
 	class Window {
 	public:
 		explicit Window(const WindowCreateInfo& createInfo);
@@ -42,6 +52,13 @@ namespace tiny {
 		void show();
 		void hide();
 		void close();
+
+		void minimize();
+		void toggleMaximize();
+
+		bool isMaximized() const;
+
+		WindowCaptionButton captionButtonAt(const Point& position) const;
 
 		void requestRepaint();
 

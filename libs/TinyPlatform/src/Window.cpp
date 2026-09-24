@@ -226,6 +226,13 @@ namespace tiny {
 		void hide();
 		void close();
 
+		void minimize();
+		void toggleMaximize();
+
+		bool isMaximized() const;
+
+		WindowCaptionButton captionButtonAt(const Point& position) const;
+
 		void requestRepaint();
 
 		void capturePointer();
@@ -804,8 +811,19 @@ namespace tiny {
 			return HTCLIENT;
 
 		bool insideCaption = clientPoint.x >= clientRect.left && clientPoint.x < clientRect.right && clientPoint.y >= clientRect.top && clientPoint.y < captionHeight;
-		if (insideCaption)
+		if (insideCaption) {
+			float scale = dpiScale();
+			if (scale <= 0.0f)
+				scale = 1.0f;
+
+			Point logicalPoint(static_cast<float>(clientPoint.x) / scale, static_cast<float>(clientPoint.y) / scale);
+
+			WindowCaptionButton button = captionButtonAt(logicalPoint);
+			if (button != WindowCaptionButton::None)
+				return HTCLIENT;
+
 			return HTCAPTION;
+		}
 
 		return HTCLIENT;
 	}
@@ -824,6 +842,23 @@ namespace tiny {
 
 	void Window::close() {
 		impl->close();
+	}
+
+
+	void Window::minimize() {
+		impl->minimize();
+	}
+
+	void Window::toggleMaximize() {
+		impl->toggleMaximize();
+	}
+
+	bool Window::isMaximized() const {
+		return impl->isMaximized();
+	}
+
+	WindowCaptionButton Window::captionButtonAt(const Point& position) const {
+		return impl->captionButtonAt(position);
 	}
 
 	void Window::requestRepaint() {
@@ -910,6 +945,61 @@ namespace tiny {
 			return;
 
 		SendMessageW(handle, WM_CLOSE, 0, 0);
+	}
+
+	void Window::Impl::minimize() {
+		if (!handle || closed)
+			return;
+
+		ShowWindow(handle, SW_MINIMIZE);
+	}
+
+	void Window::Impl::toggleMaximize() {
+		if (!handle || closed)
+			return;
+
+		if (IsZoomed(handle))
+			ShowWindow(handle, SW_RESTORE);
+		else
+			ShowWindow(handle, SW_MAXIMIZE);
+	}
+
+	bool Window::Impl::isMaximized() const {
+		if (!handle || closed)
+			return false;
+
+		return IsZoomed(handle) != FALSE;
+	}
+
+	WindowCaptionButton Window::Impl::captionButtonAt(const Point& position) const {
+		if (!customTitleBar || !handle || closed)
+			return WindowCaptionButton::None;
+
+		float scale = dpiScale();
+		if (scale <= 0.0f)
+			scale = 1.0f;
+
+		float clientWidth = clientSize().width / scale;
+		float totalButtonWidth = WindowCaptionButtonWidth * 3.0f;
+
+		if (clientWidth < totalButtonWidth)
+			return WindowCaptionButton::None;
+
+		if (position.y < 0.0f || position.y >= titleBarHeight)
+			return WindowCaptionButton::None;
+
+		float buttonsStart = clientWidth - totalButtonWidth;
+		if (position.x < buttonsStart || position.x >= clientWidth)
+			return WindowCaptionButton::None;
+
+		float localX = position.x - buttonsStart;
+		if (localX < WindowCaptionButtonWidth)
+			return WindowCaptionButton::Minimize;
+
+		if (localX < WindowCaptionButtonWidth * 2.0f)
+			return WindowCaptionButton::Maximize;
+
+		return WindowCaptionButton::Close;
 	}
 
 	void Window::Impl::requestRepaint() {
