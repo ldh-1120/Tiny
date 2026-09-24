@@ -79,7 +79,7 @@ namespace tiny {
 				titleStyle.fontSize = 14.0f;
 
 				float titleWidth = std::max(brandWidth - styleValue.titleLeftPadding, 0.0f);
-				titleLayout = context.graphicsContext().createTextLayout(titleValue, titleStyle, titleWidth);
+				titleLayout = createTrimmedTitleLayout(context.graphicsContext(), titleStyle, titleWidth);
 
 				TextStyle iconStyle;
 				iconStyle.fontFamily = L"Segoe UI";
@@ -307,6 +307,24 @@ namespace tiny {
 				markNeedsPaint();
 			}
 
+			Element* hitTestChildren(const Point& position) override {
+				const Rect& area = bounds();
+
+				float brandWidth = effectiveBrandWidth(area.width);
+				float toolbarAvailableWidth = std::max(area.width - brandWidth - buttonWidthValue * 3.0f, 0.0f);
+
+				Rect toolbarArea(area.x + brandWidth, area.y, toolbarAvailableWidth, heightValue);
+				Rect contentArea(area.x, area.y + heightValue, area.width, std::max(area.height - heightValue, 0.0f));
+				
+				if (children()[0] && toolbarArea.contains(position))
+					return children()[0]->hitTest(position);
+
+				if (children()[1] && contentArea.contains(position))
+					return children()[1]->hitTest(position);
+
+				return nullptr;
+			}
+
 		private:
 			static std::unique_ptr<Element> createElementFor(const Widget* widget) {
 				if (!widget)
@@ -363,6 +381,44 @@ namespace tiny {
 				float remainingWidth = std::max(availableWidth - captionButtonsWidth, 0.0f);
 
 				return std::min(std::max(styleValue.brandWidth, 0.0f), remainingWidth);
+			}
+
+			std::unique_ptr<TextLayout> createTrimmedTitleLayout(GraphicsContext& graphicsContext, const TextStyle& textStyle, float availableWidth) const {
+				if (availableWidth <= 0.0f)
+					return nullptr;
+
+				constexpr float measurementWidth = 100000.0f;
+
+				std::unique_ptr<TextLayout> fullLayout = graphicsContext.createTextLayout(titleValue, textStyle, measurementWidth);
+				if (!fullLayout)
+					return nullptr;
+
+				if (fullLayout->size().width <= availableWidth)
+					return graphicsContext.createTextLayout(titleValue, textStyle, availableWidth);
+
+				const std::u32string ellipsis = U"\u2026";
+
+				std::unique_ptr<TextLayout> ellipsisLayout = graphicsContext.createTextLayout(ellipsis, textStyle, measurementWidth);
+				if (!ellipsisLayout || ellipsisLayout->size().width > availableWidth)
+					return nullptr;
+
+				std::size_t left = 0;
+				std::size_t right = titleValue.size();
+
+				while (left < right) {
+					std::size_t middle = left + (right - left + 1) / 2;
+
+					std::u32string candidate = titleValue.substr(0, middle) + ellipsis;
+					std::unique_ptr<TextLayout> candidateLayout = graphicsContext.createTextLayout(candidate, textStyle, measurementWidth);
+					if (candidateLayout && candidateLayout->size().width <= availableWidth)
+						left = middle;
+					else
+						right = middle - 1;
+				}
+
+				std::u32string result = titleValue.substr(0, left) + ellipsis;
+
+				return graphicsContext.createTextLayout(result, textStyle, availableWidth);
 			}
 
 		private:
