@@ -6,11 +6,12 @@
 #include <tiny/core/Rect.h>
 
 #include <tiny/graphics/TextStyle.h>
+#include <tiny/graphics/Image.h>
 
 namespace tiny {
 	class WindowRenderer;
 	class TextLayout;
-	class PngIcon;
+	class Image;
 
 	class Canvas {
 	public:
@@ -26,7 +27,8 @@ namespace tiny {
 		void pushClip(const Rect& rect);
 		void popClip();
 
-		void drawImage(const PngIcon& image, const Rect& destination);
+		void drawImage(const Image& image, const Rect& destination, ImageInterpolation interpolation = ImageInterpolation::Linear);
+		void drawImage(const Image& image, const Rect& destination, const Rect& source, ImageInterpolation interpolation = ImageInterpolation::Linear);
 
 	private:
 		Canvas(void* renderTarget, void* textFactory, void* solidBrush);

@@ -18,7 +18,7 @@
 #include <tiny/graphics/WindowRenderer.h>
 #include <tiny/graphics/TextStyle.h>
 #include <tiny/graphics/TextLayout.h>
-#include <tiny/graphics/PngIcon.h>
+#include <tiny/graphics/Image.h>
 
 #include <tiny/platform/Platform.h>
 #include <tiny/platform/Window.h>
@@ -67,10 +67,10 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previousInstance, PWSTR comman
 
 		DWORD pathLength = GetModuleFileNameW(nullptr, executablePath, MAX_PATH);
 
-		std::shared_ptr<tiny::PngIcon> appIcon;
+		std::shared_ptr<tiny::Image> appIcon;
 		if (pathLength > 0 && pathLength < MAX_PATH) {
 			std::filesystem::path iconPath = std::filesystem::path(executablePath).parent_path() / L"assets" / L"icon.png";
-			appIcon = tiny::PngIcon::load(iconPath.wstring());
+			appIcon = tiny::Image::load(iconPath.wstring());
 		}
 
 		tiny::GraphicsContext graphicsContext;

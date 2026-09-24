@@ -163,7 +163,7 @@
   <ItemGroup>
     <ClCompile Include="src\Canvas.cpp" />
     <ClCompile Include="src\GraphicsContext.cpp" />
-    <ClCompile Include="src\PngIcon.cpp" />
+    <ClCompile Include="src\Image.cpp" />
     <ClCompile Include="src\TextLayout.cpp" />
     <ClCompile Include="src\WindowRenderer.cpp" />
   </ItemGroup>
@@ -171,7 +171,7 @@
     <ClInclude Include="include\tiny\graphics\Canvas.h" />
     <ClInclude Include="include\tiny\graphics\FontMetrics.h" />
     <ClInclude Include="include\tiny\graphics\GraphicsContext.h" />
-    <ClInclude Include="include\tiny\graphics\PngIcon.h" />
+    <ClInclude Include="include\tiny\graphics\Image.h" />
     <ClInclude Include="include\tiny\graphics\TextLayout.h" />
     <ClInclude Include="include\tiny\graphics\TextMetrics.h" />
     <ClInclude Include="include\tiny\graphics\TextStyle.h" />

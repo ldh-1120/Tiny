@@ -8,7 +8,7 @@
 #include <tiny/graphics/Canvas.h>
 #include <tiny/graphics/TextStyle.h>
 #include <tiny/graphics/TextLayout.h>
-#include <tiny/graphics/PngIcon.h>
+#include <tiny/graphics/Image.h>
 
 namespace {
 	D2D1_COLOR_F toD2DColor(const tiny::Color& color) {
@@ -70,8 +70,18 @@ namespace tiny {
 		target->PopAxisAlignedClip();
 	}
 
-	void Canvas::drawImage(const PngIcon& image, const Rect& destination) {
-		if (destination.width <= 0.0f || destination.height <= 0.0f)
+	void Canvas::drawImage(const Image& image, const Rect& destination, ImageInterpolation interpolation) {
+		drawImage(image, destination, Rect(0.0f, 0.0f, static_cast<float>(image.width()), static_cast<float>(image.height())), interpolation);
+	}
+
+	void Canvas::drawImage(const Image& image, const Rect& destination, const Rect& source, ImageInterpolation interpolation) {
+		if (destination.width <= 0.0f || destination.height <= 0.0f || source.width <= 0.0f || source.height <= 0.0f)
+			return;
+
+		float imageWidth = static_cast<float>(image.width());
+		float imageHeight = static_cast<float>(image.height());
+
+		if (source.x < 0.0f || source.y < 0.0f || source.x + source.width > imageWidth || source.y + source.height > imageHeight)
 			return;
 
 		ID2D1RenderTarget* target = static_cast<ID2D1RenderTarget*>(renderTarget);
@@ -82,7 +92,13 @@ namespace tiny {
 		if (!bitmap)
 			return;
 
+		D2D1_BITMAP_INTERPOLATION_MODE nativeInterpolation = D2D1_BITMAP_INTERPOLATION_MODE_LINEAR;
+		if (interpolation == ImageInterpolation::Nearest)
+			nativeInterpolation = D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR;
+
 		D2D1_RECT_F destinationRect = D2D1::RectF(destination.x, destination.y, destination.x + destination.width, destination.y + destination.height);
-		target->DrawBitmap(bitmap, destinationRect, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE_LINEAR);
+		D2D1_RECT_F sourceRect = D2D1::RectF(source.x, source.y, source.x + source.width, source.y + source.height);
+
+		target->DrawBitmap(bitmap, destinationRect, 1.0f, nativeInterpolation, &sourceRect);
 	}
 }
