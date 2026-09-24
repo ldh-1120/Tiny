@@ -100,6 +100,8 @@ namespace tiny {
 
 		void applyFocusReason(FocusReason reason);
 
+		void elementBecameDisabled(Element* element);
+
 	private:
 		std::unique_ptr<Widget> rootWidget;
 		std::unique_ptr<Element> rootElement;

@@ -18,10 +18,12 @@ namespace tiny {
         Color background = Color::fromRgb(69, 71, 90);
         Color hoveredBackground = Color::fromRgb(88, 91, 112);
         Color pressedBackground = Color::fromRgb(108, 112, 134);
+        Color disabledBackground = Color::fromRgb(49, 50, 68);
 
         Color textColor = Color::fromRgb(205, 214, 244);
-        Color focusBorderColor = Color::fromRgb(137, 180, 250);
+        Color disabledTextColor = Color::fromRgb(108, 112, 134);
 
+        Color focusBorderColor = Color::fromRgb(137, 180, 250);
         float focusBorderWidth = 2.0f;
 
         TextStyle textStyle;
@@ -31,7 +33,7 @@ namespace tiny {
 
     class Button : public Widget {
     public:
-        Button(std::u32string  text, std::function<void()> onClick, ButtonStyle style = ButtonStyle(), Key key = Key());
+        Button(std::u32string  text, std::function<void()> onClick, ButtonStyle style = ButtonStyle(), Key key = Key(), bool enabled = true);
 
         const std::u32string& text() const;
 
@@ -41,11 +43,15 @@ namespace tiny {
 
         std::unique_ptr<Element> createElement() const override;
 
+        bool enabled() const;
+
     private:
         std::u32string textValue;
 
         std::function<void()> clickCallback;
 
         ButtonStyle buttonStyle;
+
+        bool enabledValue = false;
     };
 }

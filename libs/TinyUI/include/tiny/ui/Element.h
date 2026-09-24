@@ -49,6 +49,8 @@ namespace tiny {
 		bool canReceiveFocus() const;
 		bool hasFocus() const;
 
+		bool isEnabled() const;
+
 		bool requestFocus();
 
 		bool keyDown(const KeyEvent& event);
@@ -132,6 +134,8 @@ namespace tiny {
 
 		virtual void focusVisibilityChangedOverride(bool visible);
 
+		void setEnabled(bool enabled);
+
 	private:
 		void setFocused(bool value);
 
@@ -155,6 +159,8 @@ namespace tiny {
 		Rect arrangedBounds;
 
 		bool frameUpdatesEnabledValue = false;
+
+		bool enabledValue = true;
 
 		friend class FocusManager;
 	};

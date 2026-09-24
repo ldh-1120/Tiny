@@ -69,11 +69,15 @@ namespace tiny {
 	}
 
 	bool Element::canReceiveFocus() const {
-		return mounted && focusable();
+		return mounted && enabledValue && focusable();
 	}
 
 	bool Element::hasFocus() const {
 		return focused;
+	}
+
+	bool Element::isEnabled() const {
+		return enabledValue;
 	}
 
 	bool Element::requestFocus() {
@@ -84,10 +88,7 @@ namespace tiny {
 	}
 
 	bool Element::keyDown(const KeyEvent& event) {
-		if (!mounted)
-			return false;
-
-		if (!focused)
+		if (!mounted || !enabledValue || !focused)
 			return false;
 
 		return keyDownOverride(event);
@@ -148,7 +149,7 @@ namespace tiny {
 	}
 
 	Element* Element::hitTest(const Point& position) {
-		if (!mounted)
+		if (!mounted || !enabledValue)
 			return nullptr;
 
 		if (!arrangedBounds.contains(position))
@@ -165,7 +166,7 @@ namespace tiny {
 	}
 
 	void Element::pointerEnter(const PointerEvent& event) {
-		if (!mounted)
+		if (!mounted || !enabledValue)
 			return;
 
 		pointerEnterOverride(event);
@@ -179,21 +180,21 @@ namespace tiny {
 	}
 
 	void Element::pointerMove(const PointerEvent& event) {
-		if (!mounted)
+		if (!mounted || !enabledValue)
 			return;
 
 		pointerMoveOverride(event);
 	}
 
 	bool Element::pointerDown(const PointerEvent& event) {
-		if (!mounted)
+		if (!mounted || !enabledValue)
 			return false;
 
 		return pointerDownOverride(event);
 	}
 
 	void Element::pointerUp(const PointerEvent& event) {
-		if (!mounted)
+		if (!mounted || !enabledValue)
 			return;
 
 		pointerUpOverride(event);
@@ -351,6 +352,17 @@ namespace tiny {
 	}
 
 	void Element::focusVisibilityChangedOverride(bool visible) { }
+
+	void Element::setEnabled(bool enabled) {
+		if (enabledValue == enabled)
+			return;
+
+		enabledValue = enabled;
+		if (!enabledValue && rootOwner)
+			rootOwner->elementBecameDisabled(this);
+
+		markNeedsPaint();
+	}
 
 	void Element::setFocused(bool value) {
 		if (focused == value)

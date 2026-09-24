@@ -74,7 +74,9 @@ namespace tiny {
 
 		class TextBoxElement final : public Element {
 		public:
-			explicit TextBoxElement(const TextBox& widget) : Element(widget), editingModel(widget.text()), changedCallback(widget.onChanged()), textBoxStyle(widget.style()) { }
+			explicit TextBoxElement(const TextBox& widget) : Element(widget), editingModel(widget.text()), changedCallback(widget.onChanged()), textBoxStyle(widget.style()) {
+				setEnabled(widget.enabled());
+			}
 
 		protected:
 			void updateOverride(const Widget& widget) override {
@@ -92,6 +94,13 @@ namespace tiny {
 				}
 
 				compositionStart = std::min(compositionStart, editingModel.text().size());
+
+				setEnabled(textBox.enabled());
+
+				if (!isEnabled()) {
+					focusAnimation.setValue(0.0f);
+					updateFrameDemand();
+				}
 			}
 
 			bool focusable() const override {
@@ -130,8 +139,8 @@ namespace tiny {
 			}
 
 			void paintOverride(Canvas& canvas) override {
-				canvas.fillRect(bounds(), textBoxStyle.background);
-				canvas.drawRect(bounds(), textBoxStyle.borderColor, textBoxStyle.borderWidth);
+				canvas.fillRect(bounds(), isEnabled() ? textBoxStyle.background : textBoxStyle.disabledBackground);
+				canvas.drawRect(bounds(), isEnabled() ? textBoxStyle.borderColor : textBoxStyle.disabledBorderColor, textBoxStyle.borderWidth);
 
 				Rect contentBounds = getContentBounds();
 				ensureCaretVisible(contentBounds);
@@ -144,7 +153,7 @@ namespace tiny {
 
 				Point textDrawOrigin = getTextDrawOrigin(contentBounds);
 				if (textLayout)
-					canvas.drawTextLayout(*textLayout, textDrawOrigin, textBoxStyle.textColor);
+					canvas.drawTextLayout(*textLayout, textDrawOrigin, isEnabled() ? textBoxStyle.textColor : textBoxStyle.disabledTextColor);
 
 				paintCompositionUnderline(canvas, contentBounds);
 
@@ -847,7 +856,8 @@ namespace tiny {
 		};
 	}
 
-	TextBox::TextBox(std::u32string text, ChangedCallback onChanged, TextBoxStyle style, Key key) : Widget(std::move(key)), textValue(std::move(text)), changedCallback(std::move(onChanged)), textBoxStyle(std::move(style)) { }
+	TextBox::TextBox(std::u32string text, ChangedCallback onChanged, TextBoxStyle style, Key key, bool enabled)
+		: Widget(std::move(key)), textValue(std::move(text)), changedCallback(std::move(onChanged)), textBoxStyle(std::move(style)), enabledValue(enabled) { }
 
 	const std::u32string& TextBox::text() const {
 		return textValue;
@@ -863,5 +873,9 @@ namespace tiny {
 
 	std::unique_ptr<Element> TextBox::createElement() const {
 		return std::make_unique<TextBoxElement>(*this);
+	}
+
+	bool TextBox::enabled() const {
+		return enabledValue;
 	}
 }

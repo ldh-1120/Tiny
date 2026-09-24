@@ -414,4 +414,24 @@ namespace tiny {
 				break;
 		}
 	}
+
+	void UIRoot::elementBecameDisabled(Element* element) {
+		if (!element)
+			return;
+
+		if (capturedElement == element) {
+			capturedElement = nullptr;
+
+			element->pointerCancel();
+		}
+
+		if (hoveredElement == element) {
+			hoveredElement = nullptr;
+
+			element->pointerLeave();
+		}
+
+		if (focusManager.focusedElement() == element)
+			focusManager.clearFocus();
+	}
 }

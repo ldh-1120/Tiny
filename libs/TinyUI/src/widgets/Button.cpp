@@ -24,7 +24,9 @@ namespace tiny {
 	namespace {
 		class ButtonElement final : public Element {
 		public:
-			explicit ButtonElement(const Button& widget) : Element(widget), textValue(widget.text()), clickCallback(widget.onClick()), buttonStyle(widget.style()) { }
+			explicit ButtonElement(const Button& widget) : Element(widget), textValue(widget.text()), clickCallback(widget.onClick()), buttonStyle(widget.style()) { 
+				setEnabled(widget.enabled());
+			}
 
 		protected:
 			void updateOverride(const Widget& widget) override {
@@ -33,6 +35,19 @@ namespace tiny {
 				textValue = buttonWidget.text();
 				clickCallback = buttonWidget.onClick();
 				buttonStyle = buttonWidget.style();
+
+				setEnabled(buttonWidget.enabled());
+
+				if (!isEnabled()) {
+					hovered = false;
+					pointerPressedState = false;
+					keyboardPressedState = false;
+
+					hoverAnimation.setValue(0.0f);
+					focusAnimation.setValue(0.0f);
+
+					updateFrameDemand();
+				}
 			}
 
 			Size measureOverride(LayoutContext& context, const Constraints& constraints) override {
@@ -61,21 +76,27 @@ namespace tiny {
 			}
 
 			void paintOverride(Canvas& canvas) override {
-				Color background = lerpColor(buttonStyle.background, buttonStyle.hoveredBackground, hoverAnimation.value());
+				Color background = buttonStyle.disabledBackground;
+				if (isEnabled()) {
+					background = lerpColor(buttonStyle.background, buttonStyle.hoveredBackground, hoverAnimation.value());
 
-				bool visuallyPressed = keyboardPressedState || (pointerPressedState && hovered);
-				if (visuallyPressed)
-					background = buttonStyle.pressedBackground;
+					bool visuallyPressed = keyboardPressedState || (pointerPressedState && hovered);
+					if (visuallyPressed)
+						background = buttonStyle.pressedBackground;
+				}
 
 				canvas.fillRect(bounds(), background);
 
 				Rect contentBounds = getContentBounds();
 				if (textLayout) {
 					Point textOrigin = getTextOrigin(contentBounds);
-					canvas.drawTextLayout(*textLayout, textOrigin, buttonStyle.textColor);
+
+					Color textColor = isEnabled() ? buttonStyle.textColor : buttonStyle.disabledTextColor;
+					canvas.drawTextLayout(*textLayout, textOrigin, textColor);
 				}
 
-				paintFocusRing(canvas, bounds(), buttonStyle.focusBorderColor, buttonStyle.focusBorderWidth, focusAnimation.value());
+				if (isEnabled())
+					paintFocusRing(canvas, bounds(), buttonStyle.focusBorderColor, buttonStyle.focusBorderWidth, focusAnimation.value());
 			}
 
 			bool acceptsPointerEvents() const override {
@@ -292,7 +313,8 @@ namespace tiny {
 		};
 	}
 
-	Button::Button(std::u32string text, std::function<void()> onClick, ButtonStyle style, Key key) : Widget(std::move(key)), textValue(std::move(text)), clickCallback(std::move(onClick)), buttonStyle(std::move(style)) { }
+	Button::Button(std::u32string text, std::function<void()> onClick, ButtonStyle style, Key key, bool enabled)
+		: Widget(std::move(key)), textValue(std::move(text)), clickCallback(std::move(onClick)), buttonStyle(std::move(style)), enabledValue(enabled) { }
 
 	const std::u32string& Button::text() const {
 		return textValue;
@@ -308,5 +330,9 @@ namespace tiny {
 
 	std::unique_ptr<Element> Button::createElement() const {
 		return std::make_unique<ButtonElement>(*this);
+	}
+
+	bool Button::enabled() const {
+		return enabledValue;
 	}
 }

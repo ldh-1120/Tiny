@@ -37,6 +37,8 @@ namespace {
 		int count = 0;
 
 		std::u32string text;
+
+		bool addEnabled = true;
 	};
 }
 
@@ -90,28 +92,14 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previousInstance, PWSTR comman
 
 			std::vector<std::unique_ptr<tiny::Widget>> children;
 
-			children.push_back(
-				std::make_unique<tiny::Text>(
-					U"Tiny UI",
-					tiny::Color::fromRgb(205, 214, 244),
-					titleStyle,
-					tiny::Key("title")
-				)
-			);
+			children.push_back(std::make_unique<tiny::Text>(U"Tiny UI", tiny::Color::fromRgb(205, 214, 244), titleStyle, tiny::Key("title")));
 
 			std::string countAscii = std::to_string(state.count);
 			std::u32string countText = U"Count: ";
 			for (char value : countAscii)
 				countText.push_back(static_cast<char32_t>(value));
 
-			children.push_back(
-				std::make_unique<tiny::Text>(
-					std::move(countText),
-					tiny::Color::fromRgb(166, 173, 200),
-					bodyStyle,
-					tiny::Key("counter")
-				)
-			);
+			children.push_back(std::make_unique<tiny::Text>(std::move(countText), tiny::Color::fromRgb(166, 173, 200), bodyStyle, tiny::Key("counter")));
 
 			std::vector<std::unique_ptr<tiny::Widget>> actionChildren;
 
@@ -120,7 +108,14 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previousInstance, PWSTR comman
 				++state.count;
 
 				uiRoot.requestRebuild();
-			}, buttonStyle, tiny::Key("increment-button")));
+			}, buttonStyle, tiny::Key("increment-button"), state.addEnabled));
+
+			children.push_back(
+				std::make_unique<tiny::Button>(U"Toggle Add", [&state, &uiRoot]() {
+				state.addEnabled = !state.addEnabled;
+
+				uiRoot.requestRebuild();
+			}, buttonStyle, tiny::Key("toggle-add-button")));
 
 			actionChildren.push_back(
 				std::make_unique<tiny::Button>(U"Decrease", [&state, &uiRoot]() {
@@ -136,14 +131,7 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previousInstance, PWSTR comman
 				uiRoot.requestRebuild();
 			}, buttonStyle, tiny::Key("reset-button")));
 
-			children.push_back(
-				std::make_unique<tiny::Row>(
-					std::move(actionChildren),
-					12.0f,
-					tiny::CrossAxisAlignment::Center,
-					tiny::Key("actions-row")
-				)
-			);
+			children.push_back(std::make_unique<tiny::Row>(std::move(actionChildren), 12.0f, tiny::CrossAxisAlignment::Center, tiny::Key("actions-row")));
 
 			children.push_back(
 				std::make_unique<tiny::TextBox>(state.text, [&state, &uiRoot](const std::u32string& text) {

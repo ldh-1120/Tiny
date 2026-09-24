@@ -16,11 +16,15 @@
 namespace tiny {
 	struct TextBoxStyle {
         Color background = Color::fromRgb(49, 50, 68);
+        Color disabledBackground = Color::fromRgb(49, 50, 68);
 
         Color borderColor = Color::fromRgb(88, 91, 112);
         Color focusedBorderColor = Color::fromRgb(137, 180, 250);
+        Color disabledBorderColor = Color::fromRgb(69, 71, 90);
 
         Color textColor = Color::fromRgb(205, 214, 244);
+        Color disabledTextColor = Color::fromRgb(108, 112, 134);
+
         Color caretColor = Color::fromRgb(205, 214, 244);
         Color selectionColor = Color::fromRgb(69, 90, 130);
 
@@ -39,7 +43,7 @@ namespace tiny {
     public:
         using ChangedCallback = std::function<void(const std::u32string&)>;
 
-        TextBox(std::u32string text, ChangedCallback onChanged, TextBoxStyle style = TextBoxStyle(), Key key = Key());
+        TextBox(std::u32string text, ChangedCallback onChanged, TextBoxStyle style = TextBoxStyle(), Key key = Key(), bool enabled = true);
 
         const std::u32string& text() const;
 
@@ -49,11 +53,15 @@ namespace tiny {
 
         std::unique_ptr<Element> createElement() const override;
 
+        bool enabled() const;
+
     private:
         std::u32string textValue;
 
         ChangedCallback changedCallback;
 
         TextBoxStyle textBoxStyle;
+
+        bool enabledValue = true;
     };
 }
