@@ -71,7 +71,7 @@ namespace tiny {
 
 		constexpr UINT stride = Width * 4;
 		constexpr UINT bufferSize = Width * Height * 4;
-
+		 
 		result = converter->CopyPixels(nullptr, stride, bufferSize, icon->pixels.data());
 		if (FAILED(result))
 			return nullptr;
@@ -92,7 +92,7 @@ namespace tiny {
 
 		for (std::uint32_t y = 0; y < Height; ++y) {
 			for (std::uint32_t x = 0; x < Width; ++x) {
-				std::uint32_t index = (y + Width + x) * 4;
+				std::uint32_t index = (y * Width + x) * 4;
 
 				int red = pixels[index + 0];
 				int green = pixels[index + 1];
