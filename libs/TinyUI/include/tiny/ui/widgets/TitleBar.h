@@ -28,6 +28,13 @@ namespace tiny {
 
 		Color closeHoveredBackground = Color::fromRgb(196, 43, 58);
 		Color closePressedBackground = Color::fromRgb(174, 41, 55);
+
+		Color iconColor = Color::fromRgb(137, 180, 250);
+
+		float brandWidth = 180.0f;
+		float iconSize = 16.0f;
+		float iconLeftPadding = 14.0f;
+		float titleLeftPadding = 40.0f;
 	};
 
 	class TitleBar : public Widget {

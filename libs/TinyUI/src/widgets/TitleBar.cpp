@@ -63,7 +63,9 @@ namespace tiny {
 				}
 
 				float width = constraints.hasBoundedWidth() ? constraints.maxWidth() : contentSize.width;
-				float toolbarAvailableWidth = std::max(width - 160.0f - buttonWidthValue * 3.0f, 0.0f);
+				float brandWidth = effectiveBrandWidth(width);
+
+				float toolbarAvailableWidth = std::max(width - brandWidth - buttonWidthValue * 3.0f, 0.0f);
 
 				if (children()[0]) {
 					Constraints toolbarConstraints(0.0f, toolbarAvailableWidth, 0.0f, heightValue);
@@ -76,7 +78,7 @@ namespace tiny {
 				titleStyle.fontFamily = L"Segoe UI";
 				titleStyle.fontSize = 14.0f;
 
-				float titleWidth = std::max(std::min(132.0f, width - buttonWidthValue * 3.0f - 28.0f), 0.0f);
+				float titleWidth = std::max(brandWidth - styleValue.titleLeftPadding, 0.0f);
 				titleLayout = context.graphicsContext().createTextLayout(titleValue, titleStyle, titleWidth);
 
 				TextStyle iconStyle;
@@ -89,9 +91,9 @@ namespace tiny {
 			}
 
 			void arrangeOverride(const Rect& finalBounds) override {
-				float toolbarStartX = finalBounds.x + 160.0f;
+				float brandWidth = effectiveBrandWidth(finalBounds.width);
 
-				float toolbarAvailableWidth = std::max(finalBounds.width - 160.0f - buttonWidthValue * 3.0f, 0.0f);
+				float toolbarAvailableWidth = std::max(brandWidth - buttonWidthValue * 3.0f, 0.0f);
 				if (children()[0]) {
 					const Size& desired = children()[0]->desiredSize();
 					
@@ -99,7 +101,7 @@ namespace tiny {
 					float toolbarHeight = std::min(desired.height, heightValue);
 
 					float toolbarY = finalBounds.y + (heightValue - toolbarHeight) * 0.5f;
-					children()[0]->arrange(Rect(toolbarStartX, toolbarY, toolbarWidth, toolbarHeight));
+					children()[0]->arrange(Rect(finalBounds.x + brandWidth, toolbarY, toolbarWidth, toolbarHeight));
 				}
 
 				if (children()[1]) {
@@ -204,10 +206,25 @@ namespace tiny {
 
 				Rect titleArea(area.x, area.y, area.width, heightValue);
 				canvas.fillRect(titleArea, styleValue.background);
+
+				float brandWidth = effectiveBrandWidth(area.width);
+
+				float iconSize = std::min(styleValue.iconSize, heightValue);
+				float iconX = area.x + styleValue.iconLeftPadding;
+				float iconY = area.y + (heightValue - iconSize) * 0.5f;
+
+				if (iconSize > 0.0f && iconX + iconSize <= area.x + brandWidth)
+					canvas.fillRect(Rect(iconX, iconY, iconSize, iconSize), styleValue.iconColor);
 				
-				if (titleLayout) {
+				if (titleLayout && brandWidth > 0.0f) {
 					float textY = area.y + (heightValue - titleLayout->size().height) * 0.5f;
-					canvas.drawTextLayout(*titleLayout, Point(area.x + 14.0f, textY), styleValue.textColor);
+
+					Rect brandClip(area.x, area.y, brandWidth, heightValue);
+					canvas.pushClip(brandClip);
+
+					canvas.drawTextLayout(*titleLayout, Point(area.x + styleValue.titleLeftPadding, textY), styleValue.textColor);
+
+					canvas.popClip();
 				}
 
 				float totalWidth = buttonWidthValue * 3.0f;
@@ -218,7 +235,18 @@ namespace tiny {
 				if (maximizedCallback)
 					maximized = maximizedCallback();
 
-				MultiChildElement::paintOverride(canvas);
+				if (children()[1])
+					children()[1]->paint(canvas);
+
+				float toolbarAvailableWidth = std::max(area.width - brandWidth - buttonWidthValue * 3.0f, 0.0f);
+				if (children()[0] && toolbarAvailableWidth > 0.0f) {
+					Rect toolbarClip(area.x + brandWidth, area.y, toolbarAvailableWidth, heightValue);
+					canvas.pushClip(toolbarClip);
+
+					children()[0]->paint(canvas);
+
+					canvas.popClip();
+				}
 
 				for (int index = 0; index < 3; ++index) {
 					CaptionButton button = CaptionButton::None;
@@ -328,6 +356,13 @@ namespace tiny {
 				hoveredButton = button;
 
 				markNeedsPaint();
+			}
+
+			float effectiveBrandWidth(float availableWidth) const {
+				float captionButtonsWidth = buttonWidthValue * 3.0f;
+				float remainingWidth = std::max(availableWidth - captionButtonsWidth, 0.0f);
+
+				return std::min(std::max(styleValue.brandWidth, 0.0f), remainingWidth);
 			}
 
 		private:

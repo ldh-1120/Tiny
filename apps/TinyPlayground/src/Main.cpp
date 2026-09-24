@@ -139,6 +139,29 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previousInstance, PWSTR comman
 				uiRoot.requestRebuild();
 			}, textBoxStyle, tiny::Key("main-text-box")));
 
+			tiny::ButtonStyle toolbarButtonStyle;
+			toolbarButtonStyle.textStyle.fontFamily = L"Segoe UI";
+			toolbarButtonStyle.textStyle.fontSize = 12.0f;
+			toolbarButtonStyle.padding = tiny::Thickness(10.0f, 5.0f);
+
+			std::vector<std::unique_ptr<tiny::Widget>> toolbarChildren;
+			toolbarChildren.push_back(std::make_unique<tiny::Button>(U"Toggle", [&state, &uiRoot]() {
+				state.addEnabled = !state.addEnabled;
+				uiRoot.requestRebuild();
+			}, tiny::ButtonStyle(), tiny::Key("title-toolbar-toggle")));
+
+			toolbarChildren.push_back(std::make_unique<tiny::Button>(U"Reset", [&state, &uiRoot]() {
+				state.count = 0;
+				uiRoot.requestRebuild();
+			}, tiny::ButtonStyle(), tiny::Key("toolbar-reset")));
+
+			std::unique_ptr<tiny::Widget> toolbar = std::make_unique<tiny::Row>(std::move(toolbarChildren), 8.0f, tiny::CrossAxisAlignment::Center, tiny::Key("title-toolbar-row"));
+
+			tiny::TitleBarStyle titleBarStyle;
+			titleBarStyle.brandWidth = 180.0f;
+			titleBarStyle.iconSize = 16.0f;
+			titleBarStyle.iconColor = tiny::Color::fromRgb(137, 180, 250);
+
 			return std::make_unique<tiny::TitleBar>(U"Tiny Playground",
 				std::make_unique<tiny::Center>(
 					std::make_unique<tiny::Padding>(
@@ -164,17 +187,9 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previousInstance, PWSTR comman
 						window.close();
 						break;
 				}
-			},
-				[&window]() {
+			}, [&window]() {
 				return window.isMaximized();
-			},
-				createInfo.titleBarHeight, tiny::WindowCaptionButtonWidth, tiny::TitleBarStyle(), tiny::Key("window-title-bar"),
-				std::make_unique<tiny::Button>(U"Toggle Add", [&state, &uiRoot]() {
-				state.addEnabled = !state.addEnabled;
-
-				uiRoot.requestRebuild();
-			},
-					tiny::ButtonStyle(), tiny::Key("title-toolbar-toggle")));
+			}, createInfo.titleBarHeight, tiny::WindowCaptionButtonWidth, titleBarStyle, tiny::Key("window-title-bar"), std::move(toolbar));
 		}
 			));
 
