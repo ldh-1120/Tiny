@@ -112,6 +112,8 @@ namespace tiny {
 
 		virtual bool acceptsPointerEvents() const;
 
+		virtual bool hitTestSelf(const Point& position) const;
+
 		virtual Element* hitTestChildren(const Point& position);
 
 		virtual void pointerEnterOverride(const PointerEvent& event);

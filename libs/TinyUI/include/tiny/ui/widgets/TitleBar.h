@@ -1,0 +1,67 @@
+#pragma once
+
+#include <functional>
+#include <memory>
+#include <string>
+#include <utility>
+
+#include <tiny/core/Color.h>
+
+#include <tiny/ui/Key.h>
+#include <tiny/ui/Widget.h>
+
+namespace tiny {
+	enum class TitleBarAction {
+		Minimize,
+		Maximize,
+		Close
+	};
+
+	struct TitleBarStyle {
+		Color background = Color::fromRgb(24, 24, 37);
+		Color borderColor = Color::fromRgb(49, 50, 68);
+
+		Color textColor = Color::fromRgb(205, 214, 244);
+
+		Color hoveredBackground = Color::fromRgb(49, 50, 68);
+		Color pressedBackground = Color::fromRgb(69, 71, 90);
+
+		Color closeHoveredBackground = Color::fromRgb(196, 43, 58);
+		Color closePressedBackground = Color::fromRgb(174, 41, 55);
+	};
+
+	class TitleBar : public Widget {
+	public:
+		using ActionCallback = std::function<void(TitleBarAction)>;
+		using MaximizedCallback = std::function<bool()>;
+
+		TitleBar(std::u32string title, std::unique_ptr<Widget> child, ActionCallback onAction, MaximizedCallback isMaximized, float height = 40.0f, float buttonWidth = 46.0f, TitleBarStyle style = TitleBarStyle(), Key key = Key());
+
+		const std::u32string& title() const;
+
+		const Widget* child() const;
+
+		const ActionCallback& onAction() const;
+		const MaximizedCallback& isMaximized() const;
+
+		float height() const;
+		float buttonWidth() const;
+
+		const TitleBarStyle& style() const;
+
+		std::unique_ptr<Element> createElement() const override;
+
+	private:
+		std::u32string titleValue;
+
+		std::unique_ptr<Widget> childWidget;
+
+		ActionCallback actionCallback;
+		MaximizedCallback maximizedCallback;
+
+		float heightValue = 40.0f;
+		float buttonWidthValue = 46.0f;
+
+		TitleBarStyle styleValue;
+	};
+}

@@ -159,7 +159,7 @@ namespace tiny {
 		if (childResult)
 			return childResult;
 
-		if (!acceptsPointerEvents())
+		if (!hitTestSelf(position))
 			return nullptr;
 
 		return this;
@@ -283,6 +283,12 @@ namespace tiny {
 
 	bool Element::acceptsPointerEvents() const {
 		return false;
+	}
+
+	bool Element::hitTestSelf(const Point& position) const {
+		(void)position;
+
+		return acceptsPointerEvents();
 	}
 
 	Element* Element::hitTestChildren(const Point& position) {

@@ -172,6 +172,7 @@
     <ClCompile Include="src\widgets\SizedBox.cpp" />
     <ClCompile Include="src\widgets\Text.cpp" />
     <ClCompile Include="src\widgets\TextBox.cpp" />
+    <ClCompile Include="src\widgets\TitleBar.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\TinyCore\TinyCore.vcxproj">
@@ -209,6 +210,7 @@
     <ClInclude Include="include\tiny\ui\widgets\SizedBox.h" />
     <ClInclude Include="include\tiny\ui\widgets\Text.h" />
     <ClInclude Include="include\tiny\ui\widgets\TextBox.h" />
+    <ClInclude Include="include\tiny\ui\widgets\TitleBar.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

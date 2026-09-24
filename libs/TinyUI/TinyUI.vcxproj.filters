@@ -72,6 +72,9 @@
     <ClCompile Include="src\visual\FocusRing.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\widgets\TitleBar.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\tiny\ui\layout\Constraints.h">
@@ -153,6 +156,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\tiny\ui\focus\FocusReason.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\tiny\ui\widgets\TitleBar.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
