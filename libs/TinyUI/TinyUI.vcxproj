@@ -167,6 +167,7 @@
     <ClCompile Include="src\widgets\Button.cpp" />
     <ClCompile Include="src\widgets\Center.cpp" />
     <ClCompile Include="src\widgets\Column.cpp" />
+    <ClCompile Include="src\widgets\ImageView.cpp" />
     <ClCompile Include="src\widgets\Padding.cpp" />
     <ClCompile Include="src\widgets\Row.cpp" />
     <ClCompile Include="src\widgets\SizedBox.cpp" />
@@ -205,6 +206,7 @@
     <ClInclude Include="include\tiny\ui\widgets\Button.h" />
     <ClInclude Include="include\tiny\ui\widgets\Center.h" />
     <ClInclude Include="include\tiny\ui\widgets\Column.h" />
+    <ClInclude Include="include\tiny\ui\widgets\ImageView.h" />
     <ClInclude Include="include\tiny\ui\widgets\Padding.h" />
     <ClInclude Include="include\tiny\ui\widgets\Row.h" />
     <ClInclude Include="include\tiny\ui\widgets\SizedBox.h" />

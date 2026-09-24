@@ -36,6 +36,7 @@
 #include <tiny/ui/widgets/Text.h>
 #include <tiny/ui/widgets/TextBox.h>
 #include <tiny/ui/widgets/TitleBar.h>
+#include <tiny/ui/widgets/ImageView.h>
 
 namespace {
 	struct PlaygroundState {
@@ -68,9 +69,13 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previousInstance, PWSTR comman
 		DWORD pathLength = GetModuleFileNameW(nullptr, executablePath, MAX_PATH);
 
 		std::shared_ptr<tiny::Image> appIcon;
+		std::shared_ptr<tiny::Image> previewImage;
+
 		if (pathLength > 0 && pathLength < MAX_PATH) {
-			std::filesystem::path iconPath = std::filesystem::path(executablePath).parent_path() / L"assets" / L"icon.png";
-			appIcon = tiny::Image::load(iconPath.wstring());
+			std::filesystem::path assetsPath = std::filesystem::path(executablePath).parent_path() / L"assets";
+
+			appIcon = tiny::Image::load((assetsPath / L"icon.png").wstring());
+			previewImage = tiny::Image::load((assetsPath / L"preview.png").wstring());
 		}
 
 		tiny::GraphicsContext graphicsContext;
@@ -90,7 +95,7 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previousInstance, PWSTR comman
 		});
 
 		uiRoot.setBuilder(
-			tiny::UIBuilder([&state, &uiRoot, &window, &createInfo, &appIcon]() -> std::unique_ptr<tiny::Widget> {
+			tiny::UIBuilder([&state, &uiRoot, &window, &createInfo, &appIcon, &previewImage]() -> std::unique_ptr<tiny::Widget> {
 			tiny::TextStyle titleStyle;
 			titleStyle.fontFamily = L"Segoe UI";
 			titleStyle.fontSize = 32.0f;
@@ -166,6 +171,14 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previousInstance, PWSTR comman
 				state.count = 0;
 				uiRoot.requestRebuild();
 			}, tiny::ButtonStyle(), tiny::Key("toolbar-reset")));
+
+			children.push_back(
+				std::make_unique<tiny::ImageView>(
+					previewImage,
+					tiny::Size(240.0f, 160.0f),
+					tiny::ImageFit::Contain,
+					tiny::ImageInterpolation::Linear,
+					tiny::Key("preview-image")));
 
 			std::unique_ptr<tiny::Widget> toolbar = std::make_unique<tiny::Row>(std::move(toolbarChildren), 8.0f, tiny::CrossAxisAlignment::Center, tiny::Key("title-toolbar-row"));
 
