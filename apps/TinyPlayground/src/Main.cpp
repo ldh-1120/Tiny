@@ -175,8 +175,7 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previousInstance, PWSTR comman
 			children.push_back(
 				std::make_unique<tiny::ImageView>(
 					previewImage,
-					tiny::Size(240.0f, 160.0f),
-					tiny::ImageFit::Contain,
+					tiny::ImageFit::Stretch,
 					tiny::ImageInterpolation::Linear,
 					tiny::Key("preview-image")));
 

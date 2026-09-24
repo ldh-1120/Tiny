@@ -19,6 +19,7 @@ namespace tiny {
 	class ImageView : public Widget {
 	public:
 		ImageView(std::shared_ptr<Image> image, const Size& size, ImageFit fit = ImageFit::Contain, ImageInterpolation interpolation = ImageInterpolation::Linear, Key key = Key());
+		ImageView(std::shared_ptr<Image> image, ImageFit fit = ImageFit::Contain, ImageInterpolation interpolation = ImageInterpolation::Linear, Key key = Key());
 
 		const std::shared_ptr<Image>& image() const;
 
@@ -27,6 +28,8 @@ namespace tiny {
 		ImageFit fit() const;
 
 		ImageInterpolation interpolation() const;
+
+		bool usesIntrinsicSize() const;
 
 		std::unique_ptr<Element> createElement() const override;
 
@@ -38,5 +41,7 @@ namespace tiny {
 		ImageFit fitValue = ImageFit::Contain;
 
 		ImageInterpolation interpolationValue = ImageInterpolation::Linear;
+
+		bool useIntrinsicSizeValue = false;
 	};
 }
