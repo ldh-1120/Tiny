@@ -200,6 +200,13 @@ namespace tiny {
 		pointerUpOverride(event);
 	}
 
+	bool Element::pointerWheel(const PointerWheelEvent& event) {
+		if (!mounted || !enabledValue)
+			return false;
+
+		return pointerWheelOverride(event);
+	}
+
 	void Element::pointerCancel() {
 		if (!mounted)
 			return;
@@ -315,6 +322,12 @@ namespace tiny {
 
 	void Element::pointerUpOverride(const PointerEvent& event) {
 		(void)event;
+	}
+
+	bool Element::pointerWheelOverride(const PointerWheelEvent& event) {
+		(void)event;
+
+		return false;
 	}
 
 	void Element::pointerCancelOverride() { }

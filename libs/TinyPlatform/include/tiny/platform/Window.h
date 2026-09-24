@@ -86,6 +86,8 @@ namespace tiny {
 		Event<const PointerEvent&> pointerPressed;
 		Event<const PointerEvent&> pointerReleased;
 
+		Event<PointerWheelEvent&> pointerWheel;
+
 		Event<> pointerExited;
 		Event<> pointerCaptureLost;
 

@@ -25,4 +25,12 @@ namespace tiny {
 
 		PointerModifiers modifiers;
 	};
+
+	struct PointerWheelEvent {
+		Point position;
+
+		float delta = 0.0f;
+		
+		bool handled = false;
+	};
 }

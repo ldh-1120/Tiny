@@ -226,6 +226,14 @@ namespace tiny {
 		capturedElement = nullptr;
 	}
 
+	bool UIRoot::pointerWheel(const PointerWheelEvent& event) {
+		Element* target = hitTest(event.position);
+		if (!target)
+			return false;
+
+		return target->pointerWheel(event);
+	}
+
 	void UIRoot::pointerExited() {
 		if (!hoveredElement)
 			return;

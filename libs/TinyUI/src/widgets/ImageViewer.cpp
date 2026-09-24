@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <memory>
 #include <utility>
+#include <cmath>
 
 #include <tiny/core/Color.h>
 #include <tiny/core/Point.h>
@@ -28,6 +29,8 @@ namespace tiny {
 
 				if (imageValue != viewer.image()) {
 					imageValue = viewer.image();
+
+					zoomValue = 1.0f;
 
 					panX = 0.0f;
 					panY = 0.0f;
@@ -70,8 +73,8 @@ namespace tiny {
 				if (!imageValue)
 					return;
 
-				float imageWidth = static_cast<float>(imageValue->width());
-				float imageHeight = static_cast<float>(imageValue->height());
+				float imageWidth = static_cast<float>(imageValue->width()) * zoomValue;
+				float imageHeight = static_cast<float>(imageValue->height()) * zoomValue;
 				if (imageWidth <= 0.0f || imageHeight <= 0.0f)
 					return;
 
@@ -125,6 +128,56 @@ namespace tiny {
 				dragging = false;
 			}
 
+			bool pointerWheelOverride(const PointerWheelEvent& event) override {
+				if (!imageValue)
+					return false;
+
+				if (event.delta == 0.0f)
+					return false;
+
+				const Rect& area = bounds();
+				if (area.width <= 0.0f || area.height <= 0.0f)
+					return false;
+
+				float originalWidth = static_cast<float>(imageValue->width());
+				float originalHeight = static_cast<float>(imageValue->height());
+
+				if (originalWidth <= 0.0f || originalHeight <= 0.0f)
+					return false;
+
+				float oldZoom = zoomValue;
+				float zoomFactor = std::pow(ZoomStep, event.delta);
+
+				float nextZoom = std::clamp(oldZoom * zoomFactor, MinimumZoom, MaximumZoom);
+				if (nextZoom == oldZoom)
+					return true;
+
+				float oldWidth = originalWidth * oldZoom;
+				float oldHeight = originalHeight * oldZoom;
+
+				float oldLeft = area.x + (area.width - oldWidth) * 0.5f + panX;
+				float oldTop = area.y + (area.height - oldHeight) * 0.5f + panY;
+
+				float imageX = (event.position.x - oldLeft) / oldZoom;
+				float imageY = (event.position.y - oldTop) / oldZoom;
+
+				zoomValue = nextZoom;
+
+				float newWidth = originalWidth * zoomValue;
+				float newHeight = originalHeight * zoomValue;
+
+				float newCenterLeft = area.x + (area.width - newWidth) * 0.5f;
+				float newCenterTop = area.y + (area.height - newHeight) * 0.5f;
+
+				panX = event.position.x - imageX * zoomValue - newCenterLeft;
+				panY = event.position.y - imageY * zoomValue - newCenterTop;
+
+				clampPan();
+				markNeedsPaint();
+
+				return true;
+			}
+
 			void pointerCancelOverride() override {
 				dragging = false;
 			}
@@ -136,7 +189,10 @@ namespace tiny {
 
 				const Rect& area = bounds();
 
-				return static_cast<float>(imageValue->width()) > area.width || static_cast<float>(imageValue->height()) > area.height;
+				float imageWidth = static_cast<float>(imageValue->width()) * zoomValue;
+				float imageHeight = static_cast<float>(imageValue->height()) * zoomValue;
+
+				return imageWidth > area.width || imageHeight > area.height;
 			}
 
 			void clampPan() {
@@ -148,8 +204,8 @@ namespace tiny {
 
 				const Rect& area = bounds();
 
-				float imageWidth = static_cast<float>(imageValue->width());
-				float imageHeight = static_cast<float>(imageValue->height());
+				float imageWidth = static_cast<float>(imageValue->width()) * zoomValue;
+				float imageHeight = static_cast<float>(imageValue->height()) * zoomValue;
 
 				if (area.width <= 0.0f || area.height <= 0.0f) {
 					panX = 0.0f;
@@ -188,6 +244,12 @@ namespace tiny {
 
 			float panX = 0.0f;
 			float panY = 0.0f;
+
+			float zoomValue = 1.0f;
+
+			static constexpr float MinimumZoom = 0.1f;
+			static constexpr float MaximumZoom = 16.0f;
+			static constexpr float ZoomStep = 1.15f;
 		};
 	}
 	

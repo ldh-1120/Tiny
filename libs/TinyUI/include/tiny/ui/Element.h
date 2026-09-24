@@ -74,6 +74,8 @@ namespace tiny {
 		bool pointerDown(const PointerEvent& event);
 		void pointerUp(const PointerEvent& event);
 
+		bool pointerWheel(const PointerWheelEvent& event);
+
 		void pointerCancel();
 
 		const Size& desiredSize() const;
@@ -122,6 +124,8 @@ namespace tiny {
 		virtual void pointerMoveOverride(const PointerEvent& event);
 		virtual bool pointerDownOverride(const PointerEvent& event);
 		virtual void pointerUpOverride(const PointerEvent& event);
+
+		virtual bool pointerWheelOverride(const PointerWheelEvent& event);
 
 		virtual void pointerCancelOverride();
 

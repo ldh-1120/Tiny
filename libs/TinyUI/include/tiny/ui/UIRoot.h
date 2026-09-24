@@ -48,6 +48,8 @@ namespace tiny {
 		bool pointerPressed(const PointerEvent& event);
 		void pointerReleased(const PointerEvent& event);
 
+		bool pointerWheel(const PointerWheelEvent& event);
+
 		void pointerExited();
 		void pointerCaptureLost();
 

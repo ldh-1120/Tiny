@@ -416,6 +416,28 @@ namespace tiny {
 				return 0;
 			}
 
+			case WM_MOUSEWHEEL: {
+				POINT screenPoint { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+				
+				POINT clientPoint = screenPoint;
+				if (!ScreenToClient(windowHandle, &clientPoint))
+					return DefWindowProcW(windowHandle, message, wParam, lParam);
+
+				float scale = dpiScale();
+				if (scale <= 0.0f)
+					scale = 1.0f;
+
+				PointerWheelEvent event;
+				event.position = Point(static_cast<float>(clientPoint.x) / scale, static_cast<float>(clientPoint.y) / scale);
+				event.delta = static_cast<float>(GET_WHEEL_DELTA_WPARAM(wParam)) / static_cast<float>(WHEEL_DELTA);
+
+				owner.pointerWheel.emit(event);
+				if (event.handled)
+					return 0;
+
+				return DefWindowProcW(windowHandle, message, wParam, lParam);
+			}
+
 			case WM_LBUTTONDOWN: {
 				PointerEvent event = createPointerEvent(handle, lParam, wParam, PointerButton::Left);
 				owner.pointerPressed.emit(event);

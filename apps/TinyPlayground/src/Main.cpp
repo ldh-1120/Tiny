@@ -250,6 +250,10 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previousInstance, PWSTR comman
 				window.releasePointerCapture();
 		});
 
+		tiny::Subscription pointerWheelSubscription = window.pointerWheel.subscribe([&uiRoot](tiny::PointerWheelEvent& event) {
+			event.handled = uiRoot.pointerWheel(event);
+		});
+
 		tiny::Subscription pointerExitedSubscription = window.pointerExited.subscribe([&window, &uiRoot]() {
 			uiRoot.pointerExited();
 		});
