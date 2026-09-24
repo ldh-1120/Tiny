@@ -18,9 +18,14 @@
 namespace tiny {
 	struct WindowCreateInfo {
 		std::wstring title = L"Tiny";
+
 		int width = 1280;
 		int height = 720;
+
 		bool resizable = true;
+
+		bool customTitleBar = false;
+		float titleBarHeight = 40.0f;
 	};
 
 	class Window {

@@ -258,6 +258,8 @@ namespace tiny {
 
 		std::u32string decodeTextInput(char16_t codeUnit);
 
+		LRESULT hitTestCustomFrame(HWND windowHandle, LPARAM lParam) const;
+
 	private:
 		Window& owner;
 
@@ -268,6 +270,11 @@ namespace tiny {
 		bool mouseLeaveTracking = false;
 
 		char16_t pendingHighSurrogate = 0;
+
+		bool customTitleBar = false;
+		bool resizable = true;
+
+		float titleBarHeight = 40.0f;
 	};
 
 	void Window::Impl::ensureWindowClassRegistered() {
@@ -293,6 +300,10 @@ namespace tiny {
 	}
 
 	Window::Impl::Impl(Window& owner, const WindowCreateInfo& createInfo) : owner(owner) {
+		customTitleBar = createInfo.customTitleBar;
+		resizable = createInfo.resizable;
+		titleBarHeight = createInfo.titleBarHeight;
+
 		ensureWindowClassRegistered();
 
 		DWORD style = WS_OVERLAPPEDWINDOW;
@@ -347,6 +358,33 @@ namespace tiny {
 
 	LRESULT Window::Impl::handleMessage(HWND windowHandle, UINT message, WPARAM wParam, LPARAM lParam) {
 		switch (message) {
+			case WM_NCCALCSIZE: {
+				if (!customTitleBar)
+					break;
+
+				if (wParam == TRUE) {
+					NCCALCSIZE_PARAMS* parameters = reinterpret_cast<NCCALCSIZE_PARAMS*>(lParam);
+					if (IsZoomed(windowHandle)) {
+						HMONITOR monitor = MonitorFromWindow(windowHandle, MONITOR_DEFAULTTONEAREST);
+
+						MONITORINFO monitorInfo { };
+						monitorInfo.cbSize = sizeof(MONITORINFO);
+
+						if (GetMonitorInfoW(monitor, &monitorInfo))
+							parameters->rgrc[0] = monitorInfo.rcWork;
+					}
+				}
+
+				return 0;
+			}
+
+			case WM_NCHITTEST: {
+				if (!customTitleBar)
+					break;
+
+				return hitTestCustomFrame(windowHandle, lParam);
+			}
+
 			case WM_CLOSE: {
 				WindowClosingEvent event;
 				owner.closing.emit(event);
@@ -707,6 +745,69 @@ namespace tiny {
 		result.push_back(static_cast<char32_t>(codeUnit));
 
 		return result;
+	}
+
+	LRESULT Window::Impl::hitTestCustomFrame(HWND windowHandle, LPARAM lParam) const {
+		POINT screenPoint { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+
+		POINT clientPoint = screenPoint;
+		if (!ScreenToClient(windowHandle, &clientPoint))
+			return HTCLIENT;
+
+		RECT windowRect { };
+		if (!GetWindowRect(windowHandle, &windowRect))
+			return HTCLIENT;
+
+		UINT dpi = GetDpiForWindow(windowHandle);
+
+		float scale = static_cast<float>(dpi) / 96.0f;
+		if (scale <= 0.0f)
+			scale = 1.0f;
+
+		int captionHeight = static_cast<int>(titleBarHeight * scale);
+		if (resizable && !IsZoomed(windowHandle)) {
+			int horizontalBorder = GetSystemMetricsForDpi(SM_CXSIZEFRAME, dpi) + GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi);
+			int verticalBorder = GetSystemMetricsForDpi(SM_CYSIZEFRAME, dpi) + GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi);
+
+			bool left = screenPoint.x < windowRect.left + horizontalBorder;
+			bool right = screenPoint.x >= windowRect.right - horizontalBorder;
+			bool top = screenPoint.y < windowRect.top + verticalBorder;
+			bool bottom = screenPoint.y >= windowRect.bottom - verticalBorder;
+
+			if (top && left)
+				return HTTOPLEFT;
+
+			if (top && right)
+				return HTTOPRIGHT;
+
+			if (bottom && left)
+				return HTBOTTOMLEFT;
+
+			if (bottom && right)
+				return HTBOTTOMRIGHT;
+
+			if (left)
+				return HTLEFT;
+
+			if (right)
+				return HTRIGHT;
+
+			if (top)
+				return HTTOP;
+
+			if (bottom)
+				return HTBOTTOM;
+		}
+
+		RECT clientRect { };
+		if (!GetClientRect(windowHandle, &clientRect))
+			return HTCLIENT;
+
+		bool insideCaption = clientPoint.x >= clientRect.left && clientPoint.x < clientRect.right && clientPoint.y >= clientRect.top && clientPoint.y < captionHeight;
+		if (insideCaption)
+			return HTCAPTION;
+
+		return HTCLIENT;
 	}
 
 	Window::Window(const WindowCreateInfo& createInfo) : impl(std::make_unique<Impl>(*this, createInfo)) { }

@@ -53,6 +53,9 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previousInstance, PWSTR comman
 		createInfo.height = 720;
 		createInfo.resizable = true;
 
+		createInfo.customTitleBar = true;
+		createInfo.titleBarHeight = 40.0f;
+
 		tiny::Window window(createInfo);
 
 		tiny::GraphicsContext graphicsContext;
@@ -140,7 +143,9 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previousInstance, PWSTR comman
 				uiRoot.requestRebuild();
 			}, textBoxStyle, tiny::Key("main-text-box")));
 
-			return std::make_unique<tiny::Center>(
+			return std::make_unique<tiny::Padding>(
+				tiny::Thickness(0.0f, 40.0f, 0.0f, 0.0f), 
+				std::make_unique<tiny::Center>(
 				std::make_unique<tiny::Padding>(
 					tiny::Thickness(24.0f),
 					std::make_unique<tiny::Column>(
@@ -149,8 +154,7 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previousInstance, PWSTR comman
 						tiny::CrossAxisAlignment::Center,
 						tiny::Key("content")
 					)
-				)
-			);
+				)), tiny::Key("window-content-padding"));
 		}
 			)
 		);
@@ -162,9 +166,13 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previousInstance, PWSTR comman
 			tiny::Size logicalSize(pixelSize.width / scale, pixelSize.height / scale);
 			uiRoot.layout(graphicsContext, logicalSize);
 
-			renderer.render([&uiRoot](tiny::Canvas& canvas) {
+			renderer.render([&uiRoot, &window](tiny::Canvas& canvas) {
 				canvas.clear(tiny::Color::fromRgb(30, 30, 46));
 				uiRoot.paint(canvas);
+
+				float width = window.clientSize().width / window.dpiScale();
+				canvas.fillRect(tiny::Rect(0.0f, 0.0f, width, 40.0f), tiny::Color::fromRgb(24, 24, 37));
+				canvas.fillRect(tiny::Rect(0.0f, 39.0f, width, 1.0f), tiny::Color::fromRgb(49, 50, 68));
 			});
 		});
 
