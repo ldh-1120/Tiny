@@ -10,6 +10,8 @@
 #include <tiny/ui/Key.h>
 #include <tiny/ui/Widget.h>
 
+#include <tiny/graphics/PngIcon.h>
+
 namespace tiny {
 	enum class TitleBarAction {
 		Minimize,
@@ -42,7 +44,8 @@ namespace tiny {
 		using ActionCallback = std::function<void(TitleBarAction)>;
 		using MaximizedCallback = std::function<bool()>;
 
-		TitleBar(std::u32string title, std::unique_ptr<Widget> child, ActionCallback onAction, MaximizedCallback isMaximized, float height = 40.0f, float buttonWidth = 46.0f, TitleBarStyle style = TitleBarStyle(), Key key = Key(), std::unique_ptr<Widget> toolbar = nullptr);
+		TitleBar(std::u32string title, std::unique_ptr<Widget> child, ActionCallback onAction, MaximizedCallback isMaximized, float height = 40.0f, float buttonWidth = 46.0f, 
+			TitleBarStyle style = TitleBarStyle(), Key key = Key(), std::unique_ptr<Widget> toolbar = nullptr, std::shared_ptr<PngIcon> icon = nullptr);
 
 		const std::u32string& title() const;
 
@@ -58,6 +61,8 @@ namespace tiny {
 		const TitleBarStyle& style() const;
 
 		std::unique_ptr<Element> createElement() const override;
+		
+		const std::shared_ptr<PngIcon>& icon() const;
 
 	private:
 		std::u32string titleValue;
@@ -72,5 +77,7 @@ namespace tiny {
 		float buttonWidthValue = 46.0f;
 
 		TitleBarStyle styleValue;
+
+		std::shared_ptr<PngIcon> iconValue;
 	};
 }

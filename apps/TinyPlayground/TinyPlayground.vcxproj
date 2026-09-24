@@ -165,6 +165,9 @@
       <Project>{12346bb2-c791-49e6-bdda-48bfe28266a3}</Project>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="x64\Debug\assets\icon.png" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

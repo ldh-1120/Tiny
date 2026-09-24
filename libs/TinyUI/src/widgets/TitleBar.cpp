@@ -33,7 +33,7 @@ namespace tiny {
 		class TitleBarElement final : public MultiChildElement {
 		public:
 			explicit TitleBarElement(const TitleBar& widget)
-				: MultiChildElement(widget, createChildren(widget)), titleValue(widget.title()), actionCallback(widget.onAction()), maximizedCallback(widget.isMaximized()), heightValue(widget.height()), buttonWidthValue(widget.buttonWidth()), styleValue(widget.style()) { }
+				: MultiChildElement(widget, createChildren(widget)), titleValue(widget.title()), actionCallback(widget.onAction()), maximizedCallback(widget.isMaximized()), heightValue(widget.height()), buttonWidthValue(widget.buttonWidth()), styleValue(widget.style()), iconValue(widget.icon()) { }
 
 		protected:
 			void updateOverride(const Widget& widget) override {
@@ -50,6 +50,8 @@ namespace tiny {
 				styleValue = titleBar.style();
 
 				updateChildren(std::vector<const Widget*> { titleBar.toolbar(), titleBar.child() });
+
+				iconValue = titleBar.icon();
 			}
 
 			Size measureOverride(LayoutContext& context, const Constraints& constraints) override {
@@ -122,8 +124,12 @@ namespace tiny {
 				float iconX = area.x + styleValue.iconLeftPadding;
 				float iconY = area.y + (heightValue - iconSize) * 0.5f;
 
-				if (iconSize > 0.0f && iconX + iconSize <= area.x + brandWidth)
-					canvas.fillRect(Rect(iconX, iconY, iconSize, iconSize), styleValue.iconColor);
+				if (iconSize > 0.0f && iconX + iconSize <= area.x + brandWidth) {
+					if (iconValue)
+						iconValue->paint(canvas, Point(iconX, iconY), iconSize);
+					else
+						canvas.fillRect(Rect(iconX, iconY, iconSize, iconSize), styleValue.iconColor);
+				}
 
 				if (titleLayout && brandWidth > 0.0f) {
 					float textY = area.y + (heightValue - titleLayout->size().height) * 0.5f;
@@ -437,11 +443,13 @@ namespace tiny {
 
 			std::unique_ptr<TextLayout> titleLayout;
 			std::unique_ptr<TextLayout> closeIconLayout;
+
+			std::shared_ptr<PngIcon> iconValue;
 		};
 	}
 
-	TitleBar::TitleBar(std::u32string title, std::unique_ptr<Widget> child, ActionCallback onAction, MaximizedCallback isMaximized, float height, float buttonWidth, TitleBarStyle style, Key key, std::unique_ptr<Widget> toolbar)
-		: Widget(std::move(key)), titleValue(std::move(title)), childWidget(std::move(child)), toolbarWidget(std::move(toolbar)), actionCallback(std::move(onAction)), maximizedCallback(std::move(isMaximized)), heightValue(std::max(height, 0.0f)), buttonWidthValue(std::max(buttonWidth, 1.0f)), styleValue(std::move(style)) {}
+	TitleBar::TitleBar(std::u32string title, std::unique_ptr<Widget> child, ActionCallback onAction, MaximizedCallback isMaximized, float height, float buttonWidth, TitleBarStyle style, Key key, std::unique_ptr<Widget> toolbar, std::shared_ptr<PngIcon> icon)
+		: Widget(std::move(key)), titleValue(std::move(title)), childWidget(std::move(child)), toolbarWidget(std::move(toolbar)), actionCallback(std::move(onAction)), maximizedCallback(std::move(isMaximized)), heightValue(std::max(height, 0.0f)), buttonWidthValue(std::max(buttonWidth, 1.0f)), styleValue(std::move(style)), iconValue(std::move(icon)) {}
 
 	const std::u32string& TitleBar::title() const {
 		return titleValue;
@@ -477,5 +485,9 @@ namespace tiny {
 
 	std::unique_ptr<Element> TitleBar::createElement() const {
 		return std::make_unique<TitleBarElement>(*this);
+	}
+
+	const std::shared_ptr<PngIcon>& TitleBar::icon() const {
+		return iconValue;
 	}
 }

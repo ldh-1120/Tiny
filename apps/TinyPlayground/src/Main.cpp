@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <filesystem>
 
 #include <Windows.h>
 
@@ -17,6 +18,7 @@
 #include <tiny/graphics/WindowRenderer.h>
 #include <tiny/graphics/TextStyle.h>
 #include <tiny/graphics/TextLayout.h>
+#include <tiny/graphics/PngIcon.h>
 
 #include <tiny/platform/Platform.h>
 #include <tiny/platform/Window.h>
@@ -61,6 +63,16 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previousInstance, PWSTR comman
 
 		tiny::Window window(createInfo);
 
+		wchar_t executablePath[MAX_PATH] { };
+
+		DWORD pathLength = GetModuleFileNameW(nullptr, executablePath, MAX_PATH);
+
+		std::shared_ptr<tiny::PngIcon> appIcon;
+		if (pathLength > 0 && pathLength < MAX_PATH) {
+			std::filesystem::path iconPath = std::filesystem::path(executablePath).parent_path() / L"assets" / L"icon.png";
+			appIcon = tiny::PngIcon::load(iconPath.wstring());
+		}
+
 		tiny::GraphicsContext graphicsContext;
 		tiny::WindowRenderer renderer(graphicsContext, window);
 
@@ -78,7 +90,7 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previousInstance, PWSTR comman
 		});
 
 		uiRoot.setBuilder(
-			tiny::UIBuilder([&state, &uiRoot, &window, &createInfo]() -> std::unique_ptr<tiny::Widget> {
+			tiny::UIBuilder([&state, &uiRoot, &window, &createInfo, &appIcon]() -> std::unique_ptr<tiny::Widget> {
 			tiny::TextStyle titleStyle;
 			titleStyle.fontFamily = L"Segoe UI";
 			titleStyle.fontSize = 32.0f;
@@ -189,7 +201,7 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previousInstance, PWSTR comman
 				}
 			}, [&window]() {
 				return window.isMaximized();
-			}, createInfo.titleBarHeight, tiny::WindowCaptionButtonWidth, titleBarStyle, tiny::Key("window-title-bar"), std::move(toolbar));
+			}, createInfo.titleBarHeight, tiny::WindowCaptionButtonWidth, titleBarStyle, tiny::Key("window-title-bar"), std::move(toolbar), appIcon);
 		}
 			));
 
