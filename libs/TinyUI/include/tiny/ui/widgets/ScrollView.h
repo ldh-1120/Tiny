@@ -11,8 +11,10 @@ namespace tiny {
 	struct ScrollViewStyle {
 		Color trackColor = Color::fromRgba(69, 71, 90, 80);
 		Color thumbColor = Color::fromRgba(166, 173, 200, 180);
+		Color pressedThumbColor = Color::fromRgba(205, 214, 244, 230);
 
 		float scrollbarWidth = 4.0f;
+		float scrollbarHitWidth = 12.0f;
 		float scrollbarMargin = 4.0f;
 
 		float minimumThumbExtent = 24.0f;

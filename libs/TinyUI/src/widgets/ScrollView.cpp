@@ -64,6 +64,70 @@ namespace tiny {
 				return true;
 			}
 
+			bool pointerDownOverride(const PointerEvent& event) override {
+				if (event.button != PointerButton::Left)
+					return false;
+
+				if (!scrollbarInteractive())
+					return false;
+
+				Rect thumbHit = scrollbarThumbHitBounds();
+				if (!thumbHit.contains(event.position))
+					return false;
+
+				draggingScrollbar = true;
+
+				dragPointerStartY = event.position.y;
+				dragOffsetStart = scrollModel.offset();
+
+				markNeedsPaint();
+
+				return true;
+			}
+
+			void pointerMoveOverride(const PointerEvent& event) override {
+				if (!draggingScrollbar)
+					return;
+
+				Rect track = scrollbarTrackBounds();
+				Rect thumb = scrollbarThumbBounds();
+
+				float travelExtent = track.height - thumb.height;
+				if (travelExtent <= 0.0f)
+					return;
+
+				float pointerDelta = event.position.y - dragPointerStartY;
+				float scrollDelta = pointerDelta / travelExtent * scrollModel.maximumOffset();
+
+				bool changed = scrollModel.scrollTo(dragOffsetStart + scrollDelta);
+				if (!changed)
+					return;
+
+				arrangeChild(bounds());
+				markNeedsPaint();
+			}
+
+			void pointerUpOverride(const PointerEvent& event) override {
+				if (event.button != PointerButton::Left)
+					return;
+
+				if (!draggingScrollbar)
+					return;
+
+				draggingScrollbar = false;
+
+				markNeedsPaint();
+			}
+
+			void pointerCancelOverride() override {
+				if (!draggingScrollbar)
+					return;
+
+				draggingScrollbar = false;
+
+				markNeedsPaint();
+			}
+
 			bool pointerWheelOverride(const PointerWheelEvent& event) override {
 				if (!hasChild())
 					return false;
@@ -79,6 +143,13 @@ namespace tiny {
 				markNeedsPaint();
 
 				return true;
+			}
+
+			Element* hitTestChildren(const Point& position) {
+				if (scrollbarInteractive() && scrollbarHitBounds().contains(position))
+					return nullptr;
+
+				return SingleChildElement::hitTestChildren(position);
 			}
 
 		private:
@@ -115,6 +186,20 @@ namespace tiny {
 				return Rect(area.x + area.width - margin - width, area.y + margin, width, height);
 			}
 
+			Rect scrollbarHitBounds() const {
+				const Rect& area = bounds();
+
+				Rect track = scrollbarTrackBounds();
+
+				float hitWidth = std::max(scrollViewStyle.scrollbarHitWidth, track.width);
+				hitWidth = std::min(hitWidth, area.width);
+
+				float centerX = track.x + track.width * 0.5f;
+				float x = centerX - hitWidth * 0.5f;
+
+				return Rect(x, area.y, hitWidth, area.height);
+			}
+
 			Rect scrollbarThumbBounds() const {
 				Rect track = scrollbarTrackBounds();
 				if (track.width <= 0.0f || track.height <= 0.0f)
@@ -129,6 +214,13 @@ namespace tiny {
 				float thumbY = track.y + travelExtent * scrollModel.offsetFraction();
 
 				return Rect(track.x, thumbY, track.width, thumbExtent);
+			}
+
+			Rect scrollbarThumbHitBounds() const {
+				Rect hitArea = scrollbarHitBounds();
+				Rect thumb = scrollbarThumbBounds();
+
+				return Rect(hitArea.x, thumb.y, hitArea.y, thumb.height);
 			}
 
 			void paintScrollbar(Canvas& canvas) {
@@ -148,7 +240,12 @@ namespace tiny {
 				if (thumb.width <= 0.0f || thumb.height <= 0.0f)
 					return;
 
-				canvas.fillRect(thumb, scrollViewStyle.thumbColor);
+				Color thumbColor = draggingScrollbar ? scrollViewStyle.pressedThumbColor : scrollViewStyle.thumbColor;
+				canvas.fillRect(thumb, thumbColor);
+			}
+
+			bool scrollbarInteractive() const {
+				return scrollViewStyle.showScrollbar && scrollModel.canScroll();
 			}
 
 		private:
@@ -157,6 +254,11 @@ namespace tiny {
 			ScrollModel scrollModel;
 
 			ScrollViewStyle scrollViewStyle;
+
+			bool draggingScrollbar = false;
+
+			float dragPointerStartY = 0.0f;
+			float dragOffsetStart = 0.0f;
 		};
 	}
 
