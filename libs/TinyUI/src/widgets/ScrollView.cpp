@@ -71,16 +71,32 @@ namespace tiny {
 				if (!scrollbarInteractive())
 					return false;
 
-				Rect thumbHit = scrollbarThumbHitBounds();
-				if (!thumbHit.contains(event.position))
+				Rect scrollbarHit = scrollbarHitBounds();
+				if (!scrollbarHit.contains(event.position))
 					return false;
 
-				draggingScrollbar = true;
+				Rect thumbHit = scrollbarThumbHitBounds();
+				if (thumbHit.contains(event.position)) {
+					draggingScrollbar = true;
 
-				dragPointerStartY = event.position.y;
-				dragOffsetStart = scrollModel.offset();
+					dragPointerStartY = event.position.y;
+					dragOffsetStart = scrollModel.offset();
 
-				markNeedsPaint();
+					markNeedsPaint();
+
+					return true;
+				}
+
+				Rect thumb = scrollbarThumbBounds();
+				if (event.position.y < thumb.y) {
+					scrollPage(-1.0f);
+					return true;
+				}
+
+				if (event.position.y > thumb.y + thumb.height) {
+					scrollPage(1.0f);
+					return true;
+				}
 
 				return true;
 			}
@@ -145,7 +161,7 @@ namespace tiny {
 				return true;
 			}
 
-			Element* hitTestChildren(const Point& position) {
+			Element* hitTestChildren(const Point& position) override {
 				if (scrollbarInteractive() && scrollbarHitBounds().contains(position))
 					return nullptr;
 
@@ -195,7 +211,9 @@ namespace tiny {
 				hitWidth = std::min(hitWidth, area.width);
 
 				float centerX = track.x + track.width * 0.5f;
+
 				float x = centerX - hitWidth * 0.5f;
+				x = std::clamp(x, area.x, area.x + area.width - hitWidth);
 
 				return Rect(x, area.y, hitWidth, area.height);
 			}
@@ -220,7 +238,7 @@ namespace tiny {
 				Rect hitArea = scrollbarHitBounds();
 				Rect thumb = scrollbarThumbBounds();
 
-				return Rect(hitArea.x, thumb.y, hitArea.y, thumb.height);
+				return Rect(hitArea.x, thumb.y, hitArea.width, thumb.height);
 			}
 
 			void paintScrollbar(Canvas& canvas) {
@@ -246,6 +264,19 @@ namespace tiny {
 
 			bool scrollbarInteractive() const {
 				return scrollViewStyle.showScrollbar && scrollModel.canScroll();
+			}
+
+			bool scrollPage(float direciton) {
+				float pageExtent = scrollModel.viewportExtent() * 0.9f;
+
+				bool changed = scrollModel.scrollBy(pageExtent * direciton);
+				if (!changed)
+					return false;
+
+				arrangeChild(bounds());
+				markNeedsPaint();
+
+				return true;
 			}
 
 		private:
