@@ -40,6 +40,7 @@
 #include <tiny/ui/widgets/TitleBar.h>
 #include <tiny/ui/widgets/ImageView.h>
 #include <tiny/ui/widgets/ImageViewer.h>
+#include <tiny/ui/widgets/ScrollView.h>
 
 namespace {
 	struct PlaygroundState {
@@ -208,6 +209,33 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previousInstance, PWSTR comman
 			}
 				)
 			);
+
+			std::vector<std::unique_ptr<tiny::Widget>> scrollChildren;
+			for (int index = 1; index <= 20; ++index) {
+				std::u32string text = U"Scroll item ";
+
+				std::string number = std::to_string(index);
+				for (char character : number)
+					text.push_back(static_cast<char32_t>(character));
+
+				scrollChildren.push_back(std::make_unique<tiny::Text>(
+						std::move(text),
+						tiny::Color::fromRgb(205, 214, 244),
+						bodyStyle));
+			}
+
+			std::unique_ptr<tiny::Widget> scrollContent = std::make_unique<tiny::Column>(
+					std::move(scrollChildren),
+					12.0f,
+					tiny::CrossAxisAlignment::Stretch,
+					tiny::Key("scroll-content"));
+
+			std::unique_ptr<tiny::Widget> scrollView = std::make_unique<tiny::ScrollView>(
+					std::move(scrollContent),
+					48.0f,
+					tiny::Key("demo-scroll-view"));
+
+			children.push_back(std::make_unique<tiny::SizedBox>(tiny::Size(360.0f, 180.0f), std::move(scrollView), tiny::Key("scroll-viewport")))
 
 			std::unique_ptr<tiny::Widget> toolbar = std::make_unique<tiny::Row>(std::move(toolbarChildren), 8.0f, tiny::CrossAxisAlignment::Center, tiny::Key("title-toolbar-row"));
 
