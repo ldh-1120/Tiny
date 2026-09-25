@@ -41,6 +41,7 @@
 #include <tiny/ui/widgets/ImageView.h>
 #include <tiny/ui/widgets/ImageViewer.h>
 #include <tiny/ui/widgets/ScrollView.h>
+#include <tiny/ui/widgets/Flexible.h>
 
 namespace {
 	struct PlaygroundState {
@@ -138,6 +139,8 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previousInstance, PWSTR comman
 
 				uiRoot.requestRebuild();
 			}, buttonStyle, tiny::Key("increment-button"), state.addEnabled));
+
+			actionChildren.push_back(std::make_unique<tiny::Spacer>());
 
 			actionChildren.push_back(
 				std::make_unique<tiny::Button>(U"Decrease", [&state, &uiRoot]() {

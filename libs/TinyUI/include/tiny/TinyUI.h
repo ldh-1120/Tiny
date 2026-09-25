@@ -27,3 +27,4 @@
 #include <tiny/ui/widgets/Text.h>
 #include <tiny/ui/widgets/TextBox.h>
 #include <tiny/ui/widgets/ScrollView.h>
+#include <tiny/ui/widgets/Flexible.h>

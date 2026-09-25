@@ -14,6 +14,7 @@
 #include <tiny/ui/LayoutContext.h>
 #include <tiny/ui/MultiChildElement.h>
 #include <tiny/ui/layout/Constraints.h>
+#include <tiny/ui/widgets/Flexible.h>
 
 namespace tiny {
 	namespace {
@@ -62,28 +63,68 @@ namespace tiny {
 			}
 
 			Size measureOverride(LayoutContext& context, const Constraints& constraints) override {
-				float totalWidth = 0.0f;
+				float totalChildWidth = 0.0f;
 				float maximumChildHeight = 0.0f;
 
+				float totalFlex = 0.0f;
+
 				std::size_t visibleChildCount = 0;
+				bool boundedMainAxis = constraints.hasBoundedWidth();
 
 				Constraints childConstraints(0.0f, std::numeric_limits<float>::infinity(), 0.0f, constraints.maxHeight());
 				for (const std::unique_ptr<Element>& child : children()) {
 					if (!child)
 						continue;
 
+					++visibleChildCount;
+
+					float flex = boundedMainAxis ? detail::flexFactor(*child) : 0.0f;
+					if (flex > 0.0f) {
+						totalFlex += flex;
+						continue;
+					}
+
 					Size childSize = child->measure(context, childConstraints);
 
-					totalWidth += childSize.width;
+					totalChildWidth += childSize.width;
 					maximumChildHeight = std::max(maximumChildHeight, childSize.height);
-
-					++visibleChildCount;
 				}
 
+				float totalSpacing = 0.0f;
 				if (visibleChildCount > 1)
-					totalWidth += childSpacing * static_cast<float>(visibleChildCount - 1);
+					totalSpacing = childSpacing * static_cast<float>(visibleChildCount - 1);
 
-				return constraints.constrain(Size(totalWidth, maximumChildHeight));
+				float remainingWidth = 0.0f;
+				if (boundedMainAxis && totalFlex > 0.0f) {
+					remainingWidth = std::max(constraints.maxWidth() - totalChildWidth - totalSpacing, 0.0f);
+					for (const std::unique_ptr<Element>& child : children()) {
+						if (!child)
+							continue;
+
+						float flex = detail::flexFactor(*child);
+						if (flex <= 0.0f)
+							continue;
+
+						float allocatedWidth = remainingWidth * flex / totalFlex;
+
+						FlexFit fit = detail::flexFit(*child);
+
+						Constraints flexConstraints;
+						if (fit == FlexFit::Tight)
+							flexConstraints = Constraints(allocatedWidth, allocatedWidth, 0.0f, constraints.maxHeight());
+						else
+							flexConstraints = Constraints(0.0f, allocatedWidth, 0.0f, constraints.maxHeight());
+
+						Size childSize = child->measure(context, flexConstraints);
+						totalChildWidth += childSize.width;
+
+						maximumChildHeight = std::max(maximumChildHeight, childSize.height);
+					}
+				}
+
+				totalChildWidth += totalSpacing;
+
+				return constraints.constrain(Size(totalChildWidth, maximumChildHeight));
 			}
 
 			void arrangeOverride(const Rect& bounds) override {
