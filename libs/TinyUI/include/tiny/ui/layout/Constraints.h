@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <limits>
+#include <optional>
 
 #include <tiny/core/Size.h>
 
@@ -20,6 +21,32 @@ namespace tiny {
 			return Constraints(width, width, height, height);
 		}
 
+        static constexpr Constraints tightFor(std::optional<float> width = std::nullopt, std::optional<float> height = std::nullopt) {
+            float minimumWidth = width.has_value() ? std::max(width.value(), 0.0f) : 0.0f;
+            float maximumWidth = width.has_value() ? std::max(width.value(), 0.0f) : infinity();
+
+            float minimumHeight = height.has_value() ? std::max(height.value(), 0.0f) : 0.0f;
+            float maximumHeight = height.has_value() ? std::max(height.value(), 0.0f) : infinity();
+
+            return Constraints(minimumWidth, maximumWidth, minimumHeight, maximumHeight);
+        }
+
+        static constexpr Constraints fixedWidth(float width) {
+            return tightFor(width, std::nullopt);
+        }
+
+        static constexpr Constraints fixedHeight(float height) {
+            return tightFor(std::nullopt, height);
+        }
+
+        static constexpr Constraints widthRange(float minimumWidth, float maximumWidth) {
+            return Constraints(minimumWidth, maximumWidth, 0.0f, infinity());
+        }
+
+        static constexpr Constraints heightRange(float minimumHeight, float maximumHeight) {
+            return Constraints(0.0f, infinity(), minimumHeight, maximumHeight);
+        }
+
 		static constexpr Constraints loose(const Size& size) {
 			return Constraints(0.0f, std::max(size.width, 0.0f), 0.0f, std::max(size.height, 0.0f));
 		}
@@ -30,6 +57,12 @@ namespace tiny {
 
         constexpr Constraints loosen() const {
 			return Constraints(0.0f, maximumWidth, 0.0f, maximumHeight);
+        }
+
+        constexpr Constraints enforce(const Constraints& parent) {
+            return Constraints(
+                std::clamp(minimumWidth, parent.minimumWidth, parent.maximumWidth), std::clamp(maximumWidth, parent.minimumWidth, parent.maximumWidth),
+                std::clamp(minimumHeight, parent.minimumHeight, parent.maximumHeight), std::clamp(maximumHeight, parent.minimumHeight, parent.maximumHeight));
         }
 
 		constexpr Size constrain(const Size& size) const {
