@@ -68,6 +68,9 @@ namespace tiny {
         Digit8,
         Digit9,
 
+        Equal,
+        Minus,
+
         F1,
         F2,
         F3,

@@ -21,7 +21,7 @@ namespace tiny {
 	namespace {
 		class ImageViewerElement final : public Element {
 		public:
-			explicit ImageViewerElement(const ImageViewer& widget) : Element(widget), imageValue(widget.image()), requestedSizeValue(widget.requestedSize()), interpolationValue(widget.interpolation()) { }
+			explicit ImageViewerElement(const ImageViewer& widget) : Element(widget), imageValue(widget.image()), requestedSizeValue(widget.requestedSize()), interpolationValue(widget.interpolation()), zoomChangedCallback(widget.onZoomChanged()) { }
 
 		protected:
 			void updateOverride(const Widget& widget) override {
@@ -44,6 +44,7 @@ namespace tiny {
 				
 				requestedSizeValue = nextSize;
 				interpolationValue = viewer.interpolation();
+				zoomChangedCallback = viewer.onZoomChanged();
 
 				if (sizeChanged)
 					markNeedsLayout();
@@ -129,57 +130,51 @@ namespace tiny {
 			}
 
 			bool pointerWheelOverride(const PointerWheelEvent& event) override {
-				if (!imageValue)
-					return false;
-
 				if (event.delta == 0.0f)
 					return false;
 
-				const Rect& area = bounds();
-				if (area.width <= 0.0f || area.height <= 0.0f)
-					return false;
-
-				float originalWidth = static_cast<float>(imageValue->width());
-				float originalHeight = static_cast<float>(imageValue->height());
-
-				if (originalWidth <= 0.0f || originalHeight <= 0.0f)
-					return false;
-
-				float oldZoom = zoomValue;
 				float zoomFactor = std::pow(ZoomStep, event.delta);
-
-				float nextZoom = std::clamp(oldZoom * zoomFactor, MinimumZoom, MaximumZoom);
-				if (nextZoom == oldZoom)
-					return true;
-
-				float oldWidth = originalWidth * oldZoom;
-				float oldHeight = originalHeight * oldZoom;
-
-				float oldLeft = area.x + (area.width - oldWidth) * 0.5f + panX;
-				float oldTop = area.y + (area.height - oldHeight) * 0.5f + panY;
-
-				float imageX = (event.position.x - oldLeft) / oldZoom;
-				float imageY = (event.position.y - oldTop) / oldZoom;
-
-				zoomValue = nextZoom;
-
-				float newWidth = originalWidth * zoomValue;
-				float newHeight = originalHeight * zoomValue;
-
-				float newCenterLeft = area.x + (area.width - newWidth) * 0.5f;
-				float newCenterTop = area.y + (area.height - newHeight) * 0.5f;
-
-				panX = event.position.x - imageX * zoomValue - newCenterLeft;
-				panY = event.position.y - imageY * zoomValue - newCenterTop;
-
-				clampPan();
-				markNeedsPaint();
+				setZoomAt(zoomValue * zoomFactor, event.position);
 
 				return true;
 			}
 
 			void pointerCancelOverride() override {
 				dragging = false;
+			}
+
+			bool focusable() const override {
+				return imageValue != nullptr;
+			}
+
+			bool keyDownOverride(const KeyEvent& event) override {
+				if (!imageValue)
+					return false;
+
+				if (!event.modifiers.control || event.modifiers.alt)
+					return false;
+
+				if (event.key == KeyCode::Equal) {
+					setZoomCentered(zoomValue * ZoomStep);
+					return true;
+				}
+
+				if (event.key == KeyCode::Minus) {
+					setZoomCentered(zoomValue / ZoomStep);
+					return true;
+				}
+				
+				if (event.key == KeyCode::Digit0 && !event.repeated) {
+					setFitZoom();
+					return true;
+				}
+
+				if (event.key == KeyCode::Digit1 && !event.repeated) {
+					setZoomCentered(1.0f);
+					return true;
+				}
+
+				return true;
 			}
 
 		private:
@@ -232,6 +227,105 @@ namespace tiny {
 				}
 			}
 
+			float calculateFitZoom() const {
+				if (!imageValue)
+					return 1.0f;
+
+				const Rect& area = bounds();
+
+				float imageWidth = static_cast<float>(imageValue->width());
+				float imageHeight = static_cast<float>(imageValue->height());
+
+				if (area.width <= 0.0f || area.height <= 0.0f || imageWidth <= 0.0f || imageHeight <= 0.0f)
+					return 1.0f;
+
+				float scaleX = area.width / imageWidth;
+				float scaleY = area.height / imageHeight;
+
+				return std::min(1.0f, std::max(scaleX, scaleY));
+			}
+
+			void setFitZoom() {
+				float fitZoom = calculateFitZoom();
+				zoomValue = fitZoom;
+
+				panX = 0.0f;
+				panY = 0.0f;
+
+				dragging = false;
+
+				clampPan();
+				notifyZoomChanged();
+			}
+
+			void notifyZoomChanged() {
+				markNeedsPaint();
+
+				if (zoomChangedCallback)
+					zoomChangedCallback(zoomValue);
+			}
+
+			void setZoomCentered(float zoom) {
+				if (!imageValue)
+					return;
+
+				float nextZoom = std::clamp(zoom, MinimumZoom, MaximumZoom);
+				if (nextZoom == zoomValue)
+					return;
+
+				zoomValue = nextZoom;
+
+				panX = 0.0f;
+				panY = 0.0f;
+
+				clampPan();
+				notifyZoomChanged();
+			}
+
+			void setZoomAt(float zoom, const Point& position) {
+				if (!imageValue)
+					return;
+
+				const Rect& area = bounds();
+				if (area.width <= 0.0f || area.height <= 0.0f)
+					return;
+
+				float originalWidth = static_cast<float>(imageValue->width());
+				float originalHeight = static_cast<float>(imageValue->height());
+
+				if (originalWidth <= 0.0f || originalHeight <= 0.0f)
+					return;
+
+				float oldZoom = zoomValue;
+				float nextZoom = std::clamp(zoom, MinimumZoom, MaximumZoom);
+
+				if (nextZoom == oldZoom)
+					return;
+
+				float oldWidth = originalWidth * oldZoom;
+				float oldHeight = originalHeight * oldZoom;
+
+				float oldLeft = area.x + (area.width - oldWidth) * 0.5f + panX;
+				float oldTop = area.y + (area.height - oldHeight) * 0.5f + panY;
+
+				float imageX = (position.x - oldLeft) / oldZoom;
+				float imageY = (position.y - oldTop) / oldZoom;
+
+				zoomValue = nextZoom;
+
+				float newWidth = originalWidth * zoomValue;
+				float newHeight = originalHeight * zoomValue;
+
+				float newCenterLeft = area.x + (area.width - newWidth) * 0.5f;
+				float newCenterTop = area.y + (area.height - newHeight) * 0.5f;
+
+				panX = position.x - imageX * zoomValue - newCenterLeft;
+				panY = position.y - imageY * zoomValue - newCenterTop;
+
+				clampPan();
+				notifyZoomChanged();
+			}
+
 		private:
 			std::shared_ptr<Image> imageValue;
 			Size requestedSizeValue;
@@ -247,14 +341,16 @@ namespace tiny {
 
 			float zoomValue = 1.0f;
 
-			static constexpr float MinimumZoom = 0.1f;
-			static constexpr float MaximumZoom = 16.0f;
+			ImageViewer::ZoomChangedCallback zoomChangedCallback;
+
+			static constexpr float MinimumZoom = 0.05f;
+			static constexpr float MaximumZoom = 64.0f;
 			static constexpr float ZoomStep = 1.15f;
 		};
 	}
 	
-	ImageViewer::ImageViewer(std::shared_ptr<Image> image, const Size& size, ImageInterpolation interpolation, Key key) 
-		: Widget(std::move(key)), imageValue(std::move(image)), requestedSizeValue(std::max(size.width, 0.0f), std::max(size.height, 0.0f)), interpolationValue(interpolation) { }
+	ImageViewer::ImageViewer(std::shared_ptr<Image> image, const Size& size, ImageInterpolation interpolation, Key key, ZoomChangedCallback onZoomChanged)
+		: Widget(std::move(key)), imageValue(std::move(image)), requestedSizeValue(std::max(size.width, 0.0f), std::max(size.height, 0.0f)), interpolationValue(interpolation), zoomChangedCallback(std::move(onZoomChanged)) { }
 
 	const std::shared_ptr<Image>& ImageViewer::image() const {
 		return imageValue;
@@ -270,5 +366,9 @@ namespace tiny {
 
 	std::unique_ptr<Element> ImageViewer::createElement() const {
 		return std::make_unique<ImageViewerElement>(*this);
+	}
+
+	const ImageViewer::ZoomChangedCallback& ImageViewer::onZoomChanged() const {
+		return zoomChangedCallback;
 	}
 }

@@ -124,6 +124,14 @@ namespace {
 			case VK_SCROLL:
 				return tiny::KeyCode::ScrollLock;
 
+			case VK_OEM_PLUS:
+			case VK_ADD:
+				return tiny::KeyCode::Equal;
+
+			case VK_OEM_MINUS:
+			case VK_SUBTRACT:
+				return tiny::KeyCode::Minus;
+
 			default:
 				return tiny::KeyCode::Unknown;
 		}

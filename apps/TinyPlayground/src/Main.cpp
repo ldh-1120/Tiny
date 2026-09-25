@@ -4,6 +4,8 @@
 #include <string>
 #include <algorithm>
 #include <filesystem>
+#include <cmath>
+#include <string>
 
 #include <Windows.h>
 
@@ -46,6 +48,8 @@ namespace {
 		std::u32string text;
 
 		bool addEnabled = true;
+
+		int viewerZoomPercent = 100;
 	};
 }
 
@@ -173,12 +177,35 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previousInstance, PWSTR comman
 				uiRoot.requestRebuild();
 			}, tiny::ButtonStyle(), tiny::Key("toolbar-reset")));
 
+			std::string zoomNumber = std::to_string(state.viewerZoomPercent);
+			std::u32string zoomText = U"Zoom: ";
+
+			for (char digit : zoomNumber)
+				zoomText.push_back(static_cast<char32_t>(digit));
+
+			zoomText += U"%  |  Ctrl+0 Fit  |  Ctrl+1 100%";
+
+			tiny::TextStyle zoomTextStyle;
+			zoomTextStyle.fontFamily = L"Segoe UI";
+			zoomTextStyle.fontSize = 12.0f;
+
+			children.push_back(
+				std::make_unique<tiny::Text>(
+					zoomText,
+					tiny::Color::fromRgb(205, 214, 244),
+					zoomTextStyle,
+					tiny::Key("viewer-zoom-label")));
+
 			children.push_back(
 				std::make_unique<tiny::ImageViewer>(
 					previewImage,
 					tiny::Size(360.0f, 220.0f),
 					tiny::ImageInterpolation::Linear,
-					tiny::Key("image-viewer")
+					tiny::Key("image-viewer"),
+					[&state, &uiRoot](float zoom) {
+				state.viewerZoomPercent = static_cast<int>(std::lround(zoom * 100.0f));
+				uiRoot.requestRebuild();
+			}
 				)
 			);
 
@@ -186,7 +213,9 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previousInstance, PWSTR comman
 
 			tiny::TitleBarStyle titleBarStyle;
 			titleBarStyle.brandWidth = 180.0f;
-			titleBarStyle.iconSize = 16.0f;
+			titleBarStyle.titleLeftPadding = 42.0f;
+			titleBarStyle.iconLeftPadding = 10.0f;
+			titleBarStyle.iconSize = 22.0f;
 			titleBarStyle.iconColor = tiny::Color::fromRgb(137, 180, 250);
 
 			return std::make_unique<tiny::TitleBar>(U"Tiny Playground",
