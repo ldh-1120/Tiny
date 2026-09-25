@@ -235,7 +235,7 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previousInstance, PWSTR comman
 					48.0f,
 					tiny::Key("demo-scroll-view"));
 
-			children.push_back(std::make_unique<tiny::SizedBox>(tiny::Size(360.0f, 180.0f), std::move(scrollView), tiny::Key("scroll-viewport")))
+			children.push_back(std::make_unique<tiny::SizedBox>(tiny::Size(360.0f, 180.0f), std::move(scrollView), tiny::Key("scroll-viewport")));
 
 			std::unique_ptr<tiny::Widget> toolbar = std::make_unique<tiny::Row>(std::move(toolbarChildren), 8.0f, tiny::CrossAxisAlignment::Center, tiny::Key("title-toolbar-row"));
 

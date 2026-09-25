@@ -14,6 +14,7 @@
 #include <tiny/ui/LayoutContext.h>
 #include <tiny/ui/SingleChildElement.h>
 #include <tiny/ui/layout/Constraints.h>
+#include <tiny/ui/scroll/ScrollModel.h>
 
 namespace tiny {
 	namespace {
@@ -67,11 +68,8 @@ namespace tiny {
 				if (event.delta == 0.0f)
 					return false;
 
-				float previousOffset = scrollOffset;
-				float nextOffset = scrollOffset - event.delta * wheelStepValue;
-
-				scrollOffset = std::clamp(nextOffset, 0.0f, maximumScrollOffset());
-				if (scrollOffset == previousOffset)
+				bool changed = scrollModel.scrollBy(-event.delta * wheelStepValue);
+				if (!changed)
 					return false;
 
 				arrangeChild(bounds());
@@ -90,34 +88,22 @@ namespace tiny {
 				return childWidget->createElement();
 			}
 
-			float maximumScrollOffset() const {
-				if (!hasChild())
-					return 0.0f;
-
-				float contentHeight = child()->desiredSize().height;
-				return std::max(contentHeight - bounds().height, 0.0f);
-			}
-
-			void clampScrollOffset() {
-				scrollOffset = std::clamp(scrollOffset, 0.0f, maximumScrollOffset());
-			}
-
 			void arrangeChild(const Rect& viewport) {
 				if (!hasChild()) {
-					scrollOffset = 0.0f;
+					scrollModel.setExtents(viewport.height, 0.0f);
 					return;
 				}
 
-				clampScrollOffset();
-
 				float childHeight = child()->desiredSize().height;
-				child()->arrange(Rect(viewport.x, viewport.y - scrollOffset, viewport.width, childHeight));
+				scrollModel.setExtents(viewport.height, childHeight);
+
+				child()->arrange(Rect(viewport.x, viewport.y - scrollModel.offset(), viewport.width, childHeight));
 			}
 
 		private:
 			float wheelStepValue = 48.0f;
 
-			float scrollOffset = 0.0f;
+			ScrollModel scrollModel;
 		};
 	}
 

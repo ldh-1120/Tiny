@@ -84,6 +84,9 @@
     <ClCompile Include="src\widgets\ScrollView.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\scroll\ScrollModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\tiny\ui\layout\Constraints.h">
@@ -177,6 +180,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\tiny\ui\widgets\ScrollView.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\tiny\ui\scroll\ScrollModel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

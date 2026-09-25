@@ -12,6 +12,7 @@
 
 #include <tiny/ui/layout/Alignment.h>
 #include <tiny/ui/layout/Constraints.h>
+#include <tiny/ui/scroll/ScrollModel.h>
 
 #include <tiny/ui/text/TextEditingModel.h>
 #include <tiny/ui/text/TextSelection.h>
@@ -25,3 +26,4 @@
 #include <tiny/ui/widgets/SizedBox.h>
 #include <tiny/ui/widgets/Text.h>
 #include <tiny/ui/widgets/TextBox.h>
+#include <tiny/ui/widgets/ScrollView.h>
