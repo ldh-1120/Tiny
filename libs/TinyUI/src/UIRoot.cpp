@@ -3,6 +3,7 @@
 #include <utility>
 #include <cstddef>
 #include <vector>
+#include <algorithm>
 
 #include <tiny/core/Rect.h>
 
@@ -175,15 +176,28 @@ namespace tiny {
 	}
 
 	void UIRoot::updateHoveredElement(Element* element, const PointerEvent& event) {
-		if (hoveredElement == element)
-			return;
+		std::vector<Element*> nextPath;
 
-		if (hoveredElement)
-			hoveredElement->pointerLeave();
+		Element* current = element;
+		while (current) {
+			nextPath.push_back(current);
+			current = current->parent();
+		}
 
+		std::reverse(nextPath.begin(), nextPath.end());
+
+		std::size_t commonLength = 0;
+		while (commonLength < hoveredPath.size() && commonLength < nextPath.size() && hoveredPath[commonLength] == nextPath[commonLength])
+			++commonLength;
+
+		for (std::size_t index = hoveredPath.size(); index > commonLength; --index)
+			hoveredPath[index - 1]->pointerLeave();
+
+		for (std::size_t index = commonLength; index < nextPath.size(); ++index)
+			nextPath[index]->pointerEnter(event);
+
+		hoveredPath = std::move(nextPath);
 		hoveredElement = element;
-		if (hoveredElement)
-			hoveredElement->pointerEnter(event);
 	}
 
 	bool UIRoot::pointerPressed(const PointerEvent& event) {
@@ -242,10 +256,10 @@ namespace tiny {
 	}
 
 	void UIRoot::pointerExited() {
-		if (!hoveredElement)
-			return;
+		for (std::size_t index = hoveredPath.size(); index > 0; --index)
+			hoveredPath[index - 1]->pointerLeave();
 
-		hoveredElement->pointerLeave();
+		hoveredPath.clear();
 		hoveredElement = nullptr;
 	}
 
@@ -264,7 +278,10 @@ namespace tiny {
 		}
 
 		if (hoveredElement) {
-			hoveredElement->pointerLeave();
+			for (std::size_t index = hoveredPath.size(); index > 0; --index)
+				hoveredPath[index - 1]->pointerLeave();
+
+			hoveredPath.clear();
 			hoveredElement = nullptr;
 		}
 	}
@@ -327,10 +344,7 @@ namespace tiny {
 			capturedElement = nullptr;
 		}
 
-		if (hoveredElement == element) {
-			hoveredElement->pointerLeave();
-			hoveredElement = nullptr;
-		}
+		removeHoveredPathFrom(element);
 
 		focusManager.elementWillUnmount(element);
 	}
@@ -447,11 +461,7 @@ namespace tiny {
 			element->pointerCancel();
 		}
 
-		if (hoveredElement == element) {
-			hoveredElement = nullptr;
-
-			element->pointerLeave();
-		}
+		removeHoveredPathFrom(element);
 
 		if (focusManager.focusedElement() == element)
 			focusManager.clearFocus();
@@ -479,5 +489,28 @@ namespace tiny {
 		}
 
 		return false;
+	}
+
+	void UIRoot::removeHoveredPathFrom(Element* element) {
+		if (!element)
+			return;
+
+		std::size_t targetIndex = hoveredPath.size();
+		for (std::size_t index = 0; index < hoveredPath.size(); ++index) {
+			if (hoveredPath[index] == element) {
+				targetIndex = index;
+				break;
+			}
+		}
+
+		if (targetIndex >= hoveredPath.size())
+			return;
+
+		for (std::size_t index = hoveredPath.size(); index > targetIndex; --index)
+			hoveredPath[index - 1]->pointerLeave();
+
+		hoveredPath.resize(targetIndex);
+		
+		hoveredElement = hoveredPath.empty() ? nullptr : hoveredPath.back();
 	}
 }

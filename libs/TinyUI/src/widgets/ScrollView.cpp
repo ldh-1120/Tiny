@@ -15,12 +15,14 @@
 #include <tiny/ui/SingleChildElement.h>
 #include <tiny/ui/layout/Constraints.h>
 #include <tiny/ui/scroll/ScrollModel.h>
+#include <tiny/ui/animation/AnimationController.h>
+#include <tiny/ui/animation/Easing.h>
 
 namespace tiny {
 	namespace {
 		class ScrollViewElement final : public SingleChildElement {
 		public:
-			explicit ScrollViewElement(const ScrollView& widget) : SingleChildElement(widget, createChild(widget)), wheelStepValue(widget.wheelStep()), scrollViewStyle(widget.style()) { }
+			explicit ScrollViewElement(const ScrollView& widget) : SingleChildElement(widget, createChild(widget)), wheelStepValue(widget.wheelStep()), scrollViewStyle(widget.style()), scrollbarOpacity(widget.style().autoHideScrollbar ? 0.0f : 1.0f) { }
 
 		protected:
 			void updateOverride(const Widget& widget) override {
@@ -82,7 +84,7 @@ namespace tiny {
 					dragPointerStartY = event.position.y;
 					dragOffsetStart = scrollModel.offset();
 
-					markNeedsPaint();
+					revealScrollbar();
 
 					return true;
 				}
@@ -132,6 +134,31 @@ namespace tiny {
 
 				draggingScrollbar = false;
 
+				revealScrollbar();
+				updateScrollbarVisibility();
+
+				markNeedsPaint();
+			}
+
+			void pointerEnterOverride(const PointerEvent& event) override {
+				(void)event;
+
+				if (pointerInside)
+					return;
+
+				pointerInside = true;
+
+				updateScrollbarVisibility();
+				markNeedsPaint();
+			}
+
+			void pointerLeaveOverride() override {
+				if (!pointerInside)
+					return;
+
+				pointerInside = false;
+
+				updateScrollbarVisibility();
 				markNeedsPaint();
 			}
 
@@ -156,7 +183,7 @@ namespace tiny {
 					return false;
 
 				arrangeChild(bounds());
-				markNeedsPaint();
+				revealScrollbar();
 
 				return true;
 			}
@@ -166,6 +193,25 @@ namespace tiny {
 					return nullptr;
 
 				return SingleChildElement::hitTestChildren(position);
+			}
+
+			void frameOverride(const FrameEvent& event) override {
+				float deltaSeconds = static_cast<float>(event.delta.count());
+
+				bool needsPaint = false;
+				if (scrollbarActivityRemaining > 0.0f && deltaSeconds > 0.0f) {
+					scrollbarActivityRemaining = std::max(scrollbarActivityRemaining - deltaSeconds, 0.0f);
+					if (scrollbarActivityRemaining == 0.0f)
+						updateScrollbarVisibility();
+				}
+
+				if (scrollbarOpacity.advance(deltaSeconds))
+					needsPaint = true;
+
+				if (needsPaint)
+					markNeedsPaint();
+
+				updateFrameDemand();
 			}
 
 		private:
@@ -181,6 +227,8 @@ namespace tiny {
 			void arrangeChild(const Rect& viewport) {
 				if (!hasChild()) {
 					scrollModel.setExtents(viewport.height, 0.0f);
+					updateScrollbarVisibility();
+
 					return;
 				}
 
@@ -188,6 +236,8 @@ namespace tiny {
 				scrollModel.setExtents(viewport.height, childHeight);
 
 				child()->arrange(Rect(viewport.x, viewport.y - scrollModel.offset(), viewport.width, childHeight));
+
+				updateScrollbarVisibility();
 			}
 
 			Rect scrollbarTrackBounds() const {
@@ -215,7 +265,7 @@ namespace tiny {
 				float x = centerX - hitWidth * 0.5f;
 				x = std::clamp(x, area.x, area.x + area.width - hitWidth);
 
-				return Rect(x, area.y, hitWidth, area.height);
+				return Rect(x, track.y, hitWidth, track.height);
 			}
 
 			Rect scrollbarThumbBounds() const {
@@ -252,31 +302,71 @@ namespace tiny {
 				if (track.width <= 0.0f || track.height <= 0.0f)
 					return;
 
-				canvas.fillRect(track, scrollViewStyle.trackColor);
+				float opacity = scrollbarOpacity.value();
+				if (opacity <= 0.001f)
+					return;
+
+				canvas.fillRect(track, withOpacity(scrollViewStyle.trackColor, opacity));
 
 				Rect thumb = scrollbarThumbBounds();
 				if (thumb.width <= 0.0f || thumb.height <= 0.0f)
 					return;
 
 				Color thumbColor = draggingScrollbar ? scrollViewStyle.pressedThumbColor : scrollViewStyle.thumbColor;
-				canvas.fillRect(thumb, thumbColor);
+				canvas.fillRect(thumb, withOpacity(thumbColor, opacity));
 			}
 
 			bool scrollbarInteractive() const {
-				return scrollViewStyle.showScrollbar && scrollModel.canScroll();
+				if (!scrollViewStyle.showScrollbar)
+					return false;
+
+				if (!scrollModel.canScroll())
+					return false;
+
+				if (!scrollViewStyle.autoHideScrollbar)
+					return true;
+
+				return pointerInside || draggingScrollbar || scrollbarOpacity.value() > 0.01f;
 			}
 
-			bool scrollPage(float direciton) {
+			bool scrollPage(float direction) {
 				float pageExtent = scrollModel.viewportExtent() * 0.9f;
 
-				bool changed = scrollModel.scrollBy(pageExtent * direciton);
+				bool changed = scrollModel.scrollBy(pageExtent * direction);
 				if (!changed)
 					return false;
 
 				arrangeChild(bounds());
-				markNeedsPaint();
+				revealScrollbar();
 
 				return true;
+			}
+
+			void updateScrollbarVisibility() {
+				bool available = scrollViewStyle.showScrollbar && scrollModel.canScroll();
+				bool shouldShow = available && (!scrollViewStyle.autoHideScrollbar || pointerInside || draggingScrollbar || scrollbarActivityRemaining > 0.0f);
+
+				float targetOpacity = shouldShow ? 1.0f : 0.0f;
+				float duration = shouldShow ? scrollViewStyle.scrollbarFadeInDuration : scrollViewStyle.scrollbarFadeOutDuration;
+
+				scrollbarOpacity.animateTo(targetOpacity, std::max(duration, 0.0f), Easing::EaseOutCubic);
+				updateFrameDemand();
+			}
+
+			void updateFrameDemand() {
+				bool needsFrames = scrollbarOpacity.isRunning() || scrollbarActivityRemaining > 0.0f;
+				setFrameUpdatesEnabled(needsFrames);
+			}
+
+			void revealScrollbar() {
+				if (!scrollViewStyle.showScrollbar || !scrollModel.canScroll())
+					return;
+
+				scrollbarActivityRemaining = std::max(scrollViewStyle.scrollbarHideDelay, 0.0f);
+				scrollbarOpacity.animateTo(1.0f, std::max(scrollViewStyle.scrollbarFadeInDuration, 0.0f), Easing::EaseOutCubic);
+
+				updateFrameDemand();
+				markNeedsPaint();
 			}
 
 		private:
@@ -290,6 +380,12 @@ namespace tiny {
 
 			float dragPointerStartY = 0.0f;
 			float dragOffsetStart = 0.0f;
+
+			bool pointerInside = false;
+
+			float scrollbarActivityRemaining = 0.0f;
+
+			AnimationController scrollbarOpacity;
 		};
 	}
 

@@ -19,7 +19,12 @@ namespace tiny {
 
 		float minimumThumbExtent = 24.0f;
 
+		float scrollbarFadeInDuration = 0.10f;
+		float scrollbarFadeOutDuration = 0.20f;
+		float scrollbarHideDelay = 0.55f;
+
 		bool showScrollbar = true;
+		bool autoHideScrollbar = true;
 	};
 
 	class ScrollView : public Widget {

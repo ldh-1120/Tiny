@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <unordered_set>
+#include <vector>
 
 #include <tiny/core/Event.h>
 #include <tiny/core/Size.h>
@@ -112,6 +113,8 @@ namespace tiny {
 		Element* bubblePointerDown(Element* target, const PointerEvent& event);
 		bool bubblePointerWheel(Element* target, const PointerWheelEvent& event);
 
+		void removeHoveredPathFrom(Element* element);
+
 	private:
 		std::unique_ptr<Widget> rootWidget;
 		std::unique_ptr<Element> rootElement;
@@ -127,6 +130,8 @@ namespace tiny {
 
 		Element* hoveredElement = nullptr;
 		Element* capturedElement = nullptr;
+
+		std::vector<Element*> hoveredPath;
 
 		bool layoutDirty = true;
 		bool hasLayoutSize = false;
