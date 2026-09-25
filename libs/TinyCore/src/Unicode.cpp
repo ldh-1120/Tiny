@@ -49,9 +49,8 @@ namespace tiny {
 				result.push_back(low);
 
 				continue;
-			}
-
-			result.push_back(static_cast<wchar_t>(codePoint));
+			} else
+				result.push_back(static_cast<wchar_t>(codePoint));
 		}
 
 		return result;
