@@ -116,7 +116,7 @@ namespace tiny {
 							break;
 					}
 
-					child->arrange(Rect(bounds.x, currentY, childWidth, childHeight));
+					child->arrange(Rect(childX, currentY, childWidth, childHeight));
 
 					currentY += childSize.height + childSpacing;
 				}
