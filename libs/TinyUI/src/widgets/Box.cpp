@@ -24,7 +24,7 @@ namespace tiny {
 				color = box.color();
 			}
 
-			Size measureOverride(LayoutContext& context, const Constraints& constraints) override {
+			Size measureOverride(LayoutContext&, const Constraints& constraints) override {
 				return constraints.constrain(requestedSize);
 			}
 

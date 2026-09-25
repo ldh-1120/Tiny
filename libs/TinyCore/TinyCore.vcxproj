@@ -171,7 +171,6 @@
     <ClInclude Include="include\tiny\TinyCore.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\TinyCore.cpp" />
     <ClCompile Include="src\Unicode.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

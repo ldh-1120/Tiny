@@ -9,7 +9,6 @@
 namespace tiny {
 	class WindowRenderer;
 	class TextLayout;
-	class TextStyle;
 
 	class GraphicsContext {
 	public:

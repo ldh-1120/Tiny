@@ -375,13 +375,13 @@ namespace tiny {
 			rootOwner->unregisterFrameElement(this);
 	}
 
-	void Element::frameOverride(const FrameEvent& event) { }
+	void Element::frameOverride(const FrameEvent&) { }
 
 	bool Element::isFocusVisible() const {
 		return hasFocus() && rootOwner && rootOwner->focusVisibility();
 	}
 
-	void Element::focusVisibilityChangedOverride(bool visible) { }
+	void Element::focusVisibilityChangedOverride(bool) { }
 
 	void Element::setEnabled(bool enabled) {
 		if (enabledValue == enabled)

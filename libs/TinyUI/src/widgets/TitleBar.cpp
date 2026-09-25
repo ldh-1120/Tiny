@@ -212,10 +212,10 @@ namespace tiny {
 						} else
 							canvas.drawRect(Rect(centerX - 5.0f, centerY - 5.0f, 10.0f, 10.0f), styleValue.textColor, 1.0f);
 					} else if (button == CaptionButton::Close && closeIconLayout) {
-						float iconX = centerX - closeIconLayout->size().width * 0.5f;
-						float iconY = centerY - closeIconLayout->size().height * 0.5f;
+						float closeIconX = centerX - closeIconLayout->size().width * 0.5f;
+						float closeIconY = centerY - closeIconLayout->size().height * 0.5f;
 
-						canvas.drawTextLayout(*closeIconLayout, Point(iconX, iconY), styleValue.textColor);
+						canvas.drawTextLayout(*closeIconLayout, Point(closeIconX, closeIconY), styleValue.textColor);
 					}
 				}
 

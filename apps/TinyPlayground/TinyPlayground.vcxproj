@@ -158,12 +158,6 @@
     <ProjectReference Include="..\..\libs\TinyUI\TinyUI.vcxproj">
       <Project>{5cee01a8-4399-42f6-ad0b-31ea70b029c9}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\libs\TinyCore\TinyCore.vcxproj">
-      <Project>{8069f973-b184-4a58-9631-912768f141d0}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\libs\TinyPlatform\TinyPlatform.vcxproj">
-      <Project>{12346bb2-c791-49e6-bdda-48bfe28266a3}</Project>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Image Include="x64\Debug\assets\icon.png" />

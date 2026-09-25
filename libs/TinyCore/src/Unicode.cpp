@@ -5,11 +5,11 @@
 namespace tiny {
 	constexpr char32_t REPLACEMENT_CHARACTER = U'\uFFFD';
 
-	bool isHighSurrogate(char16_t value) {
+	bool isHighSurrogate(char32_t value) {
 		return value >= 0xD800 && value <= 0xDBFF;
 	}
 
-	bool isLowSurrogate(char16_t value) {
+	bool isLowSurrogate(char32_t value) {
 		return value >= 0xDC00 && value <= 0xDFFF;
 	}
 
@@ -93,14 +93,14 @@ namespace tiny {
 			}
 
 			return result;
-		}
+		} else {
+			for (wchar_t value : text) {
+				char32_t codePoint = static_cast<char32_t>(value);
+				if (!isUnicodeScalar(codePoint))
+					codePoint = REPLACEMENT_CHARACTER;
 
-		for (wchar_t value : text) {
-			char32_t codePoint = static_cast<char32_t>(value);
-			if (!isUnicodeScalar(codePoint))
-				codePoint = REPLACEMENT_CHARACTER;
-
-			result.push_back(codePoint);
+				result.push_back(codePoint);
+			}
 		}
 
 		return result;

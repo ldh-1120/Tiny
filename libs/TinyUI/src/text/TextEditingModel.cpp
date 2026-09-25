@@ -88,6 +88,8 @@ namespace tiny {
 
 		textSelection.anchor = 0;
 		textSelection.caret = textValue.size();
+
+		return true;
 	}
 
 	bool TextEditingModel::eraseSelection() {

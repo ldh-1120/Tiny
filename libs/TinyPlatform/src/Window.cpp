@@ -901,10 +901,6 @@ namespace tiny {
 
 		bool insideCaption = clientPoint.x >= clientRect.left && clientPoint.x < clientRect.right && clientPoint.y >= clientRect.top && clientPoint.y < captionHeight;
 		if (insideCaption) {
-			float scale = dpiScale();
-			if (scale <= 0.0f)
-				scale = 1.0f;
-
 			Point logicalPoint(static_cast<float>(clientPoint.x) / scale, static_cast<float>(clientPoint.y) / scale);
 			if (captionClientHitTest && captionClientHitTest(logicalPoint))
 				return HTCLIENT;

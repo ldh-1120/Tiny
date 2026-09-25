@@ -120,17 +120,14 @@ namespace tiny {
 					lineHeight = textBoxStyle.textStyle.fontSize;
 
 				Size desiredSize(textBoxStyle.width, lineHeight + textBoxStyle.padding.vertical());
-				Size measuredSize = constraints.constrain(desiredSize);
-
-				float contentWidth = std::max(measuredSize.width - textBoxStyle.padding.horizontal(), 0.0f);
 
 				std::u32string displayText = buildDisplayText();
 				textLayout = graphicsContext.createTextLayout(displayText, textBoxStyle.textStyle, std::numeric_limits<float>::infinity());
 
-				return measuredSize;
+				return constraints.constrain(desiredSize);
 			}
 
-			void arrangeOverride(const Rect& finalBounds) override {
+			void arrangeOverride(const Rect&) override {
 				Rect contentBounds = getContentBounds();
 
 				clampHorizontalScroll(contentBounds);
@@ -712,10 +709,8 @@ namespace tiny {
 				Rect visualBounds = getTextVisualBounds(contentBounds);
 
 				std::vector<Rect> rectangles = textLayout->hitTestRange(compositionStart, compositionText.size());
-				for (const Rect& rectangle : rectangles) {
-					float y = textOrigin.y + rectangle.y + rectangle.height - 1.0f;
+				for (const Rect& rectangle : rectangles)
 					canvas.fillRect(Rect(textOrigin.x + rectangle.x, visualBounds.y + visualBounds.height - 1.0f, rectangle.width, 1.0f), textBoxStyle.textColor);
-				}
 			}
 
 			void updateNativeCaretRect(const Rect& contentBounds) {
@@ -822,8 +817,8 @@ namespace tiny {
 				setFrameUpdatesEnabled(caretBlinkNeeded || focusAnimationNeeded);
 			}
 
-			void updateFocusAnimation(bool focused) {
-				focusAnimation.animateTo(focused ? 1.0f : 0.0f, 0.16f, Easing::EaseOutCubic);
+			void updateFocusAnimation(bool focusVisible) {
+				focusAnimation.animateTo(focusVisible ? 1.0f : 0.0f, 0.16f, Easing::EaseOutCubic);
 
 				updateFrameDemand();
 				markNeedsPaint();

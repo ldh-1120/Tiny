@@ -275,15 +275,15 @@ namespace tiny {
 				return Point(x, y);
 			}
 
-			void updateFocusAnimation(bool focused) {
-				focusAnimation.animateTo(focused ? 1.0f : 0.0f, 0.16f, Easing::EaseOutCubic);
+			void updateFocusAnimation(bool focusVisible) {
+				focusAnimation.animateTo(focusVisible ? 1.0f : 0.0f, 0.16f, Easing::EaseOutCubic);
 
 				updateFrameDemand();
 				markNeedsPaint();
 			}
 
-			void updateHoverAnimation(bool hovered) {
-				hoverAnimation.animateTo(hovered ? 1.0f : 0.0f, 0.12f, Easing::EaseOutCubic);
+			void updateHoverAnimation(bool targetHovered) {
+				hoverAnimation.animateTo(targetHovered ? 1.0f : 0.0f, 0.12f, Easing::EaseOutCubic);
 
 				updateFrameDemand();
 				markNeedsPaint();
