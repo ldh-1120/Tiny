@@ -109,6 +109,10 @@ namespace tiny {
 
 		void setCaptionClientHitTest(std::function<bool(const Point&)> callback);
 
+		void setPointerCursor(PointerCursor cursor);
+
+		PointerCursor pointerCursor() const;
+
 	private:
 		class Impl;
 

@@ -12,6 +12,23 @@ namespace tiny {
 		X2
 	};
 
+	enum class PointerCursor {
+		Arrow,
+
+		IBeam,
+		Hand,
+		Crosshair,
+		Move,
+
+		ResizeHorizontal,
+		ResizeVertical,
+
+		ResizeDiagonalNorthWestSouthEast,
+		ResizeDiagonalNorthEastSouthWest,
+
+		NotAllowed
+	};
+
 	struct PointerModifiers {
 		bool shift = false;
 		bool control = false;

@@ -158,6 +158,15 @@ namespace tiny {
 		return rootElement->hitTest(position) != nullptr;
 	}
 
+	PointerCursor UIRoot::pointerCursor() const {
+		const Element* target = capturedElement ? capturedElement : hoveredElement;
+		
+		if (!target)
+			return PointerCursor::Arrow;
+
+		return target->pointerCursor();
+	}
+
 	Element* UIRoot::hitTest(const Point& position) {
 		if (!rootElement)
 			return nullptr;

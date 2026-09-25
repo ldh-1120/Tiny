@@ -78,6 +78,8 @@ namespace tiny {
 
 		void pointerCancel();
 
+		PointerCursor pointerCursor() const;
+
 		const Size& desiredSize() const;
 		const Rect& bounds() const;
 
@@ -128,6 +130,8 @@ namespace tiny {
 		virtual bool pointerWheelOverride(const PointerWheelEvent& event);
 
 		virtual void pointerCancelOverride();
+
+		virtual PointerCursor pointerCursorOverride() const;
 
 		Clipboard* clipboard();
 		TextInputContext* textInputContext();

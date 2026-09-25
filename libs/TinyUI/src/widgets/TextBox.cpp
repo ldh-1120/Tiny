@@ -223,6 +223,10 @@ namespace tiny {
 				pointerSelecting = false;
 			}
 
+			PointerCursor pointerCursorOverride() const override {
+				return PointerCursor::IBeam;
+			}
+
 			void focusGainedOverride() override {
 				resetCaretBlink();
 				updateFocusAnimation(isFocusVisible());

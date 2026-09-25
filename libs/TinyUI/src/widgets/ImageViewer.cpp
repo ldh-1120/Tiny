@@ -174,7 +174,17 @@ namespace tiny {
 					return true;
 				}
 
-				return true;
+				return false;
+			}
+
+			PointerCursor pointerCursorOverride() const override {
+				if (dragging)
+					return PointerCursor::Move;
+
+				if (canPan())
+					return PointerCursor::Hand;
+
+				return PointerCursor::Arrow;
 			}
 
 		private:
@@ -242,7 +252,7 @@ namespace tiny {
 				float scaleX = area.width / imageWidth;
 				float scaleY = area.height / imageHeight;
 
-				return std::min(1.0f, std::max(scaleX, scaleY));
+				return std::min(1.0f, std::min(scaleX, scaleY));
 			}
 
 			void setFitZoom() {

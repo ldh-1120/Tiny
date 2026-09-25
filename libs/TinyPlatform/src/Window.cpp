@@ -16,7 +16,7 @@
 
 namespace {
 	constexpr wchar_t WINDOW_CLASS_NAME[] = L"Tiny.Window";
-	
+
 	tiny::PointerModifiers getPointerModifiers(WPARAM wParam) {
 		tiny::PointerModifiers modifiers;
 		modifiers.shift = (wParam & MK_SHIFT) != 0;
@@ -219,6 +219,41 @@ namespace {
 
 		return static_cast<std::size_t>(position);
 	}
+
+	HCURSOR nativePointerCursor(tiny::PointerCursor cursor) {
+		switch (cursor) {
+			case tiny::PointerCursor::IBeam:
+				return LoadCursorW(nullptr, IDC_IBEAM);
+
+			case tiny::PointerCursor::Hand:
+				return LoadCursorW(nullptr, IDC_HAND);
+
+			case tiny::PointerCursor::Crosshair:
+				return LoadCursorW(nullptr, IDC_CROSS);
+
+			case tiny::PointerCursor::Move:
+				return LoadCursorW(nullptr, IDC_SIZEALL);
+
+			case tiny::PointerCursor::ResizeHorizontal:
+				return LoadCursorW(nullptr, IDC_SIZEWE);
+
+			case tiny::PointerCursor::ResizeVertical:
+				return LoadCursorW(nullptr, IDC_SIZENS);
+
+			case tiny::PointerCursor::ResizeDiagonalNorthWestSouthEast:
+				return LoadCursorW(nullptr, IDC_SIZENWSE);
+
+			case tiny::PointerCursor::ResizeDiagonalNorthEastSouthWest:
+				return LoadCursorW(nullptr, IDC_SIZENESW);
+
+			case tiny::PointerCursor::NotAllowed:
+				return LoadCursorW(nullptr, IDC_NO);
+
+			case tiny::PointerCursor::Arrow:
+			default:
+				return LoadCursorW(nullptr, IDC_ARROW);
+		}
+	}
 }
 
 namespace tiny {
@@ -260,6 +295,10 @@ namespace tiny {
 
 		void setCaptionClientHitTest(std::function<bool(const Point&)> callback);
 
+		void setPointerCursor(PointerCursor cursor);
+
+		PointerCursor pointerCursor() const;
+
 	public:
 		std::chrono::steady_clock::time_point lastFrameTime;
 
@@ -277,6 +316,8 @@ namespace tiny {
 		std::u32string decodeTextInput(char16_t codeUnit);
 
 		LRESULT hitTestCustomFrame(HWND windowHandle, LPARAM lParam) const;
+
+		PointerCursor pointerCursorValue = PointerCursor::Arrow;
 
 	private:
 		Window& owner;
@@ -415,6 +456,19 @@ namespace tiny {
 				return 0;
 			}
 
+			case WM_SETCURSOR: {
+				int hitTest = LOWORD(lParam);
+				if (hitTest == HTCLIENT) {
+					HCURSOR cursor = nativePointerCursor(pointerCursorValue);
+					if (cursor)
+						SetCursor(cursor);
+
+					return TRUE;
+				}
+
+				break;
+			}
+
 			case WM_MOUSEMOVE: {
 				beginMouseLeaveTracking();
 
@@ -426,7 +480,7 @@ namespace tiny {
 
 			case WM_MOUSEWHEEL: {
 				POINT screenPoint { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-				
+
 				POINT clientPoint = screenPoint;
 				if (!ScreenToClient(windowHandle, &clientPoint))
 					return DefWindowProcW(windowHandle, message, wParam, lParam);
@@ -683,7 +737,7 @@ namespace tiny {
 
 			case WM_PAINT: {
 				PAINTSTRUCT paint { };
-				
+
 				BeginPaint(windowHandle, &paint);
 
 				owner.paintRequested.emit();
@@ -865,7 +919,7 @@ namespace tiny {
 		return HTCLIENT;
 	}
 
-	Window::Window(const WindowCreateInfo& createInfo) : impl(std::make_unique<Impl>(*this, createInfo)) { }
+	Window::Window(const WindowCreateInfo& createInfo) : impl(std::make_unique<Impl>(*this, createInfo)) {}
 
 	Window::~Window() = default;
 
@@ -954,7 +1008,7 @@ namespace tiny {
 		}
 
 		KillTimer(static_cast<HWND>(nativeHandle()), FrameTimerId);
-		
+
 		impl->frameUpdatesEnabledValue = false;
 	}
 
@@ -964,6 +1018,14 @@ namespace tiny {
 
 	void Window::setCaptionClientHitTest(std::function<bool(const Point&)> callback) {
 		impl->setCaptionClientHitTest(std::move(callback));
+	}
+
+	void Window::setPointerCursor(PointerCursor cursor) {
+		impl->setPointerCursor(cursor);
+	}
+
+	PointerCursor Window::pointerCursor() const {
+		return impl->pointerCursor();
 	}
 
 	void Window::Impl::show() {
@@ -1117,6 +1179,21 @@ namespace tiny {
 
 	void Window::Impl::setCaptionClientHitTest(std::function<bool(const Point&)> callback) {
 		captionClientHitTest = std::move(callback);
+	}
+
+	void Window::Impl::setPointerCursor(PointerCursor cursor) {
+		pointerCursorValue = cursor;
+
+		if (!handle)
+			return;
+
+		HCURSOR nativeCursor = nativePointerCursor(cursor);
+		if (nativeCursor)
+			SetCursor(nativeCursor);
+	}
+
+	PointerCursor Window::Impl::pointerCursor() const {
+		return pointerCursorValue;
 	}
 
 	Window::Impl::~Impl() {

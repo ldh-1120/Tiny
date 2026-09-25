@@ -76,6 +76,8 @@ namespace tiny {
 
 		bool isInteractiveAt(const Point& position);
 
+		PointerCursor pointerCursor() const;
+
 	private:
 		Element* hitTest(const Point& position);
 

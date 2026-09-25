@@ -264,12 +264,16 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previousInstance, PWSTR comman
 
 		tiny::Subscription pointerMovedSubscription = window.pointerMoved.subscribe([&window, &uiRoot](const tiny::PointerEvent& event) {
 			uiRoot.pointerMoved(event);
+
+			window.setPointerCursor(uiRoot.pointerCursor());
 		});
 
 		tiny::Subscription pointerPressedSubscription = window.pointerPressed.subscribe([&window, &uiRoot](const tiny::PointerEvent& event) {
 			bool handled = uiRoot.pointerPressed(event);
 			if (handled)
 				window.capturePointer();
+
+			window.setPointerCursor(uiRoot.pointerCursor());
 		});
 
 		tiny::Subscription pointerReleasedSubscription = window.pointerReleased.subscribe([&window, &uiRoot](const tiny::PointerEvent& event) {
@@ -277,6 +281,8 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previousInstance, PWSTR comman
 
 			if (window.hasPointerCapture())
 				window.releasePointerCapture();
+
+			window.setPointerCursor(uiRoot.pointerCursor());
 		});
 
 		tiny::Subscription pointerWheelSubscription = window.pointerWheel.subscribe([&uiRoot](tiny::PointerWheelEvent& event) {
@@ -285,10 +291,14 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previousInstance, PWSTR comman
 
 		tiny::Subscription pointerExitedSubscription = window.pointerExited.subscribe([&window, &uiRoot]() {
 			uiRoot.pointerExited();
+
+			window.setPointerCursor(uiRoot.pointerCursor());
 		});
 
 		tiny::Subscription pointerCaptureLostSubscription = window.pointerCaptureLost.subscribe([&window, &uiRoot]() {
 			uiRoot.pointerCaptureLost();
+
+			window.setPointerCursor(uiRoot.pointerCursor());
 		});
 
 		tiny::Subscription keyPressedSubscription = window.keyPressed.subscribe([&uiRoot](tiny::KeyEvent& event) {

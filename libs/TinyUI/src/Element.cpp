@@ -214,6 +214,13 @@ namespace tiny {
 		pointerCancelOverride();
 	}
 
+	PointerCursor Element::pointerCursor() const {
+		if (!mounted || !enabledValue)
+			return PointerCursor::Arrow;
+
+		return pointerCursorOverride();
+	}
+
 	const Size& Element::desiredSize() const {
 		return measuredSize;
 	}
@@ -331,6 +338,10 @@ namespace tiny {
 	}
 
 	void Element::pointerCancelOverride() { }
+
+	PointerCursor Element::pointerCursorOverride() const {
+		return PointerCursor::Arrow;
+	}
 
 	Clipboard* Element::clipboard() {
 		if (!rootOwner)
