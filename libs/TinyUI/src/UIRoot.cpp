@@ -186,17 +186,6 @@ namespace tiny {
 			hoveredElement->pointerEnter(event);
 	}
 
-	void UIRoot::pointerMoved(const PointerEvent& event) {
-		Element* target = hitTest(event.position);
-		updateHoveredElement(target, event);
-
-		Element* deliveryTarget = capturedElement ? capturedElement : hoveredElement;
-		if (!deliveryTarget)
-			return;
-
-		deliveryTarget->pointerMove(event);
-	}
-
 	bool UIRoot::pointerPressed(const PointerEvent& event) {
 		Element* target = hitTest(event.position);
 		updateHoveredElement(target, event);
@@ -210,18 +199,27 @@ namespace tiny {
 			return false;
 		}
 
-		if (capturedElement && capturedElement != target) {
-			capturedElement->pointerCancel();
-			capturedElement = nullptr;
-		}
-
-		bool handled = target->pointerDown(event);
-		if (!handled)
+		Element* handledElement = bubblePointerDown(target, event);
+		if (!handledElement)
 			return false;
 
-		capturedElement = target;
+		if (capturedElement && capturedElement != handledElement)
+			capturedElement->pointerCancel();
+
+		capturedElement = handledElement;
 
 		return true;
+	}
+
+	void UIRoot::pointerMoved(const PointerEvent& event) {
+		Element* target = hitTest(event.position);
+		updateHoveredElement(target, event);
+
+		Element* deliveryTarget = capturedElement ? capturedElement : hoveredElement;
+		if (!deliveryTarget)
+			return;
+
+		deliveryTarget->pointerMove(event);
 	}
 
 	void UIRoot::pointerReleased(const PointerEvent& event) {
@@ -240,7 +238,7 @@ namespace tiny {
 		if (!target)
 			return false;
 
-		return target->pointerWheel(event);
+		return bubblePointerWheel(target, event);
 	}
 
 	void UIRoot::pointerExited() {
@@ -457,5 +455,29 @@ namespace tiny {
 
 		if (focusManager.focusedElement() == element)
 			focusManager.clearFocus();
+	}
+
+	Element* UIRoot::bubblePointerDown(Element* target, const PointerEvent& event) {
+		Element* current = target;
+		while (current) {
+			if (current->pointerDown(event))
+				return current;
+
+			current = current->parent();
+		}
+
+		return nullptr;
+	}
+
+	bool UIRoot::bubblePointerWheel(Element* target, const PointerWheelEvent& event) {
+		Element* current = target;
+		while (current) {
+			if (current->pointerWheel(event))
+				return true;
+
+			current = current->parent();
+		}
+
+		return false;
 	}
 }

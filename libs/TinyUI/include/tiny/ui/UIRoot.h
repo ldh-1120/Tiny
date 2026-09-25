@@ -109,6 +109,9 @@ namespace tiny {
 
 		void elementBecameDisabled(Element* element);
 
+		Element* bubblePointerDown(Element* target, const PointerEvent& event);
+		bool bubblePointerWheel(Element* target, const PointerWheelEvent& event);
+
 	private:
 		std::unique_ptr<Widget> rootWidget;
 		std::unique_ptr<Element> rootElement;
