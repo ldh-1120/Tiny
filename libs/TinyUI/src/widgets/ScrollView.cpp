@@ -20,15 +20,17 @@ namespace tiny {
 	namespace {
 		class ScrollViewElement final : public SingleChildElement {
 		public:
-			explicit ScrollViewElement(const ScrollView& widget) : SingleChildElement(widget, createChild(widget)), wheelStepValue(widget.wheelStep()) { }
+			explicit ScrollViewElement(const ScrollView& widget) : SingleChildElement(widget, createChild(widget)), wheelStepValue(widget.wheelStep()), scrollViewStyle(widget.style()) { }
 
 		protected:
 			void updateOverride(const Widget& widget) override {
 				const ScrollView& scrollView = static_cast<const ScrollView&>(widget);
 
 				wheelStepValue = scrollView.wheelStep();
+				scrollViewStyle = scrollView.style();
 
 				updateChild(scrollView.child());
+				markNeedsPaint();
 			}
 
 			Size measureOverride(LayoutContext& context, const Constraints& constraints) override {
@@ -53,6 +55,7 @@ namespace tiny {
 				canvas.pushClip(bounds());
 				
 				child()->paint(canvas);
+				paintScrollbar(canvas);
 
 				canvas.popClip();
 			}
@@ -100,14 +103,64 @@ namespace tiny {
 				child()->arrange(Rect(viewport.x, viewport.y - scrollModel.offset(), viewport.width, childHeight));
 			}
 
+			Rect scrollbarTrackBounds() const {
+				const Rect& area = bounds();
+
+				float margin = std::max(scrollViewStyle.scrollbarMargin, 0.0f);
+				float availableWidth = std::max(area.width - margin * 2.0f, 0.0f);
+
+				float width = std::min(std::max(scrollViewStyle.scrollbarWidth, 0.0f), availableWidth);
+				float height = std::max(area.height - margin * 2.0f, 0.0f);
+
+				return Rect(area.x + area.width - margin - width, area.y + margin, width, height);
+			}
+
+			Rect scrollbarThumbBounds() const {
+				Rect track = scrollbarTrackBounds();
+				if (track.width <= 0.0f || track.height <= 0.0f)
+					return Rect();
+
+				float thumbExtent = track.height * scrollModel.viewportFraction();
+
+				float minimumThumbExtent = std::min(std::max(scrollViewStyle.minimumThumbExtent, 0.0f), track.height);
+				thumbExtent = std::clamp(thumbExtent, minimumThumbExtent, track.height);
+
+				float travelExtent = std::max(track.height - thumbExtent, 0.0f);
+				float thumbY = track.y + travelExtent * scrollModel.offsetFraction();
+
+				return Rect(track.x, thumbY, track.width, thumbExtent);
+			}
+
+			void paintScrollbar(Canvas& canvas) {
+				if (!scrollViewStyle.showScrollbar)
+					return;
+
+				if (!scrollModel.canScroll())
+					return;
+
+				Rect track = scrollbarTrackBounds();
+				if (track.width <= 0.0f || track.height <= 0.0f)
+					return;
+
+				canvas.fillRect(track, scrollViewStyle.trackColor);
+
+				Rect thumb = scrollbarThumbBounds();
+				if (thumb.width <= 0.0f || thumb.height <= 0.0f)
+					return;
+
+				canvas.fillRect(thumb, scrollViewStyle.thumbColor);
+			}
+
 		private:
 			float wheelStepValue = 48.0f;
 
 			ScrollModel scrollModel;
+
+			ScrollViewStyle scrollViewStyle;
 		};
 	}
 
-	ScrollView::ScrollView(std::unique_ptr<Widget> child, float wheelStep, Key key) : Widget(std::move(key)), childWidget(std::move(child)), wheelStepValue(std::max(wheelStep, 0.0f)) { }
+	ScrollView::ScrollView(std::unique_ptr<Widget> child, float wheelStep, Key key, ScrollViewStyle style) : Widget(std::move(key)), childWidget(std::move(child)), wheelStepValue(std::max(wheelStep, 0.0f)), scrollViewStyle(std::move(style)) { }
 
 	const Widget* ScrollView::child() const {
 		return childWidget.get();
@@ -115,6 +168,10 @@ namespace tiny {
 
 	float ScrollView::wheelStep() const {
 		return wheelStepValue;
+	}
+
+	const ScrollViewStyle& ScrollView::style() const {
+		return scrollViewStyle;
 	}
 
 	std::unique_ptr<Element> ScrollView::createElement() const {
