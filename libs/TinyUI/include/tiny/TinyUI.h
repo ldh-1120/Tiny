@@ -35,3 +35,4 @@
 #include <tiny/ui/widgets/Positioned.h>
 #include <tiny/ui/widgets/ClipRect.h>
 #include <tiny/ui/widgets/IgnorePointer.h>
+#include <tiny/ui/widgets/AbsorbPointer.h>

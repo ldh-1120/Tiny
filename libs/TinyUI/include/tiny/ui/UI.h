@@ -34,6 +34,7 @@
 #include <tiny/ui/widgets/Positioned.h>
 #include <tiny/ui/widgets/ClipRect.h>
 #include <tiny/ui/widgets/IgnorePointer.h>
+#include <tiny/ui/widgets/AbsorbPointer.h>
 
 namespace tiny::ui {
 	template <typename WidgetType, typename... Arguments>
@@ -131,5 +132,9 @@ namespace tiny::ui {
 
 	inline WidgetPtr ignorePointer(WidgetPtr child, bool ignoring = true, Key key = Key()) {
 		return make<IgnorePointer>(std::move(child), ignoring, std::move(key));
+	}
+
+	inline WidgetPtr absorbPointer(WidgetPtr child, bool absorbing = true, Key key = Key()) {
+		return make<AbsorbPointer>(std::move(child), absorbing, std::move(key));
 	}
 }

@@ -81,6 +81,7 @@
     <ClCompile Include="src\UIBuilder.cpp" />
     <ClCompile Include="src\UIRoot.cpp" />
     <ClCompile Include="src\visual\FocusRing.cpp" />
+    <ClCompile Include="src\widgets\AbsorbPointer.cpp" />
     <ClCompile Include="src\widgets\Align.cpp" />
     <ClCompile Include="src\widgets\Box.cpp" />
     <ClCompile Include="src\widgets\Button.cpp" />
@@ -122,6 +123,7 @@
     <ClInclude Include="include\tiny\ui\UIRoot.h" />
     <ClInclude Include="include\tiny\ui\visual\FocusRing.h" />
     <ClInclude Include="include\tiny\ui\Widget.h" />
+    <ClInclude Include="include\tiny\ui\widgets\AbsorbPointer.h" />
     <ClInclude Include="include\tiny\ui\widgets\Align.h" />
     <ClInclude Include="include\tiny\ui\widgets\Box.h" />
     <ClInclude Include="include\tiny\ui\widgets\Button.h" />

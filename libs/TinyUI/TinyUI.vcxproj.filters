@@ -92,6 +92,7 @@
     <ClCompile Include="src\widgets\Positioned.cpp" />
     <ClCompile Include="src\widgets\ClipRect.cpp" />
     <ClCompile Include="src\widgets\IgnorePointer.cpp" />
+    <ClCompile Include="src\widgets\AbsorbPointer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\tiny\TinyUI.h">
@@ -202,5 +203,6 @@
     <ClInclude Include="include\tiny\ui\widgets\Positioned.h" />
     <ClInclude Include="include\tiny\ui\widgets\ClipRect.h" />
     <ClInclude Include="include\tiny\ui\widgets\IgnorePointer.h" />
+    <ClInclude Include="include\tiny\ui\widgets\AbsorbPointer.h" />
   </ItemGroup>
 </Project>
