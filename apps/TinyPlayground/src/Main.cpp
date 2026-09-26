@@ -43,6 +43,7 @@
 #include <tiny/ui/widgets/Flexible.h>
 #include <tiny/ui/widgets/ConstrainedBox.h>
 #include <tiny/ui/widgets/Stack.h>
+#include <tiny/ui/widgets/Align.h>
 
 namespace {
 	struct PlaygroundState {
@@ -171,7 +172,6 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previousInstance, PWSTR comman
 			zoomTextStyle.fontSize = 12.0f;
 
 			std::vector<std::unique_ptr<tiny::Widget>> viewerChildren;
-			viewerChildren.push_back(std::make_unique<tiny::Text>(zoomText, tiny::Color::fromRgb(205, 214, 244), zoomTextStyle, tiny::Key("viewer-zoom-label")));
 
 			std::vector<std::unique_ptr<tiny::Widget>> viewerStackChildren;
 			viewerStackChildren.push_back(std::make_unique<tiny::ImageViewer>(previewImage, tiny::Size(360.0f, 220.0f), tiny::ImageInterpolation::Linear, tiny::Key("image-viewer"), [&state, &uiRoot](float zoom) {
@@ -179,6 +179,15 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previousInstance, PWSTR comman
 				uiRoot.requestRebuild();
 			}));
 			viewerStackChildren.push_back(std::make_unique<tiny::Box>(tiny::Size(1.0f, 1.0f), tiny::Color::fromRgba(137, 180, 250, 18), tiny::Key("viewer-overlay")));
+
+			tiny::TextStyle overlayTextStyle;
+			overlayTextStyle.fontFamily = L"Segoe UI";
+			overlayTextStyle.fontSize = 12.0f;
+
+			viewerStackChildren.push_back(
+				std::make_unique<tiny::Align>(
+					std::make_unique<tiny::Padding>(tiny::Thickness(12.0f),
+						std::make_unique<tiny::Text>(zoomText, tiny::Color::fromRgb(205, 214, 144), overlayTextStyle, tiny::Key("viewer-overlay-zoom"))), tiny::Alignment::BottomRight, tiny::Key("viewer-zoom-align")));
 
 			std::unique_ptr<tiny::Widget> viewerStack = std::make_unique<tiny::Stack>(std::move(viewerStackChildren), tiny::Key("viewer-stack"));
 			viewerChildren.push_back(std::make_unique<tiny::Expanded>(std::move(viewerStack), 1.0f, tiny::Key("viewer-expanded")));

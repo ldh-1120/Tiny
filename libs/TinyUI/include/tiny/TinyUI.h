@@ -19,7 +19,6 @@
 
 #include <tiny/ui/widgets/Box.h>
 #include <tiny/ui/widgets/Button.h>
-#include <tiny/ui/widgets/Center.h>
 #include <tiny/ui/widgets/Column.h>
 #include <tiny/ui/widgets/Padding.h>
 #include <tiny/ui/widgets/Row.h>

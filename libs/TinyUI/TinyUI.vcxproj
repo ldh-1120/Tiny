@@ -81,9 +81,9 @@
     <ClCompile Include="src\UIBuilder.cpp" />
     <ClCompile Include="src\UIRoot.cpp" />
     <ClCompile Include="src\visual\FocusRing.cpp" />
+    <ClCompile Include="src\widgets\Align.cpp" />
     <ClCompile Include="src\widgets\Box.cpp" />
     <ClCompile Include="src\widgets\Button.cpp" />
-    <ClCompile Include="src\widgets\Center.cpp" />
     <ClCompile Include="src\widgets\Column.cpp" />
     <ClCompile Include="src\widgets\ConstrainedBox.cpp" />
     <ClCompile Include="src\widgets\Flexible.cpp" />
@@ -118,9 +118,9 @@
     <ClInclude Include="include\tiny\ui\UIRoot.h" />
     <ClInclude Include="include\tiny\ui\visual\FocusRing.h" />
     <ClInclude Include="include\tiny\ui\Widget.h" />
+    <ClInclude Include="include\tiny\ui\widgets\Align.h" />
     <ClInclude Include="include\tiny\ui\widgets\Box.h" />
     <ClInclude Include="include\tiny\ui\widgets\Button.h" />
-    <ClInclude Include="include\tiny\ui\widgets\Center.h" />
     <ClInclude Include="include\tiny\ui\widgets\Column.h" />
     <ClInclude Include="include\tiny\ui\widgets\ConstrainedBox.h" />
     <ClInclude Include="include\tiny\ui\widgets\Flexible.h" />

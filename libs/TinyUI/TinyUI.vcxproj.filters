@@ -51,9 +51,6 @@
     <ClCompile Include="src\widgets\Button.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\widgets\Center.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\widgets\Column.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -91,6 +88,7 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\widgets\Stack.cpp" />
+    <ClCompile Include="src\widgets\Align.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\tiny\TinyUI.h">
@@ -156,9 +154,6 @@
     <ClInclude Include="include\tiny\ui\widgets\Button.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\tiny\ui\widgets\Center.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\tiny\ui\widgets\Column.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -199,5 +194,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\tiny\ui\widgets\Stack.h" />
+    <ClInclude Include="include\tiny\ui\widgets\Align.h" />
   </ItemGroup>
 </Project>
