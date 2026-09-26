@@ -93,6 +93,7 @@
     <ClCompile Include="src\widgets\Row.cpp" />
     <ClCompile Include="src\widgets\ScrollView.cpp" />
     <ClCompile Include="src\widgets\SizedBox.cpp" />
+    <ClCompile Include="src\widgets\Stack.cpp" />
     <ClCompile Include="src\widgets\Text.cpp" />
     <ClCompile Include="src\widgets\TextBox.cpp" />
     <ClCompile Include="src\widgets\TitleBar.cpp" />
@@ -129,6 +130,7 @@
     <ClInclude Include="include\tiny\ui\widgets\Row.h" />
     <ClInclude Include="include\tiny\ui\widgets\ScrollView.h" />
     <ClInclude Include="include\tiny\ui\widgets\SizedBox.h" />
+    <ClInclude Include="include\tiny\ui\widgets\Stack.h" />
     <ClInclude Include="include\tiny\ui\widgets\Text.h" />
     <ClInclude Include="include\tiny\ui\widgets\TextBox.h" />
     <ClInclude Include="include\tiny\ui\widgets\TitleBar.h" />
