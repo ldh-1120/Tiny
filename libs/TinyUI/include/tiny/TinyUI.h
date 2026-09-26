@@ -28,3 +28,4 @@
 #include <tiny/ui/widgets/TextBox.h>
 #include <tiny/ui/widgets/ScrollView.h>
 #include <tiny/ui/widgets/Flexible.h>
+#include <tiny/ui/widgets/ConstrainedBox.h>

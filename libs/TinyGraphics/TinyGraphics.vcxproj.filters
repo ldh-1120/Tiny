@@ -9,45 +9,57 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Canvas.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\GraphicsContext.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Image.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="src\pch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Platform.cpp">
+    <ClCompile Include="src\TextLayout.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\SystemClipboard.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Window.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\WindowTextInputContext.cpp">
+    <ClCompile Include="src\WindowRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\tiny\platform\NativeWindowHandle.h">
+    <ClInclude Include="include\tiny\graphics\Canvas.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\tiny\platform\Platform.h">
+    <ClInclude Include="include\tiny\graphics\FontMetrics.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\tiny\platform\SystemClipboard.h">
+    <ClInclude Include="include\tiny\graphics\GraphicsContext.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\tiny\platform\Window.h">
+    <ClInclude Include="include\tiny\graphics\Image.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\tiny\platform\WindowEvents.h">
+    <ClInclude Include="include\tiny\graphics\TextLayout.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\tiny\platform\WindowTextInputContext.h">
+    <ClInclude Include="include\tiny\graphics\TextMetrics.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\tiny\graphics\TextStyle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\tiny\graphics\WindowRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\tiny\TinyGraphics.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\pch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Win32\PlatformWin32.h">
+    <ClInclude Include="src\TextLayoutInternal.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
