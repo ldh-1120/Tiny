@@ -157,7 +157,8 @@ tiny::WidgetPtr buildViewer(PlaygroundState& state, tiny::UIRoot& uiRoot, const 
 					make<Box>(Size(1.0f, 1.0f), Color::fromRgba(137, 180, 250, 18)),
 					positioned(tiny::PositionedSpec { .left = 16.0f, .top = 16.0f },
 						ignorePointer(
-							button(U"Pass Through", []() { }, styles.toolbarButton))),
+							opacity(0.35f,
+							button(U"Pass Through", []() { }, styles.toolbarButton)))),
 					positioned(tiny::PositionedSpec { .left = 16.0f, .top = 56.0f },
 						absorbPointer(
 							button(U"Block Pointer", []() { }, styles.toolbarButton))),

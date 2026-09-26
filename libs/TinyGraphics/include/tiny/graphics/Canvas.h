@@ -15,6 +15,8 @@ namespace tiny {
 
 	class Canvas {
 	public:
+		~Canvas();
+
 		Canvas(const Canvas&) = delete;
 		Canvas& operator=(const Canvas&) = delete;
 
@@ -27,6 +29,9 @@ namespace tiny {
 		void pushClip(const Rect& rect);
 		void popClip();
 
+		bool pushOpacity(float opacity);
+		void popOpacity();
+
 		void drawImage(const Image& image, const Rect& destination, ImageInterpolation interpolation = ImageInterpolation::Linear);
 		void drawImage(const Image& image, const Rect& destination, const Rect& source, ImageInterpolation interpolation = ImageInterpolation::Linear);
 
@@ -37,6 +42,8 @@ namespace tiny {
 		void* renderTarget = nullptr;
 		void* textFactory = nullptr;
 		void* solidBrush = nullptr;
+
+		std::vector<void*> opacityLayers;
 
 		friend class WindowRenderer;
 	};

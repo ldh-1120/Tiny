@@ -1,5 +1,7 @@
 #include "TextLayoutInternal.h"
 
+#include <algorithm>
+
 #include <d2d1.h>
 #include <d2d1helper.h>
 #include <dwrite.h>
@@ -22,6 +24,11 @@ namespace {
 
 namespace tiny {
 	Canvas::Canvas(void* renderTarget, void* textFactory, void* solidBrush) : renderTarget(renderTarget), textFactory(textFactory), solidBrush(solidBrush) { }
+
+	Canvas::~Canvas() {
+		while (!opacityLayers.empty())
+			popOpacity();
+	}
 
 	void Canvas::clear(const Color& color) {
 		ID2D1RenderTarget* target = static_cast<ID2D1RenderTarget*>(renderTarget);
@@ -68,6 +75,48 @@ namespace tiny {
 	void Canvas::popClip() {
 		ID2D1RenderTarget* target = static_cast<ID2D1RenderTarget*>(renderTarget);
 		target->PopAxisAlignedClip();
+	}
+
+	bool Canvas::pushOpacity(float opacity) {
+		ID2D1RenderTarget* target = static_cast<ID2D1RenderTarget*>(renderTarget);
+		if (!target)
+			return false;
+
+		float safeOpacity = std::clamp(opacity, 0.0f, 1.0f);
+
+		ID2D1Layer* layer = nullptr;
+		HRESULT result = target->CreateLayer(nullptr, &layer);
+		if (FAILED(result) || !layer)
+			return false;
+
+		D2D1_LAYER_PARAMETERS parameters = { };
+		parameters.contentBounds = D2D1::InfiniteRect();
+		parameters.geometricMask = nullptr;
+		parameters.maskAntialiasMode = D2D1_ANTIALIAS_MODE_PER_PRIMITIVE;
+		parameters.maskTransform = D2D1::Matrix3x2F::Identity();
+		parameters.opacity = safeOpacity;
+		parameters.opacityBrush = nullptr;
+		parameters.layerOptions = D2D1_LAYER_OPTIONS_NONE;
+
+		target->PushLayer(parameters, layer);
+		opacityLayers.push_back(layer);
+
+		return true;
+	}
+
+	void Canvas::popOpacity() {
+		if (opacityLayers.empty())
+			return;
+
+		ID2D1RenderTarget* target = static_cast<ID2D1RenderTarget*>(renderTarget);
+		ID2D1Layer* layer = static_cast<ID2D1Layer*>(opacityLayers.back());
+
+		opacityLayers.pop_back();
+		if (target)
+			target->PopLayer();
+
+		if (layer)
+			layer->Release();
 	}
 
 	void Canvas::drawImage(const Image& image, const Rect& destination, ImageInterpolation interpolation) {
