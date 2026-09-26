@@ -28,22 +28,11 @@
 
 #include <tiny/ui/UI.h>
 #include <tiny/ui/UIRoot.h>
+#include <tiny/ui/UIBuilder.h>
+
 #include <tiny/ui/widgets/Box.h>
-#include <tiny/ui/widgets/Button.h>
-#include <tiny/ui/widgets/Column.h>
-#include <tiny/ui/widgets/Padding.h>
-#include <tiny/ui/widgets/Row.h>
-#include <tiny/ui/widgets/SizedBox.h>
-#include <tiny/ui/widgets/Text.h>
-#include <tiny/ui/widgets/TextBox.h>
 #include <tiny/ui/widgets/TitleBar.h>
-#include <tiny/ui/widgets/ImageView.h>
 #include <tiny/ui/widgets/ImageViewer.h>
-#include <tiny/ui/widgets/ScrollView.h>
-#include <tiny/ui/widgets/Flexible.h>
-#include <tiny/ui/widgets/ConstrainedBox.h>
-#include <tiny/ui/widgets/Stack.h>
-#include <tiny/ui/widgets/Align.h>
 
 namespace {
 	struct PlaygroundState {
@@ -55,10 +44,213 @@ namespace {
 
 		int viewerZoomPercent = 100;
 	};
+
+	struct PlaygroundStyles {
+		tiny::TextStyle title;
+		tiny::TextStyle body;
+		tiny::TextStyle overlay;
+		tiny::TextStyle status;
+
+		tiny::ButtonStyle button;
+		tiny::ButtonStyle toolbarButton;
+
+		tiny::TextBoxStyle textBox;
+
+		tiny::TitleBarStyle titleBar;
+
+		PlaygroundStyles() {
+			title.fontFamily = L"Segoe UI";
+			title.fontSize = 32.0f;
+			title.bold = true;
+
+			body.fontFamily = L"Segoe UI";
+			body.fontSize = 18.0f;
+
+			overlay.fontFamily = L"Segoe UI";
+			overlay.fontSize = 12.0f;
+
+			status.fontFamily = L"Segoe UI";
+			status.fontSize = 12.0f;
+
+			button.textStyle.fontFamily = L"Segoe UI";
+			button.textStyle.fontSize = 16.0f;
+			button.padding = tiny::Thickness(20.0f, 10.0f);
+
+			toolbarButton.textStyle.fontFamily = L"Segoe UI";
+			toolbarButton.textStyle.fontSize = 12.0f;
+			toolbarButton.background = tiny::Color::fromRgb(30, 30, 46);
+			toolbarButton.padding = tiny::Thickness(10.0f, 5.0f);
+
+			textBox.width = 240.0f;
+			textBox.textStyle.fontFamily = L"Segoe UI";
+			textBox.textStyle.fontSize = 18.0f;
+
+			titleBar.brandWidth = 180.0f;
+			titleBar.titleLeftPadding = 42.0f;
+			titleBar.iconLeftPadding = 10.0f;
+			titleBar.iconSize = 22.0f;
+			titleBar.iconColor = tiny::Color::fromRgb(137, 180, 250);
+		}
+	};
 }
 
-using namespace tiny;
-using namespace tiny::ui;
+std::u32string toU32String(int value) {
+	std::string ascii = std::to_string(value);
+
+	std::u32string result;
+	for (char character : ascii)
+		result.push_back(static_cast<char32_t>(character));
+
+	return result;
+}
+
+tiny::WidgetPtr buildControls(PlaygroundState& state, tiny::UIRoot& uiRoot, const PlaygroundStyles& styles) {
+	using namespace tiny;
+	using namespace tiny::ui;
+
+	std::u32string countText = U"Count: ";
+	countText += toU32String(state.count);
+
+	return fixedWidth(280.0f,
+		padding(16.0f,
+			scroll(
+				column(children(
+					text(U"Controls", Color::fromRgb(137, 180, 250), styles.title),
+					text(std::move(countText), Color::fromRgb(166, 173, 200), styles.body),
+					button(U"Add", [&state, &uiRoot]() {
+		++state.count;
+		uiRoot.requestRebuild();
+	}, styles.button, state.addEnabled),
+					button(U"Decrease", [&state, &uiRoot]() {
+		--state.count;
+		uiRoot.requestRebuild();
+	}, styles.button),
+					button(U"Reset", [&state, &uiRoot]() {
+		state.count = 0;
+		uiRoot.requestRebuild();
+	}, styles.button),
+					textBox(state.text, [&state, &uiRoot](const std::u32string& value) {
+		state.text = value;
+		uiRoot.requestRebuild();
+	}, styles.textBox)
+				), 12.0f, CrossAxisAlignment::Stretch))));
+}
+
+tiny::WidgetPtr buildViewer(PlaygroundState& state, tiny::UIRoot& uiRoot, const PlaygroundStyles& styles, const std::shared_ptr<tiny::Image>& previewImage) {
+	using namespace tiny;
+	using namespace tiny::ui;
+
+	std::u32string zoomText = U"Zoom: ";
+	zoomText += toU32String(state.viewerZoomPercent);
+	zoomText += U"%  |  Ctrl+0 Fit  |  Ctrl+1 100%";
+
+	ImageViewer::ZoomChangedCallback zoomChanged = [&state, &uiRoot](float zoom) {
+		state.viewerZoomPercent = static_cast<int>(std::lround(zoom * 100.0f));
+		uiRoot.requestRebuild();
+	};
+
+	return expanded(
+		padding(16.0f,
+			stack(children(
+				make<ImageViewer>(previewImage, Size(360.0f, 220.0f), ImageInterpolation::Linear, Key("image-viewer"), std::move(zoomChanged)),
+				make<Box>(Size(1.0f, 1.0f), Color::fromRgba(137, 180, 250, 18)),
+				align(Alignment::BottomRight,
+					padding(12.0f,
+						text(std::move(zoomText), Color::fromRgb(205, 214, 144), styles.overlay)))))));
+}
+
+tiny::WidgetPtr buildScrollTest(const PlaygroundStyles& styles) {
+	using namespace tiny;
+	using namespace tiny::ui;
+
+	std::vector<WidgetPtr> items;
+	for (int index = 0; index < 40; ++index) {
+		std::u32string label = U"Scroll item";
+		label += toU32String(index);
+
+		items.push_back(text(std::move(label), Color::fromRgb(205, 214, 244), styles.body));
+	}
+
+	return fixedWidth(260.0f,
+		padding(16.0f,
+			column(children(
+				text(U"Scroll Text", Color::fromRgb(137, 180, 250), styles.body),
+				expanded(
+					scroll(
+						column(std::move(items), 12.0f, CrossAxisAlignment::Stretch)))), 12.0f, CrossAxisAlignment::Stretch)));
+}
+
+tiny::WidgetPtr buildStatusBar(const PlaygroundStyles& styles) {
+	using namespace tiny::ui;
+
+	return fixedHeight(30.0f,
+		padding(6.0f,
+			text(U"Playground  |  Flex / Scroll / Stack / Align", tiny::Color::fromRgb(108, 112, 134), styles.status)));
+}
+
+tiny::WidgetPtr buildToolbar(PlaygroundState& state, tiny::UIRoot& uiRoot, const PlaygroundStyles& styles) {
+	using namespace tiny;
+	using namespace tiny::ui;
+
+	return row(children(
+		button(U"Toggle Add", [&state, &uiRoot]() {
+		state.addEnabled = !state.addEnabled;
+		uiRoot.requestRebuild();
+	}, styles.toolbarButton),
+		button(U"Reset", [&state, &uiRoot]() {
+		state.count = 0;
+		uiRoot.requestRebuild();
+	}, styles.toolbarButton)
+	), 8.0f, CrossAxisAlignment::Center);
+}
+
+tiny::WidgetPtr buildContent(PlaygroundState& state, tiny::UIRoot& uiRoot, const std::shared_ptr<tiny::Image>& previewImage, const PlaygroundStyles& styles) {
+	using namespace tiny;
+	using namespace tiny::ui;
+
+	WidgetPtr main = row(children(
+		buildControls(state, uiRoot, styles),
+		buildViewer(state, uiRoot, styles, previewImage),
+		buildScrollTest(styles)
+	), 1.0f, CrossAxisAlignment::Stretch);
+
+	return column(children(
+		expanded(std::move(main)),
+		buildStatusBar(styles)
+	), 0.0f, CrossAxisAlignment::Stretch);
+}
+
+void handleTitleBarAction(tiny::Window& window, tiny::TitleBarAction action) {
+	switch (action) {
+		case tiny::TitleBarAction::Minimize:
+			window.minimize();
+			break;
+
+		case tiny::TitleBarAction::Maximize:
+			window.toggleMaximize();
+			break;
+
+		case tiny::TitleBarAction::Close:
+			window.close();
+			break;
+	}
+}
+
+tiny::WidgetPtr buildPlayground(PlaygroundState& state, tiny::UIRoot& uiRoot, tiny::Window& window, float titleBarHeight, const std::shared_ptr<tiny::Image>& appIcon, const std::shared_ptr<tiny::Image>& previewImage, const PlaygroundStyles& styles) {
+	using namespace tiny;
+	using namespace tiny::ui;
+
+	WidgetPtr content = padding(8.0f,
+		buildContent(state, uiRoot, previewImage, styles));
+
+	WidgetPtr toolbar = buildToolbar(state, uiRoot, styles);
+
+	return make<TitleBar>(U"Tiny Playground", std::move(content), [&window](TitleBarAction action) {
+		handleTitleBarAction(window, action);
+	}, [&window]() {
+		return window.isMaximized();
+	}, titleBarHeight, WindowCaptionButtonWidth, styles.titleBar, Key(), std::move(toolbar), appIcon);
+}
 
 int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previousInstance, PWSTR commandLine, int showCommand) {
 	tiny::initializePlatform();
@@ -94,6 +286,7 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previousInstance, PWSTR comman
 		tiny::WindowRenderer renderer(graphicsContext, window);
 
 		PlaygroundState state;
+		PlaygroundStyles styles;
 
 		tiny::WindowTextInputContext textInputContext(window);
 		tiny::SystemClipboard clipboard;
@@ -107,184 +300,8 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previousInstance, PWSTR comman
 		});
 
 		uiRoot.setBuilder(
-			tiny::UIBuilder([&state, &uiRoot, &window, &createInfo, &appIcon, &previewImage]() -> std::unique_ptr<tiny::Widget> {
-			tiny::TextStyle titleStyle;
-			titleStyle.fontFamily = L"Segoe UI";
-			titleStyle.fontSize = 32.0f;
-			titleStyle.bold = true;
-
-			tiny::TextStyle bodyStyle;
-			bodyStyle.fontFamily = L"Segoe UI";
-			bodyStyle.fontSize = 18.0f;
-
-			tiny::ButtonStyle buttonStyle;
-			buttonStyle.textStyle.fontSize = 16.0f;
-			buttonStyle.padding = tiny::Thickness(20.0f, 10.0f);
-
-			tiny::TextBoxStyle textBoxStyle;
-			textBoxStyle.width = 300.0f;
-			textBoxStyle.textStyle.fontSize = 18.0f;
-
-			std::string countAscii = std::to_string(state.count);
-			std::u32string countText = U"Count: ";
-			for (char value : countAscii)
-				countText.push_back(static_cast<char32_t>(value));
-
-			std::vector<std::unique_ptr<tiny::Widget>> controlChildren;
-			controlChildren.push_back(std::make_unique<tiny::Text>(U"Controls", tiny::Color::fromRgb(137, 180, 250), titleStyle, tiny::Key("controls-title")));
-			controlChildren.push_back(std::make_unique<tiny::Text>(std::move(countText), tiny::Color::fromRgb(166, 173, 200), bodyStyle, tiny::Key("counter")));
-
-			controlChildren.push_back(std::make_unique<tiny::Button>(U"Add", [&state, &uiRoot]() {
-				++state.count;
-				uiRoot.requestRebuild();
-			}, buttonStyle, tiny::Key("increasement-button"), state.addEnabled));
-			controlChildren.push_back(
-				std::make_unique<tiny::Button>(U"Decrease", [&state, &uiRoot]() {
-				--state.count;
-				uiRoot.requestRebuild();
-			}, buttonStyle, tiny::Key("decrement-button")));
-			controlChildren.push_back(
-				std::make_unique<tiny::Button>(U"Reset", [&state, &uiRoot]() {
-				state.count = 0;
-				uiRoot.requestRebuild();
-			}, buttonStyle, tiny::Key("reset-button")));
-
-			textBoxStyle.width = 240.0f;
-			controlChildren.push_back(
-				std::make_unique<tiny::TextBox>(state.text, [&state, &uiRoot](const std::u32string& text) {
-				state.text = text;
-				uiRoot.requestRebuild();
-			}, textBoxStyle, tiny::Key("main-text-box")));
-
-			std::unique_ptr<tiny::Widget> controlContent =
-				std::make_unique<tiny::Column>(std::move(controlChildren), 12.0f, tiny::CrossAxisAlignment::Stretch, tiny::Key("control-content"));
-			std::unique_ptr<tiny::Widget> controlPanel =
-				std::make_unique<tiny::ConstrainedBox>(tiny::Constraints::fixedWidth(280.0f),
-					std::make_unique<tiny::Padding>(tiny::Thickness(16.0f),
-						std::make_unique<tiny::ScrollView>(std::move(controlContent), 48.0f, tiny::Key("control-scroll"))), tiny::Key("control-panel"));
-
-			std::string zoomNumber = std::to_string(state.viewerZoomPercent);
-			std::u32string zoomText = U"Zoom: ";
-			for (char digit : zoomNumber)
-				zoomText.push_back(static_cast<char32_t>(digit));
-
-			zoomText += U"%  |  Ctrl+0 Fit  |  Ctrl+1 100%";
-
-			tiny::TextStyle zoomTextStyle;
-			zoomTextStyle.fontFamily = L"Segoe UI";
-			zoomTextStyle.fontSize = 12.0f;
-
-			std::vector<std::unique_ptr<tiny::Widget>> viewerChildren;
-
-			std::vector<std::unique_ptr<tiny::Widget>> viewerStackChildren;
-			viewerStackChildren.push_back(std::make_unique<tiny::ImageViewer>(previewImage, tiny::Size(360.0f, 220.0f), tiny::ImageInterpolation::Linear, tiny::Key("image-viewer"), [&state, &uiRoot](float zoom) {
-				state.viewerZoomPercent = static_cast<int>(std::lround(zoom * 100.0f));
-				uiRoot.requestRebuild();
-			}));
-			viewerStackChildren.push_back(std::make_unique<tiny::Box>(tiny::Size(1.0f, 1.0f), tiny::Color::fromRgba(137, 180, 250, 18), tiny::Key("viewer-overlay")));
-
-			tiny::TextStyle overlayTextStyle;
-			overlayTextStyle.fontFamily = L"Segoe UI";
-			overlayTextStyle.fontSize = 12.0f;
-
-			viewerStackChildren.push_back(
-				std::make_unique<tiny::Align>(
-					std::make_unique<tiny::Padding>(tiny::Thickness(12.0f),
-						std::make_unique<tiny::Text>(zoomText, tiny::Color::fromRgb(205, 214, 144), overlayTextStyle, tiny::Key("viewer-overlay-zoom"))), tiny::Alignment::BottomRight, tiny::Key("viewer-zoom-align")));
-
-			std::unique_ptr<tiny::Widget> viewerStack = std::make_unique<tiny::Stack>(std::move(viewerStackChildren), tiny::Key("viewer-stack"));
-			viewerChildren.push_back(std::make_unique<tiny::Expanded>(std::move(viewerStack), 1.0f, tiny::Key("viewer-expanded")));
-
-			std::unique_ptr<tiny::Widget> viewerContent = std::make_unique<tiny::Column>(std::move(viewerChildren), 10.0f, tiny::CrossAxisAlignment::Stretch, tiny::Key("viewer-content"));
-			std::unique_ptr<tiny::Widget> viewerPanel = std::make_unique<tiny::Expanded>(std::make_unique<tiny::Padding>(tiny::Thickness(16.0f), std::move(viewerContent)), 1.0f, tiny::Key("viewer-panel"));
-
-			std::vector<std::unique_ptr<tiny::Widget>> scrollChildren;
-			for (int index = 1; index <= 40; ++index) {
-				std::u32string text = U"Scroll item ";
-
-				std::string number = std::to_string(index);
-				for (char character : number)
-					text.push_back(static_cast<char32_t>(character));
-
-				scrollChildren.push_back(std::make_unique<tiny::Text>(std::move(text), tiny::Color::fromRgb(205, 214, 244), bodyStyle));
-			}
-
-			std::unique_ptr<tiny::Widget> scrollContent = std::make_unique<tiny::Column>(std::move(scrollChildren), 12.0f, tiny::CrossAxisAlignment::Stretch, tiny::Key("scroll-content"));
-
-			std::vector<std::unique_ptr<tiny::Widget>> rightChildren;
-			rightChildren.push_back(std::make_unique<tiny::Text>(U"Scroll Test", tiny::Color::fromRgb(137, 180, 250), bodyStyle, tiny::Key("scroll-title")));
-			rightChildren.push_back(std::make_unique<tiny::Expanded>(std::make_unique<tiny::ScrollView>(std::move(scrollContent), 48.0f, tiny::Key("demo-scroll-view")), 1.0f, tiny::Key("scroll-expanded")));
-
-			std::unique_ptr<tiny::Widget> rightPanel =
-				std::make_unique<tiny::ConstrainedBox>(
-					tiny::Constraints::fixedWidth(260.0f),
-					std::make_unique<tiny::Padding>(tiny::Thickness(16.0f),
-						std::make_unique<tiny::Column>(std::move(rightChildren), 12.0f, tiny::CrossAxisAlignment::Stretch, tiny::Key("right-content"))), tiny::Key("right-panel"));
-
-			std::vector<std::unique_ptr<tiny::Widget>> mainChildren;
-			mainChildren.push_back(std::move(controlPanel));
-			mainChildren.push_back(std::move(viewerPanel));
-			mainChildren.push_back(std::move(rightPanel));
-
-			std::unique_ptr<tiny::Widget> mainContent = std::make_unique<tiny::Row>(std::move(mainChildren), 1.0f, tiny::CrossAxisAlignment::Stretch, tiny::Key("main-layout"));
-
-			tiny::TextStyle statusStyle;
-			statusStyle.fontFamily = L"Segoe UI";
-			statusStyle.fontSize = 12.0f;
-
-			std::unique_ptr<tiny::Widget> statusBar =
-				std::make_unique<tiny::ConstrainedBox>(tiny::Constraints::fixedHeight(30.0f),
-					std::make_unique<tiny::Padding>(tiny::Thickness(6.0f),
-						std::make_unique<tiny::Text>(U"Playground  |  Expanded / ConstrainedBox / ScrollView", tiny::Color::fromRgb(108, 112, 134), statusStyle, tiny::Key("status-text"))), tiny::Key("status-bar"));
-
-			std::vector<std::unique_ptr<tiny::Widget>> rootChildren;
-			rootChildren.push_back(std::make_unique<tiny::Expanded>(std::move(mainContent), 1.0f, tiny::Key("main-expanded")));
-			rootChildren.push_back(std::move(statusBar));
-
-			std::unique_ptr<tiny::Widget> rootContent = std::make_unique<tiny::Column>(std::move(rootChildren), 0.0f, tiny::CrossAxisAlignment::Stretch, tiny::Key("root-content"));
-
-			tiny::ButtonStyle toolbarButtonStyle;
-			toolbarButtonStyle.textStyle.fontFamily = L"Segoe UI";
-			toolbarButtonStyle.textStyle.fontSize = 12.0f;
-			toolbarButtonStyle.background = tiny::Color::fromRgb(30, 30, 46);
-			toolbarButtonStyle.padding = tiny::Thickness(10.0f, 5.0f);
-
-			std::vector<std::unique_ptr<tiny::Widget>> toolbarChildren;
-			toolbarChildren.push_back(std::make_unique<tiny::Button>(U"Toggle Add", [&state, &uiRoot]() {
-				state.addEnabled = !state.addEnabled;
-				uiRoot.requestRebuild();
-			}, toolbarButtonStyle, tiny::Key("title-toolbar-toggle")));
-			toolbarChildren.push_back(std::make_unique<tiny::Button>(U"Reset", [&state, &uiRoot]() {
-				state.count = 0;
-				uiRoot.requestRebuild();
-			}, toolbarButtonStyle, tiny::Key("toolbar-reset")));
-
-			std::unique_ptr<tiny::Widget> toolbar = std::make_unique<tiny::Row>(std::move(toolbarChildren), 8.0f, tiny::CrossAxisAlignment::Center, tiny::Key("title-toolbar-row"));
-
-			tiny::TitleBarStyle titleBarStyle;
-			titleBarStyle.brandWidth = 180.0f;
-			titleBarStyle.titleLeftPadding = 42.0f;
-			titleBarStyle.iconLeftPadding = 10.0f;
-			titleBarStyle.iconSize = 22.0f;
-			titleBarStyle.iconColor = tiny::Color::fromRgb(137, 180, 250);
-
-			return std::make_unique<tiny::TitleBar>(U"Tiny Playground",
-				std::make_unique<tiny::Padding>(tiny::Thickness(8.0f), std::move(rootContent)), [&window](tiny::TitleBarAction action) {
-				switch (action) {
-					case tiny::TitleBarAction::Minimize:
-						window.minimize();
-						break;
-
-					case tiny::TitleBarAction::Maximize:
-						window.toggleMaximize();
-						break;
-
-					case tiny::TitleBarAction::Close:
-						window.close();
-						break;
-				}}, [&window]() {
-					return window.isMaximized();
-				}, createInfo.titleBarHeight, tiny::WindowCaptionButtonWidth, titleBarStyle, tiny::Key("window-title-bar"), std::move(toolbar), appIcon);
+			tiny::UIBuilder([&state, &uiRoot, &window, &createInfo, &appIcon, &previewImage, &styles]() -> std::unique_ptr<tiny::Widget> {
+			return buildPlayground(state, uiRoot, window, createInfo.titleBarHeight, appIcon, previewImage, styles);
 		}));
 
 		tiny::Subscription paintSubscription = window.paintRequested.subscribe([&window, &graphicsContext, &renderer, &uiRoot]() {

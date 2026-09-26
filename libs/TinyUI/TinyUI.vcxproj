@@ -114,6 +114,7 @@
     <ClInclude Include="include\tiny\ui\SingleChildElement.h" />
     <ClInclude Include="include\tiny\ui\text\TextEditingModel.h" />
     <ClInclude Include="include\tiny\ui\text\TextSelection.h" />
+    <ClInclude Include="include\tiny\ui\UI.h" />
     <ClInclude Include="include\tiny\ui\UIBuilder.h" />
     <ClInclude Include="include\tiny\ui\UIRoot.h" />
     <ClInclude Include="include\tiny\ui\visual\FocusRing.h" />
