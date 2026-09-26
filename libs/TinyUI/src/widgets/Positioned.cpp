@@ -39,7 +39,7 @@ namespace tiny {
 				return constraints.constrain(childSize);
 			}
 
-			void arrangeOverride(const Rect& bounds) {
+			void arrangeOverride(const Rect& bounds) override {
 				if (!hasChild())
 					return;
 

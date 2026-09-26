@@ -33,6 +33,7 @@
 #include <tiny/ui/widgets/TextBox.h>
 #include <tiny/ui/widgets/Positioned.h>
 #include <tiny/ui/widgets/ClipRect.h>
+#include <tiny/ui/widgets/IgnorePointer.h>
 
 namespace tiny::ui {
 	template <typename WidgetType, typename... Arguments>
@@ -126,5 +127,9 @@ namespace tiny::ui {
 
 	inline WidgetPtr clipRect(WidgetPtr child, Key key = Key()) {
 		return make<ClipRect>(std::move(child), std::move(key));
+	}
+
+	inline WidgetPtr ignorePointer(WidgetPtr child, bool ignoring = true, Key key = Key()) {
+		return make<IgnorePointer>(std::move(child), ignoring, std::move(key));
 	}
 }
