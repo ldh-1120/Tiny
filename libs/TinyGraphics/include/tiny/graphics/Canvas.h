@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string_view>
+#include <vector>
 
 #include <tiny/core/Color.h>
 #include <tiny/core/Rect.h>
