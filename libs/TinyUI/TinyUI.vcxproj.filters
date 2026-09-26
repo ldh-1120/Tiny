@@ -89,6 +89,7 @@
     </ClCompile>
     <ClCompile Include="src\widgets\Stack.cpp" />
     <ClCompile Include="src\widgets\Align.cpp" />
+    <ClCompile Include="src\widgets\Positioned.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\tiny\TinyUI.h">
@@ -196,5 +197,6 @@
     <ClInclude Include="include\tiny\ui\widgets\Stack.h" />
     <ClInclude Include="include\tiny\ui\widgets\Align.h" />
     <ClInclude Include="include\tiny\ui\UI.h" />
+    <ClInclude Include="include\tiny\ui\widgets\Positioned.h" />
   </ItemGroup>
 </Project>

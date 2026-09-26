@@ -154,6 +154,8 @@ tiny::WidgetPtr buildViewer(PlaygroundState& state, tiny::UIRoot& uiRoot, const 
 			stack(children(
 				make<ImageViewer>(previewImage, Size(360.0f, 220.0f), ImageInterpolation::Linear, Key("image-viewer"), std::move(zoomChanged)),
 				make<Box>(Size(1.0f, 1.0f), Color::fromRgba(137, 180, 250, 18)),
+				positioned(tiny::PositionedSpec { .left = 16.0f, .top = 16.0f }, 
+					text(U"Positioned 16, 16", tiny::Color::fromRgb(249, 226, 175), styles.overlay)),
 				align(Alignment::BottomRight,
 					padding(12.0f,
 						text(std::move(zoomText), Color::fromRgb(205, 214, 144), styles.overlay)))))));

@@ -90,6 +90,7 @@
     <ClCompile Include="src\widgets\ImageView.cpp" />
     <ClCompile Include="src\widgets\ImageViewer.cpp" />
     <ClCompile Include="src\widgets\Padding.cpp" />
+    <ClCompile Include="src\widgets\Positioned.cpp" />
     <ClCompile Include="src\widgets\Row.cpp" />
     <ClCompile Include="src\widgets\ScrollView.cpp" />
     <ClCompile Include="src\widgets\SizedBox.cpp" />
@@ -128,6 +129,7 @@
     <ClInclude Include="include\tiny\ui\widgets\ImageView.h" />
     <ClInclude Include="include\tiny\ui\widgets\ImageViewer.h" />
     <ClInclude Include="include\tiny\ui\widgets\Padding.h" />
+    <ClInclude Include="include\tiny\ui\widgets\Positioned.h" />
     <ClInclude Include="include\tiny\ui\widgets\Row.h" />
     <ClInclude Include="include\tiny\ui\widgets\ScrollView.h" />
     <ClInclude Include="include\tiny\ui\widgets\SizedBox.h" />

@@ -31,6 +31,7 @@
 #include <tiny/ui/widgets/Stack.h>
 #include <tiny/ui/widgets/Text.h>
 #include <tiny/ui/widgets/TextBox.h>
+#include <tiny/ui/widgets/Positioned.h>
 
 namespace tiny::ui {
 	template <typename WidgetType, typename... Arguments>
@@ -116,5 +117,9 @@ namespace tiny::ui {
 
 	inline WidgetPtr textBox(std::u32string value, TextBox::ChangedCallback onChanged, TextBoxStyle style = TextBoxStyle(), bool enabled = true, Key key = Key()) {
 		return make<TextBox>(std::move(value), std::move(onChanged), std::move(style), std::move(key), enabled);
+	}
+
+	inline WidgetPtr positioned(PositionedSpec spec, WidgetPtr child, Key key = Key()) {
+		return make<Positioned>(std::move(spec), std::move(child), std::move(key));
 	}
 }
