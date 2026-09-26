@@ -5,7 +5,6 @@
 #include <algorithm>
 #include <filesystem>
 #include <cmath>
-#include <string>
 
 #include <Windows.h>
 
@@ -27,6 +26,7 @@
 #include <tiny/platform/SystemClipboard.h>
 #include <tiny/platform/WindowTextInputContext.h>
 
+#include <tiny/ui/UI.h>
 #include <tiny/ui/UIRoot.h>
 #include <tiny/ui/widgets/Box.h>
 #include <tiny/ui/widgets/Button.h>
@@ -56,6 +56,9 @@ namespace {
 		int viewerZoomPercent = 100;
 	};
 }
+
+using namespace tiny;
+using namespace tiny::ui;
 
 int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previousInstance, PWSTR commandLine, int showCommand) {
 	tiny::initializePlatform();

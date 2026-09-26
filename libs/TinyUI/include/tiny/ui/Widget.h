@@ -7,6 +7,9 @@
 
 namespace tiny {
 	class Element;
+	class Widget;
+
+	using WidgetPtr = std::unique_ptr<Widget>;
 
 	class Widget {
 	public:

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <tiny/ui/UI.h>
+
 #include <tiny/ui/Element.h>
 #include <tiny/ui/FocusManager.h>
 #include <tiny/ui/Key.h>
@@ -29,3 +31,4 @@
 #include <tiny/ui/widgets/Flexible.h>
 #include <tiny/ui/widgets/ConstrainedBox.h>
 #include <tiny/ui/widgets/Stack.h>
+#include <tiny/ui/widgets/Align.h>
