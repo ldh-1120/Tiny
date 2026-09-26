@@ -164,22 +164,22 @@ namespace tiny {
 					float height = std::max(spec.height.value(), 0.0f);
 					minimumHeight = height;
 					maximumHeight = height;
-				} else if (spec.left.has_value() && spec.right.has_value()) {
+				} else if (spec.top.has_value() && spec.bottom.has_value()) {
 					float height = std::max(stackSize.height - spec.top.value() - spec.bottom.value(), 0.0f);
 					minimumHeight = height;
 					maximumHeight = height;
 				} else {
 					float inset = 0.0f;
 					if (spec.top.has_value())
-						inset += spec.left.value();
+						inset += spec.top.value();
 
 					if (spec.bottom.has_value())
-						inset += spec.right.value();
+						inset += spec.bottom.value();
 
 					maximumHeight = std::max(stackSize.height - inset, 0.0f);
 				}
 
-				return Constraints(minimumWidth, minimumHeight, maximumWidth, maximumHeight);
+				return Constraints(minimumWidth, maximumWidth, minimumHeight, maximumHeight);
 			}
 		};
 	}

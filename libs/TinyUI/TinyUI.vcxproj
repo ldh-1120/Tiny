@@ -84,6 +84,7 @@
     <ClCompile Include="src\widgets\Align.cpp" />
     <ClCompile Include="src\widgets\Box.cpp" />
     <ClCompile Include="src\widgets\Button.cpp" />
+    <ClCompile Include="src\widgets\ClipRect.cpp" />
     <ClCompile Include="src\widgets\Column.cpp" />
     <ClCompile Include="src\widgets\ConstrainedBox.cpp" />
     <ClCompile Include="src\widgets\Flexible.cpp" />
@@ -123,6 +124,7 @@
     <ClInclude Include="include\tiny\ui\widgets\Align.h" />
     <ClInclude Include="include\tiny\ui\widgets\Box.h" />
     <ClInclude Include="include\tiny\ui\widgets\Button.h" />
+    <ClInclude Include="include\tiny\ui\widgets\ClipRect.h" />
     <ClInclude Include="include\tiny\ui\widgets\Column.h" />
     <ClInclude Include="include\tiny\ui\widgets\ConstrainedBox.h" />
     <ClInclude Include="include\tiny\ui\widgets\Flexible.h" />
