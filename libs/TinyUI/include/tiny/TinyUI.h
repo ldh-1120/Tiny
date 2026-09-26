@@ -29,3 +29,4 @@
 #include <tiny/ui/widgets/ScrollView.h>
 #include <tiny/ui/widgets/Flexible.h>
 #include <tiny/ui/widgets/ConstrainedBox.h>
+#include <tiny/ui/widgets/Stack.h>
