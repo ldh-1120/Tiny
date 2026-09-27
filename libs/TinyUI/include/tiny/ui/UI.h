@@ -36,6 +36,7 @@
 #include <tiny/ui/widgets/IgnorePointer.h>
 #include <tiny/ui/widgets/AbsorbPointer.h>
 #include <tiny/ui/widgets/Opacity.h>
+#include <tiny/ui/widgets/Blur.h>
 
 namespace tiny::ui {
 	template <typename WidgetType, typename... Arguments>
@@ -141,5 +142,9 @@ namespace tiny::ui {
 
 	inline WidgetPtr opacity(float value, WidgetPtr child, Key key = Key()) {
 		return make<Opacity>(value, std::move(child), std::move(key));
+	}
+
+	inline WidgetPtr blur(float radius, WidgetPtr child, Key key = Key()) {
+		return make<Blur>(radius, std::move(child), std::move(key));
 	}
 }

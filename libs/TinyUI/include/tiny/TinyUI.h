@@ -37,3 +37,4 @@
 #include <tiny/ui/widgets/IgnorePointer.h>
 #include <tiny/ui/widgets/AbsorbPointer.h>
 #include <tiny/ui/widgets/Opacity.h>
+#include <tiny/ui/widgets/Blur.h>

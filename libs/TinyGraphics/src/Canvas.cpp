@@ -7,6 +7,7 @@
 #include <d2d1_1.h>
 #include <d2d1helper.h>
 #include <dxgiformat.h>
+#include <d2d1effects.h>
 #include <wrl/client.h>
 
 #include <tiny/graphics/Canvas.h>
@@ -14,6 +15,9 @@
 #include <tiny/graphics/TextLayout.h>
 #include <tiny/graphics/Image.h>
 #include <tiny/graphics/RenderSurface.h>
+
+#pragma comment(lib, "d2d1.lib")
+#pragma comment(lib, "dxguid.lib")
 
 namespace {
 	D2D1_COLOR_F toD2DColor(const tiny::Color& color) {
@@ -179,7 +183,7 @@ namespace tiny {
 		sourceContext->GetDpi(&dpiX, &dpiY);
 
 		float scaleX = dpiX / 96.0f;
-		float scaleY = dpiX / 96.0f;
+		float scaleY = dpiY / 96.0f;
 
 		UINT pixelWidth = static_cast<UINT>(std::max(std::ceil(size.width * scaleX), 1.0f));
 		UINT pixelHeight = static_cast<UINT>(std::max(std::ceil(size.height * scaleY), 1.0f));
@@ -271,6 +275,42 @@ namespace tiny {
 
 		float safeOpacity = std::clamp(opacity, 0.0f, 1.0f);
 		context->DrawBitmap(bitmap, toD2DRect(destination), safeOpacity, D2D1_BITMAP_INTERPOLATION_MODE_LINEAR);
+	}
+
+	void Canvas::drawBlurredRenderSurface(const RenderSurface& surface, const Point& origin, float standardDeviation) {
+		ID2D1DeviceContext* context = static_cast<ID2D1DeviceContext*>(renderTarget);
+		if (!context)
+			return;
+
+		ID2D1Bitmap1* bitmap = static_cast<ID2D1Bitmap1*>(surface.bitmapHandle());
+		if (!bitmap)
+			return;
+
+		float safeStandardDevation = std::clamp(standardDeviation, 0.0f, 250.0f);
+		if (safeStandardDevation <= 0.0f) {
+			drawRenderSurface(surface, Rect(origin, surface.size()));
+			return;
+		}
+
+		Microsoft::WRL::ComPtr<ID2D1Effect> effect;
+		HRESULT result = context->CreateEffect(CLSID_D2D1GaussianBlur, effect.ReleaseAndGetAddressOf());
+		if (FAILED(result))
+			return;
+
+		effect->SetInput(0, bitmap);
+		result = effect->SetValue(D2D1_GAUSSIANBLUR_PROP_STANDARD_DEVIATION, safeStandardDevation);
+		if (FAILED(result))
+			return;
+
+		result = effect->SetValue(D2D1_GAUSSIANBLUR_PROP_OPTIMIZATION, D2D1_GAUSSIANBLUR_OPTIMIZATION_BALANCED);
+		if (FAILED(result))
+			return;
+
+		result = effect->SetValue(D2D1_GAUSSIANBLUR_PROP_BORDER_MODE, D2D1_BORDER_MODE_HARD);
+		if (FAILED(result))
+			return;
+
+		context->DrawImage(effect.Get(), D2D1::Point2F(origin.x, origin.y));
 	}
 
 	float Canvas::dpiScale() const {

@@ -44,6 +44,7 @@ namespace tiny {
 		void popRenderSurface();
 
 		void drawRenderSurface(const RenderSurface& surface, const Rect& destination, float opacity = 1.0f);
+		void drawBlurredRenderSurface(const RenderSurface& surface, const Point& origin, float standardDeviation);
 
 		float dpiScale() const;
 

@@ -6,3 +6,4 @@
 #include <tiny/graphics/WindowRenderer.h>
 #include <tiny/graphics/TextLayout.h>
 #include <tiny/graphics/FontMetrics.h>
+#include <tiny/graphics/RenderSurface.h>

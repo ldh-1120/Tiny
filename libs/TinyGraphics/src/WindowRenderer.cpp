@@ -153,7 +153,7 @@ namespace tiny {
 			if (!swapChain)
 				return;
 
-			UINT syncInterval = interactiveSize ? 0 : 1;
+			UINT syncInterval = interactiveSize ? 0 : 1;	
 			result = swapChain->Present(syncInterval, 0);
 			if (result == DXGI_ERROR_DEVICE_REMOVED || result == DXGI_ERROR_DEVICE_RESET) {
 				discardTargetBitmap();
