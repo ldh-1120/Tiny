@@ -47,6 +47,8 @@ namespace tiny {
 		void drawBlurredRenderSurface(const RenderSurface& surface, const Point& origin, float standardDeviation);
 		void drawShadowRenderSurface(const RenderSurface& surface, const Point& origin, const Point& offset, float standardDeviation, const Color& color);
 
+		bool captureRenderSurface(RenderSurface& surface, const Rect& sourceBounds);
+
 		float dpiScale() const;
 
 	private:
@@ -59,9 +61,13 @@ namespace tiny {
 
 		std::vector<void*> opacityLayers;
 
+		Point renderTargetOrigin;
+
 		struct RenderSurfaceState {
 			void* renderTarget = nullptr;
 			void* solidBrush = nullptr;
+
+			Point origin;
 		};
 
 		std::vector<RenderSurfaceState> renderSurfaceStates;

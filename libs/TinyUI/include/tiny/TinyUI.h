@@ -39,3 +39,4 @@
 #include <tiny/ui/widgets/Opacity.h>
 #include <tiny/ui/widgets/Blur.h>
 #include <tiny/ui/widgets/DropShadow.h>
+#include <tiny/ui/widgets/BackdropBlur.h>

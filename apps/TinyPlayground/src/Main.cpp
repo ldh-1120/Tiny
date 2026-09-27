@@ -154,11 +154,18 @@ tiny::WidgetPtr buildViewer(PlaygroundState& state, tiny::UIRoot& uiRoot, const 
 				stack(children(
 					make<ImageViewer>(previewImage, Size(360.0f, 220.0f), ImageInterpolation::Linear, Key("image-viewer"), std::move(zoomChanged)),
 					make<Box>(Size(1.0f, 1.0f), Color::fromRgba(137, 180, 250, 18)),
-					positioned(tiny::PositionedSpec { .left = 16.0f, .top = 16.0f },
+					positioned(PositionedSpec { .top = 16.0f, .right = 16.0f, .width = 240.0f, .height = 72.0f },
 						ignorePointer(
-							dropShadow(4.0f, Point(0.0f, 4.0f), Color::fromRgba(0, 0, 0, 220),
+							backdropBlur(12.0f,
+								stack(children(
+									make<Box>(Size(1.0f, 1.0f), Color::fromRgba(30, 30, 46, 110)),
+									align(Alignment::Center,
+										text(U"Backdrop Blur", Color::fromRgb(205, 214, 244), styles.overlay))))))),
+					positioned(PositionedSpec { .left = 16.0f, .top = 16.0f },
+						ignorePointer(
+							dropShadow(4.0f, Point(0.0f, 4.0f), Color::fromRgba(0, 0, 0, 80),
 								button(U"Pass Through", []() { }, styles.toolbarButton)))),
-					positioned(tiny::PositionedSpec { .left = 16.0f, .top = 56.0f },
+					positioned(PositionedSpec { .left = 16.0f, .top = 56.0f },
 						absorbPointer(
 							button(U"Block Pointer", []() { }, styles.toolbarButton))),
 					align(Alignment::BottomRight,
@@ -188,11 +195,12 @@ tiny::WidgetPtr buildScrollTest(const PlaygroundStyles& styles) {
 }
 
 tiny::WidgetPtr buildStatusBar(const PlaygroundStyles& styles) {
+	using namespace tiny;
 	using namespace tiny::ui;
 
 	return fixedHeight(30.0f,
 		padding(6.0f,
-			text(U"Playground  |  Flex / Scroll / Stack / Align", tiny::Color::fromRgb(108, 112, 134), styles.status)));
+			text(U"Playground  |  Flex / Scroll / Stack / Align", Color::fromRgb(108, 112, 134), styles.status)));
 }
 
 tiny::WidgetPtr buildToolbar(PlaygroundState& state, tiny::UIRoot& uiRoot, const PlaygroundStyles& styles) {

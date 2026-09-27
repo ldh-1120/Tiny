@@ -38,6 +38,7 @@
 #include <tiny/ui/widgets/Opacity.h>
 #include <tiny/ui/widgets/Blur.h>
 #include <tiny/ui/widgets/DropShadow.h>
+#include <tiny/ui/widgets/BackdropBlur.h>
 
 namespace tiny::ui {
 	template <typename WidgetType, typename... Arguments>
@@ -151,5 +152,9 @@ namespace tiny::ui {
 
 	inline WidgetPtr dropShadow(float blurRadius, Point offset, Color color, WidgetPtr child, Key key = Key()) {
 		return make<DropShadow>(blurRadius, offset, color, std::move(child), std::move(key));
+	}
+
+	inline WidgetPtr backdropBlur(float radius, WidgetPtr child, Key key = Key()) {
+		return make<BackdropBlur>(radius, std::move(child), std::move(key));
 	}
 }
