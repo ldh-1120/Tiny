@@ -747,6 +747,18 @@ namespace tiny {
 				return 0;
 			}
 
+			case WM_ENTERSIZEMOVE:
+				owner.resizeStarted.emit();
+				return 0;
+
+			case WM_EXITSIZEMOVE:
+				owner.resizeEnded.emit();
+
+				owner.requestRepaint();
+				UpdateWindow(windowHandle);
+
+				return 0;
+
 			case WM_SIZE: {
 				RECT clientRect { };
 				GetClientRect(windowHandle, &clientRect);

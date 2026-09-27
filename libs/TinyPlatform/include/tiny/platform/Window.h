@@ -113,6 +113,9 @@ namespace tiny {
 
 		PointerCursor pointerCursor() const;
 
+		Event<> resizeStarted;
+		Event<> resizeEnded;
+
 	private:
 		class Impl;
 

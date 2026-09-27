@@ -35,7 +35,9 @@ namespace tiny {
 			bufferHeight = static_cast<UINT>(std::max(clientSize.height, 1.0f));
 
 			createTargetBitmap();
-
+			
+			resizeStartedSubscription = window.resizeStarted.subscribe([this]() { interactiveSize = true; });
+			resizeEndedSubscription = window.resizeEnded.subscribe([this]() { interactiveSize = false; });
 			resizedSubscription = window.resized.subscribe([this](const Size& size) { resize(size); });
 			dpiScaleSubscription = window.dpiChanged.subscribe([this](float scale) { updateDpi(scale); });
 		}
@@ -151,7 +153,8 @@ namespace tiny {
 			if (!swapChain)
 				return;
 
-			result = swapChain->Present(1, 0);
+			UINT syncInterval = interactiveSize ? 0 : 1;
+			result = swapChain->Present(syncInterval, 0);
 			if (result == DXGI_ERROR_DEVICE_REMOVED || result == DXGI_ERROR_DEVICE_RESET) {
 				discardTargetBitmap();
 				window.requestRepaint();
@@ -237,6 +240,11 @@ namespace tiny {
 
 		UINT bufferWidth = 0;
 		UINT bufferHeight = 0;
+
+		bool interactiveSize = false;
+
+		Subscription resizeStartedSubscription;
+		Subscription resizeEndedSubscription;
 	};
 
 	WindowRenderer::WindowRenderer(GraphicsContext& graphicsContext, Window& window) : impl(std::make_unique<Impl>(graphicsContext.d2dFactoryHandle(), graphicsContext.dwriteFactoryHandle(), window)) { }
