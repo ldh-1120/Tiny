@@ -30,6 +30,8 @@ namespace tiny {
 		void* bitmapHandle() const;
 		void* brushHandle() const;
 
+		void* gaussianBlurEffectHandle(float standardDeviation) const;
+
 	private:
 		std::unique_ptr<Impl> impl;
 

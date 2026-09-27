@@ -7,7 +7,6 @@
 #include <d2d1_1.h>
 #include <d2d1helper.h>
 #include <dxgiformat.h>
-#include <d2d1effects.h>
 #include <wrl/client.h>
 
 #include <tiny/graphics/Canvas.h>
@@ -17,7 +16,6 @@
 #include <tiny/graphics/RenderSurface.h>
 
 #pragma comment(lib, "d2d1.lib")
-#pragma comment(lib, "dxguid.lib")
 
 namespace {
 	D2D1_COLOR_F toD2DColor(const tiny::Color& color) {
@@ -282,35 +280,17 @@ namespace tiny {
 		if (!context)
 			return;
 
-		ID2D1Bitmap1* bitmap = static_cast<ID2D1Bitmap1*>(surface.bitmapHandle());
-		if (!bitmap)
-			return;
-
-		float safeStandardDevation = std::clamp(standardDeviation, 0.0f, 250.0f);
-		if (safeStandardDevation <= 0.0f) {
+		float safeStandardDeviation = std::clamp(standardDeviation, 0.0f, 250.0f);
+		if (safeStandardDeviation <= 0.0f) {
 			drawRenderSurface(surface, Rect(origin, surface.size()));
 			return;
 		}
 
-		Microsoft::WRL::ComPtr<ID2D1Effect> effect;
-		HRESULT result = context->CreateEffect(CLSID_D2D1GaussianBlur, effect.ReleaseAndGetAddressOf());
-		if (FAILED(result))
+		ID2D1Effect* effect = static_cast<ID2D1Effect*>(surface.gaussianBlurEffectHandle(safeStandardDeviation));
+		if (!effect)
 			return;
 
-		effect->SetInput(0, bitmap);
-		result = effect->SetValue(D2D1_GAUSSIANBLUR_PROP_STANDARD_DEVIATION, safeStandardDevation);
-		if (FAILED(result))
-			return;
-
-		result = effect->SetValue(D2D1_GAUSSIANBLUR_PROP_OPTIMIZATION, D2D1_GAUSSIANBLUR_OPTIMIZATION_BALANCED);
-		if (FAILED(result))
-			return;
-
-		result = effect->SetValue(D2D1_GAUSSIANBLUR_PROP_BORDER_MODE, D2D1_BORDER_MODE_HARD);
-		if (FAILED(result))
-			return;
-
-		context->DrawImage(effect.Get(), D2D1::Point2F(origin.x, origin.y));
+		context->DrawImage(effect, D2D1::Point2F(origin.x, origin.y));
 	}
 
 	float Canvas::dpiScale() const {
