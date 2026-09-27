@@ -72,6 +72,7 @@
       <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</MultiProcessorCompilation>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'!='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="src\RenderSurface.cpp" />
     <ClCompile Include="src\TextLayout.cpp" />
     <ClCompile Include="src\WindowRenderer.cpp" />
   </ItemGroup>
@@ -80,6 +81,7 @@
     <ClInclude Include="include\tiny\graphics\FontMetrics.h" />
     <ClInclude Include="include\tiny\graphics\GraphicsContext.h" />
     <ClInclude Include="include\tiny\graphics\Image.h" />
+    <ClInclude Include="include\tiny\graphics\RenderSurface.h" />
     <ClInclude Include="include\tiny\graphics\TextLayout.h" />
     <ClInclude Include="include\tiny\graphics\TextMetrics.h" />
     <ClInclude Include="include\tiny\graphics\TextStyle.h" />

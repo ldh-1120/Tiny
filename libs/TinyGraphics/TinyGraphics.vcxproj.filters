@@ -27,6 +27,7 @@
     <ClCompile Include="src\WindowRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\RenderSurface.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\tiny\graphics\Canvas.h">
@@ -62,5 +63,6 @@
     <ClInclude Include="src\TextLayoutInternal.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\tiny\graphics\RenderSurface.h" />
   </ItemGroup>
 </Project>

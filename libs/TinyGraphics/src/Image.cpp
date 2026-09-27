@@ -10,7 +10,7 @@
 #include <wincodec.h>
 #include <wrl/client.h>
 
-#include <d2d1.h>
+#include <d2d1_1.h>
 #include <d2d1helper.h>
 #include <dxgiformat.h>
 
@@ -19,31 +19,42 @@
 
 namespace tiny {
     struct Image::BitmapCache {
-        Microsoft::WRL::ComPtr<ID2D1RenderTarget> target;
-        Microsoft::WRL::ComPtr<ID2D1Bitmap> bitmap;
+        Microsoft::WRL::ComPtr<ID2D1Device> device;
+        Microsoft::WRL::ComPtr<ID2D1Bitmap1> bitmap;
     };
 
     Image::Image(std::uint32_t width, std::uint32_t height, std::vector<std::uint8_t> pixels) : widthValue(width), heightValue(height), pixelData(std::move(pixels)) { }
     Image::~Image() = default;
 
 	void* Image::nativeBitmap(void* renderTarget) const {
-		ID2D1RenderTarget* target = static_cast<ID2D1RenderTarget*>(renderTarget);
-		if (!target)
+		ID2D1DeviceContext* context = static_cast<ID2D1DeviceContext*>(renderTarget);
+		if (!context)
+			return nullptr;
+
+		Microsoft::WRL::ComPtr<ID2D1Device> device;
+		context->GetDevice(device.ReleaseAndGetAddressOf());
+
+		if (!device)
 			return nullptr;
 			
 		if (!bitmapCache)
 			bitmapCache = std::make_unique<BitmapCache>();
 
-		if (bitmapCache->target.Get() != target) {
+		if (bitmapCache->device.Get() != device.Get()) {
 			bitmapCache->bitmap.Reset();
-			bitmapCache->target = target;
+			bitmapCache->device = device;
 		}
 
 		if (bitmapCache->bitmap)
 			return bitmapCache->bitmap.Get();
 
-		D2D1_BITMAP_PROPERTIES properties = D2D1::BitmapProperties(D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED), 96.0f, 96.0f);
-		HRESULT result = target->CreateBitmap(D2D1::SizeU(widthValue, heightValue), pixelData.data(), widthValue * 4, properties, bitmapCache->bitmap.GetAddressOf());
+		float dpiX = 96.0f;
+		float dpiY = 96.0f;
+
+		context->GetDpi(&dpiX, &dpiY);
+
+		D2D1_BITMAP_PROPERTIES1 properties = D2D1::BitmapProperties1(D2D1_BITMAP_OPTIONS_NONE, D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED), dpiX, dpiY);
+		HRESULT result = context->CreateBitmap(D2D1::SizeU(widthValue, heightValue), pixelData.data(), widthValue * 4, properties, bitmapCache->bitmap.ReleaseAndGetAddressOf());
 		if (FAILED(result))
 			return nullptr;
 

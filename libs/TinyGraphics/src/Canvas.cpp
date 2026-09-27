@@ -1,16 +1,19 @@
 #include "TextLayoutInternal.h"
 
 #include <algorithm>
+#include <cmath>
+#include <memory>
 
-#include <d2d1.h>
+#include <d2d1_1.h>
 #include <d2d1helper.h>
-#include <dwrite.h>
+#include <dxgiformat.h>
 #include <wrl/client.h>
 
 #include <tiny/graphics/Canvas.h>
 #include <tiny/graphics/TextStyle.h>
 #include <tiny/graphics/TextLayout.h>
 #include <tiny/graphics/Image.h>
+#include <tiny/graphics/RenderSurface.h>
 
 namespace {
 	D2D1_COLOR_F toD2DColor(const tiny::Color& color) {
@@ -149,5 +152,137 @@ namespace tiny {
 		D2D1_RECT_F sourceRect = D2D1::RectF(source.x, source.y, source.x + source.width, source.y + source.height);
 
 		target->DrawBitmap(bitmap, destinationRect, 1.0f, nativeInterpolation, &sourceRect);
+	}
+
+	std::unique_ptr<RenderSurface> Canvas::createRenderSurface(const Size& size) {
+		if (size.isEmpty())
+			return nullptr;
+
+		ID2D1DeviceContext* sourceContext = static_cast<ID2D1DeviceContext*>(renderTarget);
+		if (!sourceContext)
+			return nullptr;
+
+		Microsoft::WRL::ComPtr<ID2D1Device> device;
+		sourceContext->GetDevice(device.ReleaseAndGetAddressOf());
+
+		if (!device)
+			return nullptr;
+
+		Microsoft::WRL::ComPtr<ID2D1DeviceContext> surfaceContext;
+		HRESULT result = device->CreateDeviceContext(D2D1_DEVICE_CONTEXT_OPTIONS_NONE, surfaceContext.ReleaseAndGetAddressOf());
+		if (FAILED(result))
+			return nullptr;
+
+		float dpiX = 96.0f;
+		float dpiY = 96.0f;
+
+		sourceContext->GetDpi(&dpiX, &dpiY);
+
+		float scaleX = dpiX / 96.0f;
+		float scaleY = dpiX / 96.0f;
+
+		UINT pixelWidth = static_cast<UINT>(std::max(std::ceil(size.width * scaleX), 1.0f));
+		UINT pixelHeight = static_cast<UINT>(std::max(std::ceil(size.height * scaleY), 1.0f));
+
+		D2D1_BITMAP_PROPERTIES1 properties = D2D1::BitmapProperties1(D2D1_BITMAP_OPTIONS_TARGET, D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED), dpiX, dpiY);
+		Microsoft::WRL::ComPtr<ID2D1Bitmap1> bitmap;
+		result = surfaceContext->CreateBitmap(D2D1::SizeU(pixelWidth, pixelHeight), nullptr, 0, &properties, bitmap.ReleaseAndGetAddressOf());
+		if (FAILED(result))
+			return nullptr;
+
+		surfaceContext->SetTarget(bitmap.Get());
+		surfaceContext->SetDpi(dpiX, dpiY);
+
+		Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> brush;
+		result = surfaceContext->CreateSolidColorBrush(D2D1::ColorF(1.0f, 1.0f, 1.0f, 1.0f), brush.ReleaseAndGetAddressOf());
+		if (FAILED(result))
+			return nullptr;
+
+		return std::unique_ptr<RenderSurface>(new RenderSurface(size, scaleX, surfaceContext.Get(), bitmap.Get(), brush.Get()));
+	}
+
+	bool Canvas::pushRenderSurface(RenderSurface& surface, const Point& origin) {
+		ID2D1DeviceContext* context = static_cast<ID2D1DeviceContext*>(surface.contextHandle());
+		ID2D1Bitmap1* bitmap = static_cast<ID2D1Bitmap1*>(surface.bitmapHandle());
+		ID2D1SolidColorBrush* brush = static_cast<ID2D1SolidColorBrush*>(surface.brushHandle());
+
+		if (!context || !bitmap || !brush)
+			return false;
+
+		ID2D1DeviceContext* currentContext = static_cast<ID2D1DeviceContext*>(renderTarget);
+		if (!currentContext)
+			return false;
+
+		Microsoft::WRL::ComPtr<ID2D1Device> currentDevice;
+		Microsoft::WRL::ComPtr<ID2D1Device> surfaceDevice;
+
+		currentContext->GetDevice(currentDevice.ReleaseAndGetAddressOf());
+		context->GetDevice(surfaceDevice.ReleaseAndGetAddressOf());
+
+		if (!currentDevice || !surfaceDevice || currentDevice.Get() != surfaceDevice.Get())
+			return false;
+
+		RenderSurfaceState state;
+		state.renderTarget = renderTarget;
+		state.solidBrush = solidBrush;
+
+		renderSurfaceStates.push_back(state);
+
+		renderTarget = context;
+		solidBrush = brush;
+
+		context->SetTarget(bitmap);
+		context->BeginDraw();
+
+		context->SetTransform(D2D1::Matrix3x2F::Translation(-origin.x, -origin.y));
+		context->Clear(D2D1::ColorF(0.0f, 0.0f, 0.0f, 0.0f));
+
+		return true;
+	}
+
+	void Canvas::popRenderSurface() {
+		if (renderSurfaceStates.empty())
+			return;
+
+		ID2D1DeviceContext* context = static_cast<ID2D1DeviceContext*>(renderTarget);
+		if (context) {
+			context->SetTransform(D2D1::Matrix3x2F::Identity());
+			context->EndDraw();
+		}
+
+		RenderSurfaceState state = renderSurfaceStates.back();
+		renderSurfaceStates.pop_back();
+
+		renderTarget = state.renderTarget;
+		solidBrush = state.solidBrush;
+	}
+
+	void Canvas::drawRenderSurface(const RenderSurface& surface, const Rect& destination, float opacity) {
+		if (destination.isEmpty())
+			return;
+
+		ID2D1DeviceContext* context = static_cast<ID2D1DeviceContext*>(renderTarget);
+		if (!context)
+			return;
+
+		ID2D1Bitmap1* bitmap = static_cast<ID2D1Bitmap1*>(surface.bitmapHandle());
+		if (!bitmap)
+			return;
+
+		float safeOpacity = std::clamp(opacity, 0.0f, 1.0f);
+		context->DrawBitmap(bitmap, toD2DRect(destination), safeOpacity, D2D1_BITMAP_INTERPOLATION_MODE_LINEAR);
+	}
+
+	float Canvas::dpiScale() const {
+		ID2D1DeviceContext* context = static_cast<ID2D1DeviceContext*>(renderTarget);
+		if (!context)
+			return 1.0f;
+
+		float dpiX = 96.0f;
+		float dpiY = 96.0f;
+
+		context->GetDpi(&dpiX, &dpiY);
+
+		return dpiX / 96.0f;
 	}
 }

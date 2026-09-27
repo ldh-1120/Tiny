@@ -2,6 +2,7 @@
 
 #include <string_view>
 #include <vector>
+#include <memory>
 
 #include <tiny/core/Color.h>
 #include <tiny/core/Rect.h>
@@ -13,6 +14,7 @@ namespace tiny {
 	class WindowRenderer;
 	class TextLayout;
 	class Image;
+	class RenderSurface;
 
 	class Canvas {
 	public:
@@ -36,6 +38,15 @@ namespace tiny {
 		void drawImage(const Image& image, const Rect& destination, ImageInterpolation interpolation = ImageInterpolation::Linear);
 		void drawImage(const Image& image, const Rect& destination, const Rect& source, ImageInterpolation interpolation = ImageInterpolation::Linear);
 
+		std::unique_ptr<RenderSurface> createRenderSurface(const Size& size);
+
+		bool pushRenderSurface(RenderSurface& surface, const Point& origin);
+		void popRenderSurface();
+
+		void drawRenderSurface(const RenderSurface& surface, const Rect& destination, float opacity = 1.0f);
+
+		float dpiScale() const;
+
 	private:
 		Canvas(void* renderTarget, void* textFactory, void* solidBrush);
 
@@ -45,6 +56,13 @@ namespace tiny {
 		void* solidBrush = nullptr;
 
 		std::vector<void*> opacityLayers;
+
+		struct RenderSurfaceState {
+			void* renderTarget = nullptr;
+			void* solidBrush = nullptr;
+		};
+
+		std::vector<RenderSurfaceState> renderSurfaceStates;
 
 		friend class WindowRenderer;
 	};
