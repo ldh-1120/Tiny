@@ -62,13 +62,20 @@ namespace tiny {
 				if (effectBounds.isEmpty())
 					return;
 
-				std::unique_ptr<RenderSurface> surface = canvas.createRenderSurface(effectBounds.size());
+				RenderSurface* surface = ensureSurface(canvas, effectBounds.size());
 				if (!surface) {
 					SingleChildElement::paintOverride(canvas);
 					return;
 				}
 
 				bool pushed = canvas.pushRenderSurface(*surface, effectBounds.position());
+				if (!pushed) {
+					renderSurface.reset();
+					surface = ensureSurface(canvas, effectBounds.size());
+					if (surface)
+						pushed = canvas.pushRenderSurface(*surface, effectBounds.position());
+				}
+
 				if (!pushed) {
 					SingleChildElement::paintOverride(canvas);
 					return;
@@ -89,8 +96,35 @@ namespace tiny {
 				return childWidget->createElement();
 			}
 
+			bool surfaceMatches(const RenderSurface& surface, const Size& size, float dpiScale) const {
+				constexpr float Epsilon = 0.001f;
+
+				const Size& surfaceSize = surface.size();
+				if (std::abs(surfaceSize.width - size.width) > Epsilon)
+					return false;
+
+				if (std::abs(surfaceSize.height - size.height) > Epsilon)
+					return false;
+
+				if (std::abs(surface.dpiScale() - dpiScale) > Epsilon)
+					return false;
+
+				return true;
+			}
+
+			RenderSurface* ensureSurface(Canvas& canvas, const Size& size) {
+				float currentDpiScale = canvas.dpiScale();
+				if (renderSurface && surfaceMatches(*renderSurface, size, currentDpiScale))
+					return renderSurface.get();
+
+				renderSurface = canvas.createRenderSurface(size);
+				return renderSurface.get();
+			}
+
 		private:
 			float radiusValue = 0.0f;
+
+			std::unique_ptr<RenderSurface> renderSurface;
 		};
 	}
 
