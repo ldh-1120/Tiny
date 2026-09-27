@@ -389,7 +389,7 @@ namespace tiny {
 		UINT32 sourceTop = static_cast<UINT32>(std::max(std::floor((copyTop - targetTop) * sourceScaleY), 0.0f));
 
 		UINT32 sourceRight = static_cast<UINT32>(std::max(std::ceil((copyRight - targetLeft) * sourceScaleX), 0.0f));
-		UINT32 sourceBottom = static_cast<UINT32>(std::max(std::ceil((copyBottom - targetBottom) * sourceScaleY), 0.0f));
+		UINT32 sourceBottom = static_cast<UINT32>(std::max(std::ceil((copyBottom - targetTop) * sourceScaleY), 0.0f));
 
 		sourceLeft = std::min(sourceLeft, sourcePixelSize.width);
 		sourceTop = std::min(sourceTop, sourcePixelSize.height);

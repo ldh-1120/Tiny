@@ -150,27 +150,28 @@ tiny::WidgetPtr buildViewer(PlaygroundState& state, tiny::UIRoot& uiRoot, const 
 
 	return expanded(
 		padding(16.0f,
-			clipRect(
-				stack(children(
-					make<ImageViewer>(previewImage, Size(360.0f, 220.0f), ImageInterpolation::Linear, Key("image-viewer"), std::move(zoomChanged)),
-					make<Box>(Size(1.0f, 1.0f), Color::fromRgba(137, 180, 250, 18)),
-					positioned(PositionedSpec { .top = 16.0f, .right = 16.0f, .width = 240.0f, .height = 72.0f },
-						ignorePointer(
-							backdropBlur(12.0f,
-								stack(children(
-									make<Box>(Size(1.0f, 1.0f), Color::fromRgba(30, 30, 46, 110)),
-									align(Alignment::Center,
-										text(U"Backdrop Blur", Color::fromRgb(205, 214, 244), styles.overlay))))))),
-					positioned(PositionedSpec { .left = 16.0f, .top = 16.0f },
-						ignorePointer(
-							dropShadow(4.0f, Point(0.0f, 4.0f), Color::fromRgba(0, 0, 0, 80),
-								button(U"Pass Through", []() { }, styles.toolbarButton)))),
-					positioned(PositionedSpec { .left = 16.0f, .top = 56.0f },
-						absorbPointer(
-							button(U"Block Pointer", []() { }, styles.toolbarButton))),
-					align(Alignment::BottomRight,
-						padding(12.0f,
-							text(std::move(zoomText), Color::fromRgb(205, 214, 144), styles.overlay))))))));
+			stack(children(
+				clipRect(
+					stack(children(
+						make<ImageViewer>(previewImage, Size(360.0f, 220.0f), ImageInterpolation::Linear, Key("image-viewer"), std::move(zoomChanged)),
+						make<Box>(Size(1.0f, 1.0f), Color::fromRgba(137, 180, 250, 18))))),
+				positioned(PositionedSpec { .top = 16.0f, .right = 16.0f, .width = 240.0f, .height = 72.0f },
+					ignorePointer(
+						backdropBlur(12.0f,
+							stack(children(
+								make<Box>(Size(1.0f, 1.0f), Color::fromRgba(30, 30, 46, 110)),
+								align(Alignment::Center,
+									text(U"Backdrop Blur", Color::fromRgb(205, 214, 244), styles.overlay))))))),
+				positioned(PositionedSpec { .left = 16.0f, .top = 16.0f },
+					ignorePointer(
+						dropShadow(4.0f, Point(0.0f, 4.0f), Color::fromRgba(0, 0, 0, 80),
+							button(U"Pass Through", []() { }, styles.toolbarButton)))),
+				positioned(PositionedSpec { .left = 16.0f, .top = 56.0f },
+					absorbPointer(
+						button(U"Block Pointer", []() { }, styles.toolbarButton))),
+				align(Alignment::BottomRight,
+					padding(12.0f,
+						text(std::move(zoomText), Color::fromRgb(205, 214, 144), styles.overlay)))))));
 }
 
 tiny::WidgetPtr buildScrollTest(const PlaygroundStyles& styles) {
