@@ -22,6 +22,12 @@ namespace tiny {
 
 		Microsoft::WRL::ComPtr<ID2D1Effect> gaussianBlurEffect;
 		float gaussianBlurStandardDeviation = -1.0f;
+
+		Microsoft::WRL::ComPtr<ID2D1Effect> shadowEffect;
+		float shadowStandardDeviation = -1.0f;
+
+		Color shadowColorValue;
+		bool shadowColorInitialized = false;
 	};
 
 	RenderSurface::RenderSurface(const Size& size, float dpiScale, void* context, void* bitmap, void* brush) : impl(std::make_unique<Impl>()) {
@@ -93,5 +99,52 @@ namespace tiny {
 		}
 
 		return impl->gaussianBlurEffect.Get();
+	}
+
+	void* RenderSurface::shadowEffectHandle(float standardDeviation, const Color& color) const {
+		if (!impl->context)
+			return nullptr;
+
+		if (!impl->bitmap)
+			return nullptr;
+
+		if (!impl->shadowEffect) {
+			HRESULT result = impl->context->CreateEffect(CLSID_D2D1Shadow, impl->shadowEffect.ReleaseAndGetAddressOf());
+			if (FAILED(result))
+				return nullptr;
+
+			impl->shadowEffect->SetInput(0, impl->bitmap.Get());
+			result = impl->shadowEffect->SetValue(D2D1_SHADOW_PROP_OPTIMIZATION, D2D1_SHADOW_OPTIMIZATION_BALANCED);
+			if (FAILED(result)) {
+				impl->shadowEffect.Reset();
+				return nullptr;
+			}
+
+			impl->shadowStandardDeviation = -1.0f;
+			impl->shadowColorInitialized = false;
+		}
+
+		constexpr float Epsilon = 0.001f;
+		if (std::abs(impl->shadowStandardDeviation - standardDeviation) > Epsilon) {
+			HRESULT result = impl->shadowEffect->SetValue(D2D1_SHADOW_PROP_BLUR_STANDARD_DEVIATION, standardDeviation);
+			if (FAILED(result))
+				return nullptr;
+
+			impl->shadowStandardDeviation = standardDeviation;
+		}
+
+		bool colorChanged = !impl->shadowColorInitialized || std::abs(impl->shadowColorValue.r - color.r) > Epsilon || std::abs(impl->shadowColorValue.g - color.g) > Epsilon ||
+			std::abs(impl->shadowColorValue.b - color.b) > Epsilon || std::abs(impl->shadowColorValue.a - color.a) > Epsilon;
+		if (colorChanged) {
+			D2D1_VECTOR_4F nativeColor = { color.r, color.g, color.b, color.a };
+			HRESULT result = impl->shadowEffect->SetValue(D2D1_SHADOW_PROP_COLOR, D2D1_PROPERTY_TYPE_VECTOR4, reinterpret_cast<const BYTE*>(&nativeColor), sizeof(nativeColor));
+			if (FAILED(result))
+				return nullptr;
+
+			impl->shadowColorValue = color;
+			impl->shadowColorInitialized = true;
+		}
+
+		return impl->shadowEffect.Get();
 	}
 }

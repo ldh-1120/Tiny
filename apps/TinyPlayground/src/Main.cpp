@@ -151,20 +151,19 @@ tiny::WidgetPtr buildViewer(PlaygroundState& state, tiny::UIRoot& uiRoot, const 
 	return expanded(
 		padding(16.0f,
 			clipRect(
-				blur(4.0f, 
 				stack(children(
 					make<ImageViewer>(previewImage, Size(360.0f, 220.0f), ImageInterpolation::Linear, Key("image-viewer"), std::move(zoomChanged)),
 					make<Box>(Size(1.0f, 1.0f), Color::fromRgba(137, 180, 250, 18)),
 					positioned(tiny::PositionedSpec { .left = 16.0f, .top = 16.0f },
 						ignorePointer(
-							opacity(0.35f,
-							button(U"Pass Through", []() { }, styles.toolbarButton)))),
+							dropShadow(4.0f, Point(0.0f, 4.0f), Color::fromRgba(0, 0, 0, 220),
+								button(U"Pass Through", []() { }, styles.toolbarButton)))),
 					positioned(tiny::PositionedSpec { .left = 16.0f, .top = 56.0f },
 						absorbPointer(
 							button(U"Block Pointer", []() { }, styles.toolbarButton))),
 					align(Alignment::BottomRight,
 						padding(12.0f,
-							text(std::move(zoomText), Color::fromRgb(205, 214, 144), styles.overlay)))))))));
+							text(std::move(zoomText), Color::fromRgb(205, 214, 144), styles.overlay))))))));
 }
 
 tiny::WidgetPtr buildScrollTest(const PlaygroundStyles& styles) {

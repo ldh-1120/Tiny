@@ -293,6 +293,22 @@ namespace tiny {
 		context->DrawImage(effect, D2D1::Point2F(origin.x, origin.y));
 	}
 
+	void Canvas::drawShadowRenderSurface(const RenderSurface& surface, const Point& origin, const Point& offset, float standardDeviation, const Color& color) {
+		if (color.a <= 0.0f)
+			return;
+
+		ID2D1DeviceContext* context = static_cast<ID2D1DeviceContext*>(renderTarget);
+		if (!context)
+			return;
+
+		float safeStandardDeviation = std::clamp(standardDeviation, 0.0f, 250.0f);
+		ID2D1Effect* effect = static_cast<ID2D1Effect*>(surface.shadowEffectHandle(safeStandardDeviation, color));
+		if (!effect)
+			return;
+
+		context->DrawImage(effect, D2D1::Point2F(origin.x + offset.x, origin.y + offset.y));
+	}
+
 	float Canvas::dpiScale() const {
 		ID2D1DeviceContext* context = static_cast<ID2D1DeviceContext*>(renderTarget);
 		if (!context)

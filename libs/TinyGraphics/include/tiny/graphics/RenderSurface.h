@@ -3,6 +3,7 @@
 #include <memory>
 
 #include <tiny/core/Size.h>
+#include <tiny/core/Color.h>
 
 namespace tiny {
 	class Canvas;
@@ -31,6 +32,7 @@ namespace tiny {
 		void* brushHandle() const;
 
 		void* gaussianBlurEffectHandle(float standardDeviation) const;
+		void* shadowEffectHandle(float standardDeviation, const Color& color) const;
 
 	private:
 		std::unique_ptr<Impl> impl;

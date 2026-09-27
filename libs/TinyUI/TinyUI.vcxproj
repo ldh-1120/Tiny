@@ -89,6 +89,7 @@
     <ClCompile Include="src\widgets\ClipRect.cpp" />
     <ClCompile Include="src\widgets\Column.cpp" />
     <ClCompile Include="src\widgets\ConstrainedBox.cpp" />
+    <ClCompile Include="src\widgets\DropShadow.cpp" />
     <ClCompile Include="src\widgets\Flexible.cpp" />
     <ClCompile Include="src\widgets\IgnorePointer.cpp" />
     <ClCompile Include="src\widgets\ImageView.cpp" />
@@ -133,6 +134,7 @@
     <ClInclude Include="include\tiny\ui\widgets\ClipRect.h" />
     <ClInclude Include="include\tiny\ui\widgets\Column.h" />
     <ClInclude Include="include\tiny\ui\widgets\ConstrainedBox.h" />
+    <ClInclude Include="include\tiny\ui\widgets\DropShadow.h" />
     <ClInclude Include="include\tiny\ui\widgets\Flexible.h" />
     <ClInclude Include="include\tiny\ui\widgets\IgnorePointer.h" />
     <ClInclude Include="include\tiny\ui\widgets\ImageView.h" />

@@ -95,6 +95,7 @@
     <ClCompile Include="src\widgets\AbsorbPointer.cpp" />
     <ClCompile Include="src\widgets\Opacity.cpp" />
     <ClCompile Include="src\widgets\Blur.cpp" />
+    <ClCompile Include="src\widgets\DropShadow.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\tiny\TinyUI.h">
@@ -208,5 +209,6 @@
     <ClInclude Include="include\tiny\ui\widgets\AbsorbPointer.h" />
     <ClInclude Include="include\tiny\ui\widgets\Opacity.h" />
     <ClInclude Include="include\tiny\ui\widgets\Blur.h" />
+    <ClInclude Include="include\tiny\ui\widgets\DropShadow.h" />
   </ItemGroup>
 </Project>
