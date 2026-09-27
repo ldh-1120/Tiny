@@ -11,7 +11,6 @@
 #include <tiny/core/Color.h>
 #include <tiny/core/Rect.h>
 #include <tiny/core/Subscription.h>
-
 #include <tiny/core/input/Pointer.h>
 
 #include <tiny/graphics/Canvas.h>

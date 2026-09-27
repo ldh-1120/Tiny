@@ -754,6 +754,9 @@ namespace tiny {
 				Size size(static_cast<float>(clientRect.right - clientRect.left), static_cast<float>(clientRect.bottom - clientRect.top));
 				owner.resized.emit(size);
 
+				owner.requestRepaint();
+				UpdateWindow(windowHandle);
+
 				return 0;
 			}
 

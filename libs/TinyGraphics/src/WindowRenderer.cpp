@@ -29,6 +29,11 @@ namespace tiny {
 			createD3DDevice();
 			createD2DDevice(d2dFactory);
 			createSwapChain();
+
+			Size clientSize = window.clientSize();
+			bufferWidth = static_cast<UINT>(std::max(clientSize.width, 1.0f));
+			bufferHeight = static_cast<UINT>(std::max(clientSize.height, 1.0f));
+
 			createTargetBitmap();
 
 			resizedSubscription = window.resized.subscribe([this](const Size& size) { resize(size); });
@@ -81,7 +86,7 @@ namespace tiny {
 			description.SampleDesc.Count = 1;
 			description.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 			description.BufferCount = 2;
-			description.Scaling = DXGI_SCALING_STRETCH;
+			description.Scaling = DXGI_SCALING_NONE;
 			description.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
 			description.AlphaMode = DXGI_ALPHA_MODE_IGNORE;
 
@@ -168,11 +173,17 @@ namespace tiny {
 			UINT width = static_cast<UINT>(std::max(size.width, 1.0f));
 			UINT height = static_cast<UINT>(std::max(size.height, 1.0f));
 
+			if (width == bufferWidth && height == bufferHeight)
+				return;
+
 			discardTargetBitmap();
 
 			HRESULT result = swapChain->ResizeBuffers(0, width, height, DXGI_FORMAT_UNKNOWN, 0);
 			if (FAILED(result))
 				return;
+
+			bufferWidth = width;
+			bufferHeight = height;
 
 			createTargetBitmap();
 
@@ -223,6 +234,9 @@ namespace tiny {
 
 		Subscription resizedSubscription;
 		Subscription dpiScaleSubscription;
+
+		UINT bufferWidth = 0;
+		UINT bufferHeight = 0;
 	};
 
 	WindowRenderer::WindowRenderer(GraphicsContext& graphicsContext, Window& window) : impl(std::make_unique<Impl>(graphicsContext.d2dFactoryHandle(), graphicsContext.dwriteFactoryHandle(), window)) { }
