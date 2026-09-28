@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <cmath>
 #include <memory>
+#include <utility>
+#include <cstddef>
 
 #include <d2d1_1.h>
 #include <d2d1helper.h>
@@ -25,6 +27,30 @@ namespace {
 	D2D1_RECT_F toD2DRect(const tiny::Rect& rect) {
 		return D2D1::RectF(rect.x, rect.y, rect.x + rect.width, rect.y + rect.height);
 	}
+
+	class ClipSuspension {
+	public:
+		ClipSuspension(ID2D1RenderTarget* target, const std::vector<tiny::Rect>& clips) : target(target), clips(clips) {
+			if (!target)
+				return;
+
+			for (std::size_t index = 0; index < clips.size(); ++index)
+				target->PopAxisAlignedClip();
+		}
+
+		~ClipSuspension() {
+			if (!target)
+				return;
+
+			for (const tiny::Rect& clip : clips)
+				target->PushAxisAlignedClip(toD2DRect(clip), D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
+		}
+
+	private:
+		ID2D1RenderTarget* target = nullptr;
+
+		const std::vector<tiny::Rect>& clips;
+	};
 }
 
 namespace tiny {
@@ -71,15 +97,24 @@ namespace tiny {
 	}
 
 	void Canvas::pushClip(const Rect& rect) {
-		D2D1_RECT_F nativeRect = { rect.x, rect.y, rect.x + rect.width, rect.y + rect.height };
-
 		ID2D1RenderTarget* target = static_cast<ID2D1RenderTarget*>(renderTarget);
-		target->PushAxisAlignedClip(nativeRect, D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
+		if (!target)
+			return;
+
+		target->PushAxisAlignedClip(toD2DRect(rect), D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
+		clipRects.push_back(rect);
 	}
 
 	void Canvas::popClip() {
+		if (clipRects.empty())
+			return;
+
 		ID2D1RenderTarget* target = static_cast<ID2D1RenderTarget*>(renderTarget);
+		if (!target)
+			return;
+
 		target->PopAxisAlignedClip();
+		clipRects.pop_back();
 	}
 
 	bool Canvas::pushOpacity(float opacity) {
@@ -192,7 +227,6 @@ namespace tiny {
 		if (FAILED(result))
 			return nullptr;
 
-		surfaceContext->SetTarget(bitmap.Get());
 		surfaceContext->SetDpi(dpiX, dpiY);
 
 		Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> brush;
@@ -229,7 +263,13 @@ namespace tiny {
 		state.solidBrush = solidBrush;
 		state.origin = renderTargetOrigin;
 
-		renderSurfaceStates.push_back(state);
+		state.clipRects = std::move(clipRects);
+		state.opacityLayers = std::move(opacityLayers);
+
+		clipRects.clear();
+		opacityLayers.clear();
+
+		renderSurfaceStates.push_back(std::move(state));
 
 		renderTarget = context;
 		solidBrush = brush;
@@ -252,6 +292,8 @@ namespace tiny {
 		if (context) {
 			context->SetTransform(D2D1::Matrix3x2F::Identity());
 			context->EndDraw();
+
+			context->SetTarget(nullptr);
 		}
 
 		RenderSurfaceState state = renderSurfaceStates.back();
@@ -260,6 +302,9 @@ namespace tiny {
 		renderTarget = state.renderTarget;
 		solidBrush = state.solidBrush;
 		renderTargetOrigin = state.origin;
+
+		clipRects = std::move(state.clipRects);
+		opacityLayers = std::move(state.opacityLayers);
 	}
 
 	void Canvas::drawRenderSurface(const RenderSurface& surface, const Rect& destination, float opacity) {
@@ -335,6 +380,11 @@ namespace tiny {
 		if (!sourceDevice || !destinationDevice || sourceDevice.Get() != destinationDevice.Get())
 			return false;
 
+		if (!opacityLayers.empty())
+			return false;
+
+		ClipSuspension clipSuspension(sourceContext, clipRects);
+
 		HRESULT result = sourceContext->Flush();
 		if (FAILED(result))
 			return false;
@@ -346,6 +396,7 @@ namespace tiny {
 		destinationContext->Clear(D2D1::ColorF(0.0f, 0.0f, 0.0f, 0.0f));
 
 		result = destinationContext->EndDraw();
+		destinationContext->SetTarget(nullptr);
 		if (FAILED(result))
 			return false;
 
@@ -362,6 +413,14 @@ namespace tiny {
 
 		float copyRight = std::min(sourceBounds.right(), targetRight);
 		float copyBottom = std::min(sourceBounds.bottom(), targetBottom);
+
+		for (const Rect& clip : clipRects) {
+			copyLeft = std::max(copyLeft, clip.left());
+			copyTop = std::max(copyTop, clip.top());
+
+			copyRight = std::min(copyRight, clip.right());
+			copyBottom = std::min(copyBottom, clip.bottom());
+		}
 
 		if (copyRight <= copyLeft || copyBottom <= copyTop)
 			return true;
@@ -418,11 +477,7 @@ namespace tiny {
 		D2D1_POINT_2U destinationPoint = { destinationX, destinationY };
 		D2D1_RECT_U sourceRect = { sourceLeft, sourceTop, sourceLeft + copyWidth, sourceTop + copyHeight };
 
-		destinationContext->SetTarget(nullptr);
-
 		result = destinationBitmap->CopyFromRenderTarget(&destinationPoint, sourceContext, &sourceRect);
-		destinationContext->SetTarget(destinationBitmap);
-
 		return SUCCEEDED(result);
 	}
 

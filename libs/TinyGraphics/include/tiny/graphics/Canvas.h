@@ -59,6 +59,7 @@ namespace tiny {
 		void* textFactory = nullptr;
 		void* solidBrush = nullptr;
 
+		std::vector<Rect> clipRects;
 		std::vector<void*> opacityLayers;
 
 		Point renderTargetOrigin;
@@ -68,6 +69,9 @@ namespace tiny {
 			void* solidBrush = nullptr;
 
 			Point origin;
+
+			std::vector<Rect> clipRects;
+			std::vector<void*> opacityLayers;
 		};
 
 		std::vector<RenderSurfaceState> renderSurfaceStates;
