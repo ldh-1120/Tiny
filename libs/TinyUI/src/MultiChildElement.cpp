@@ -127,16 +127,16 @@ namespace tiny {
 		return result;
 	}
 
-	bool MultiChildElement::requiresBackdropOverride() const {
+	Rect MultiChildElement::backdropReadBoundsOverride() const {
+		Rect result;
 		for (const std::unique_ptr<Element>& child : childElements) {
 			if (!child)
 				continue;
 
-			if (child->requiresBackdrop())
-				return true;
+			result = unionRect(result, child->backdropReadBounds());
 		}
 
-		return false;
+		return result;
 	}
 
 	void MultiChildElement::mountOverride() {

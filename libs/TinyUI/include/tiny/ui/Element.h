@@ -84,7 +84,7 @@ namespace tiny {
 		const Rect& bounds() const;
 
 		Rect visualBounds() const;
-		bool requiresBackdrop() const;
+		Rect backdropReadBounds() const;
 
 	protected:
 		explicit Element(const Widget& widget);
@@ -150,7 +150,7 @@ namespace tiny {
 		void setEnabled(bool enabled);
 
 		virtual Rect visualBoundsOverride() const;
-		virtual bool requiresBackdropOverride() const;
+		virtual Rect backdropReadBoundsOverride() const;
 
 	private:
 		void setFocused(bool value);

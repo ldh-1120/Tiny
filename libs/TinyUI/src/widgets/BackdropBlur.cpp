@@ -55,9 +55,7 @@ namespace tiny {
 					return;
 				}
 
-				float padding = std::ceil(radiusValue * 3.0f);
-
-				Rect captureBounds(bounds().x - padding, bounds().y - padding, bounds().width + padding * 2.0f, bounds().height + padding * 2.0f);
+				Rect captureBounds = ownBackdropReadBounds();
 				RenderSurface* surface = ensureSurface(canvas, captureBounds.size());
 
 				bool captured = false;
@@ -83,8 +81,12 @@ namespace tiny {
 				SingleChildElement::paintOverride(canvas);
 			}
 
-			bool requiresBackdropOverride() const override {
-				return true;
+			Rect backdropReadBoundsOverride() const override {
+				Rect result;
+				if (hasChild())
+					result = child()->backdropReadBounds();
+				
+				return unionRect(result, ownBackdropReadBounds());
 			}
 
 		private:
@@ -119,6 +121,15 @@ namespace tiny {
 
 				renderSurface = canvas.createRenderSurface(size);
 				return renderSurface.get();
+			}
+
+			Rect ownBackdropReadBounds() const {
+				if (radiusValue <= 0.0f)
+					return Rect();
+
+				float padding = std::ceil(radiusValue * 3.0f);
+
+				return Rect(bounds().x - padding, bounds().y - padding, bounds().width + padding * 2.0f, bounds().height + padding * 2.0f);
 			}
 
 		private:

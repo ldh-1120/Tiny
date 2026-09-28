@@ -59,13 +59,12 @@ namespace tiny {
 				}
 
 				Rect availableBounds = canvas.currentPaintBounds();
+				Rect visualBounds = child()->visualBounds();
+				Rect backdropBounds = child()->backdropReadBounds();
 
-				Rect layerBounds;
-				if (child()->requiresBackdrop())
-					layerBounds = availableBounds;
-				else
-					layerBounds = intersectRect(child()->visualBounds(), availableBounds);
+				Rect requiredBounds = unionRect(visualBounds, backdropBounds);
 
+				Rect layerBounds = intersectRect(requiredBounds, availableBounds);
 				if (layerBounds.isEmpty())
 					return;
 

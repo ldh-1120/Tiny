@@ -76,11 +76,11 @@ namespace tiny {
 		return unionRect(bounds(), childElement->visualBounds());
 	}
 
-	bool SingleChildElement::requiresBackdropOverride() const {
+	Rect SingleChildElement::backdropReadBoundsOverride() const {
 		if (!childElement)
-			return false;
+			return Rect();
 
-		return childElement->requiresBackdrop();
+		return childElement->backdropReadBounds();
 	}
 
 	void SingleChildElement::mountOverride() {

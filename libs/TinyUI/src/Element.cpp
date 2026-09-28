@@ -398,8 +398,8 @@ namespace tiny {
 		return arrangedBounds;
 	}
 
-	bool Element::requiresBackdropOverride() const {
-		return false;
+	Rect Element::backdropReadBoundsOverride() const {
+		return Rect();
 	}
 
 	void Element::setFocused(bool value) {
@@ -436,7 +436,7 @@ namespace tiny {
 		return visualBoundsOverride();
 	}
 
-	bool Element::requiresBackdrop() const {
-		return requiresBackdropOverride();
+	Rect Element::backdropReadBounds() const {
+		return backdropReadBoundsOverride();
 	}
 }
