@@ -52,6 +52,13 @@ namespace tiny {
 				canvas.popClip();
 			}
 
+			Rect visualBoundsOverride() const override {
+				if (!hasChild())
+					return Rect();
+
+				return intersectRect(bounds(), child()->visualBounds());
+			}
+
 		private:
 			static std::unique_ptr<Element> createChild(const ClipRect& widget) {
 				const Widget* childWidget = widget.child();

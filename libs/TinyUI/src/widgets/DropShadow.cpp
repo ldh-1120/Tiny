@@ -57,6 +57,7 @@ namespace tiny {
 					return;
 				}
 
+				Rect childBounds = child()->visualBounds();
 				float padding = std::ceil(blurRadiusValue * 3.0f);
 
 				float leftExtra = padding + std::max(-offsetValue.x, 0.0f);
@@ -65,7 +66,7 @@ namespace tiny {
 				float topExtra = padding + std::max(-offsetValue.y, 0.0f);
 				float bottomExtra = padding + std::max(offsetValue.y, 0.0f);
 
-				Rect effectBounds(bounds().x - leftExtra, bounds().y - topExtra, bounds().width + leftExtra + rightExtra, bounds().height + topExtra + bottomExtra);
+				Rect effectBounds(childBounds.x - leftExtra, childBounds.y - topExtra, childBounds.width + leftExtra + rightExtra, childBounds.height + topExtra + bottomExtra);
 				if (effectBounds.isEmpty())
 					return;
 
@@ -93,6 +94,20 @@ namespace tiny {
 				canvas.popRenderSurface();
 				canvas.drawShadowRenderSurface(*surface, effectBounds.position(), offsetValue, blurRadiusValue, colorValue);
 				canvas.drawRenderSurface(*surface, effectBounds);
+			}
+
+			Rect visualBoundsOverride() const override {
+				if (!hasChild())
+					return Rect();
+
+				Rect childBounds = child()->visualBounds();
+				if (colorValue.a <= 0.0f)
+					return childBounds;
+
+				float padding = std::ceil(blurRadiusValue * 3.0f);
+				Rect shadowBounds(childBounds.x + offsetValue.x - padding, childBounds.y + offsetValue.y - padding, childBounds.width + padding * 2.0f, childBounds.height + padding * 2.0f);
+
+				return unionRect(childBounds, shadowBounds);
 			}
 
 		private:

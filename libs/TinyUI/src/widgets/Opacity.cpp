@@ -58,7 +58,14 @@ namespace tiny {
 					return;
 				}
 
-				Rect layerBounds = canvas.currentPaintBounds();
+				Rect availableBounds = canvas.currentPaintBounds();
+
+				Rect layerBounds;
+				if (child()->requiresBackdrop())
+					layerBounds = availableBounds;
+				else
+					layerBounds = intersectRect(child()->visualBounds(), availableBounds);
+
 				if (layerBounds.isEmpty())
 					return;
 

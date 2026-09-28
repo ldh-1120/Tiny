@@ -83,6 +83,10 @@ namespace tiny {
 				SingleChildElement::paintOverride(canvas);
 			}
 
+			bool requiresBackdropOverride() const override {
+				return true;
+			}
+
 		private:
 			static std::unique_ptr<Element> createChild(const BackdropBlur& widget) {
 				const Widget* childWidget = widget.child();

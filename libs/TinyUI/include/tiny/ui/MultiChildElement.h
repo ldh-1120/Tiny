@@ -25,6 +25,9 @@ namespace tiny {
 
 		void collectFocusableChildren(std::vector<Element*>& result) override;
 
+		Rect visualBoundsOverride() const override;
+		bool requiresBackdropOverride() const override;
+
 	private:
 		void mountOverride() override;
 		void unmountOverride() override;

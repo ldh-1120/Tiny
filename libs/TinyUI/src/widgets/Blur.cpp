@@ -56,9 +56,7 @@ namespace tiny {
 					return;
 				}
 
-				float padding = std::ceil(radiusValue * 3.0f);
-
-				Rect effectBounds(bounds().x - padding, bounds().y - padding, bounds().width + padding * 2.0f, bounds().height + padding * 2.0f);
+				Rect effectBounds = visualBoundsOverride();
 				if (effectBounds.isEmpty())
 					return;
 
@@ -85,6 +83,16 @@ namespace tiny {
 
 				canvas.popRenderSurface();
 				canvas.drawBlurredRenderSurface(*surface, effectBounds.position(), radiusValue);
+			}
+
+			Rect visualBoundsOverride() const override {
+				if (!hasChild())
+					return Rect();
+
+				Rect childBounds = child()->visualBounds();
+
+				float padding = std::ceil(radiusValue * 3.0f);
+				return Rect(childBounds.x - padding, childBounds.y - padding, childBounds.width + padding * 2.0f, childBounds.height + padding * 2.0f);
 			}
 
 		private:

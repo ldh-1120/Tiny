@@ -69,6 +69,20 @@ namespace tiny {
 		childElement->collectFocusableElements(result);
 	}
 
+	Rect SingleChildElement::visualBoundsOverride() const {
+		if (!childElement)
+			return bounds();
+
+		return unionRect(bounds(), childElement->visualBounds());
+	}
+
+	bool SingleChildElement::requiresBackdropOverride() const {
+		if (!childElement)
+			return false;
+
+		return childElement->requiresBackdrop();
+	}
+
 	void SingleChildElement::mountOverride() {
 		if (!childElement)
 			return;

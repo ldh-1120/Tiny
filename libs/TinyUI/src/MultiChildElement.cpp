@@ -115,6 +115,30 @@ namespace tiny {
 		}
 	}
 
+	Rect MultiChildElement::visualBoundsOverride() const {
+		Rect result = bounds();
+		for (const std::unique_ptr<Element>& child : childElements) {
+			if (!child)
+				continue;
+
+			result = unionRect(result, child->visualBounds());
+		}
+
+		return result;
+	}
+
+	bool MultiChildElement::requiresBackdropOverride() const {
+		for (const std::unique_ptr<Element>& child : childElements) {
+			if (!child)
+				continue;
+
+			if (child->requiresBackdrop())
+				return true;
+		}
+
+		return false;
+	}
+
 	void MultiChildElement::mountOverride() {
 		UIRoot* root = ownerRoot();
 		if (!root)

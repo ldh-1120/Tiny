@@ -1,5 +1,7 @@
 #pragma once
 
+#include <algorithm>
+
 #include <tiny/core/Point.h>
 #include <tiny/core/Size.h>
 
@@ -52,4 +54,33 @@ namespace tiny {
 			return width <= 0.0f || height <= 0.0f;
 		}
 	};
+
+	inline Rect unionRect(const Rect& first, const Rect& second) {
+		if (first.isEmpty())
+			return second;
+
+		if (second.isEmpty())
+			return first;
+
+		float left = std::min(first.left(), second.left());
+		float top = std::min(first.top(), second.top());
+
+		float right = std::max(first.right(), second.right());
+		float bottom = std::max(first.bottom(), second.bottom());
+
+		return Rect(left, top, right - left, bottom - top);
+	}
+
+	inline Rect intersectRect(const Rect& first, const Rect& second) {
+		float left = std::max(first.left(), second.left());
+		float top = std::max(first.top(), second.top());
+
+		float right = std::min(first.right(), second.right());
+		float bottom = std::min(first.bottom(), second.bottom());
+
+		if (right <= left || bottom <= top)
+			return Rect(left, top, 0.0f, 0.0f);
+
+		return Rect(left, top, right - left, bottom - top);
+	}
 }

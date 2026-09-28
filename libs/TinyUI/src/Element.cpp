@@ -394,6 +394,14 @@ namespace tiny {
 		markNeedsPaint();
 	}
 
+	Rect Element::visualBoundsOverride() const {
+		return arrangedBounds;
+	}
+
+	bool Element::requiresBackdropOverride() const {
+		return false;
+	}
+
 	void Element::setFocused(bool value) {
 		if (focused == value)
 			return;
@@ -422,5 +430,13 @@ namespace tiny {
 			return;
 
 		focusVisibilityChangedOverride(visible);
+	}
+
+	Rect Element::visualBounds() const {
+		return visualBoundsOverride();
+	}
+
+	bool Element::requiresBackdrop() const {
+		return requiresBackdropOverride();
 	}
 }
