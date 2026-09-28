@@ -153,6 +153,8 @@
     <ClInclude Include="include\tiny\ui\widgets\TitleBar.h" />
     <ClInclude Include="src\pch.h" />
     <ClInclude Include="src\widgets\EffectSurfaceCache.h" />
+    <ClInclude Include="src\widgets\OffscreenLayer.h" />
+    <ClInclude Include="src\widgets\OffscreenPass.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\TinyCore\TinyCore.vcxproj">

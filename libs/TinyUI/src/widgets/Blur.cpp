@@ -18,7 +18,7 @@
 #include <tiny/ui/layout/Constraints.h>
 
 #include "EffectSurfaceCache.h"
-#include "OffscreenPass.h"
+#include "OffscreenLayer.h"
 
 namespace tiny {
 	namespace {
@@ -63,29 +63,22 @@ namespace tiny {
 				if (effectBounds.isEmpty())
 					return;
 
-				RenderSurface* surface = surfaceCache.ensure(canvas, effectBounds.size());
-				if (!surface) {
-					SingleChildElement::paintOverride(canvas);
-					return;
-				}
+				detail::OffscreenLayer layer(canvas, surfaceCache);
 
-				detail::OffscreenPass pass(canvas);
-
-				bool pushed = pass.begin(*surface, effectBounds.position());
-				if (!pushed) {
-					surface = surfaceCache.recreate(canvas, effectBounds.size());
-					if (surface)
-						pushed = pass.begin(*surface, effectBounds.position());
-				}
-
-				if (!pushed || !surface) {
+				bool began = layer.begin(effectBounds.size(), effectBounds.position());
+				if (!began) {
 					SingleChildElement::paintOverride(canvas);
 					return;
 				}
 				
 				SingleChildElement::paintOverride(canvas);
 
-				pass.end();
+				layer.end();
+
+				RenderSurface* surface = layer.surface();
+				if (!surface)
+					return;
+
 				canvas.drawBlurredRenderSurface(*surface, effectBounds.position(), radiusValue);
 			}
 

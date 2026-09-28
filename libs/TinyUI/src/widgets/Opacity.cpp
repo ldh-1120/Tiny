@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <memory>
 #include <utility>
-#include <cmath>
 
 #include <tiny/core/Rect.h>
 #include <tiny/core/Size.h>
@@ -17,7 +16,7 @@
 #include <tiny/ui/layout/Constraints.h>
 
 #include "EffectSurfaceCache.h"
-#include "OffscreenPass.h"
+#include "OffscreenLayer.h"
 
 namespace tiny {
 	namespace {
@@ -70,45 +69,25 @@ namespace tiny {
 				Rect layerBounds = intersectRect(requiredBounds, availableBounds);
 				if (layerBounds.isEmpty())
 					return;
+				
+				detail::OffscreenLayer layer(canvas, surfaceCache);
 
-				RenderSurface* surface = surfaceCache.ensure(canvas, layerBounds.size());
-				if (!surface) {
-					SingleChildElement::paintOverride(canvas);
-					return;
-				}
-
-				bool captured = canvas.captureRenderSurface(*surface, layerBounds);
-				if (!captured) {
-					surface = surfaceCache.recreate(canvas, layerBounds.size());
-					if (surface)
-						captured = canvas.captureRenderSurface(*surface, layerBounds);
-				}
-
-				if (!captured || !surface) {
-					SingleChildElement::paintOverride(canvas);
-					return;
-				}
-
-				detail::OffscreenPass pass(canvas);
-
-				bool pushed = pass.begin(*surface, layerBounds.position(), false);
-				if (!pushed) {
-					surface = surfaceCache.recreate(canvas, layerBounds.size());
-					if (surface) {
-						captured = canvas.captureRenderSurface(*surface, layerBounds);
-						if (captured)
-							pushed = pass.begin(*surface, layerBounds.position(), false);
-					}
-				}
-
-				if (!pushed || !surface) {
+				bool began = layer.begin(layerBounds.size(), layerBounds.position(), false, [&canvas, &layerBounds](RenderSurface& surface) {
+					return canvas.captureRenderSurface(surface, layerBounds);
+				});
+				if (!began) {
 					SingleChildElement::paintOverride(canvas);
 					return;
 				}
 
 				SingleChildElement::paintOverride(canvas);
 
-				pass.end();
+				layer.end();
+
+				RenderSurface* surface = layer.surface();
+				if (!surface)
+					return;
+
 				canvas.drawRenderSurface(*surface, layerBounds, opacityValue);
 			}
 
