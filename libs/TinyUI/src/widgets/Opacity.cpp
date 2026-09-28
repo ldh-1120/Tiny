@@ -17,6 +17,7 @@
 #include <tiny/ui/layout/Constraints.h>
 
 #include "EffectSurfaceCache.h"
+#include "OffscreenPass.h"
 
 namespace tiny {
 	namespace {
@@ -88,13 +89,15 @@ namespace tiny {
 					return;
 				}
 
-				bool pushed = canvas.pushRenderSurface(*surface, layerBounds.position(), false);
+				detail::OffscreenPass pass(canvas);
+
+				bool pushed = pass.begin(*surface, layerBounds.position(), false);
 				if (!pushed) {
 					surface = surfaceCache.recreate(canvas, layerBounds.size());
 					if (surface) {
 						captured = canvas.captureRenderSurface(*surface, layerBounds);
 						if (captured)
-							pushed = canvas.pushRenderSurface(*surface, layerBounds.position(), false);
+							pushed = pass.begin(*surface, layerBounds.position(), false);
 					}
 				}
 
@@ -105,8 +108,7 @@ namespace tiny {
 
 				SingleChildElement::paintOverride(canvas);
 
-				canvas.popRenderSurface();
-
+				pass.end();
 				canvas.drawRenderSurface(*surface, layerBounds, opacityValue);
 			}
 
