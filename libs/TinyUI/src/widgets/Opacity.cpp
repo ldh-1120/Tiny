@@ -3,11 +3,13 @@
 #include <algorithm>
 #include <memory>
 #include <utility>
+#include <cmath>
 
 #include <tiny/core/Rect.h>
 #include <tiny/core/Size.h>
 
 #include <tiny/graphics/Canvas.h>
+#include <tiny/graphics/RenderSurface.h>
 
 #include <tiny/ui/Element.h>
 #include <tiny/ui/LayoutContext.h>
@@ -56,15 +58,52 @@ namespace tiny {
 					return;
 				}
 
-				bool pushed = canvas.pushOpacity(opacityValue);
+				Rect layerBounds = canvas.currentPaintBounds();
+				if (layerBounds.isEmpty())
+					return;
+
+				RenderSurface* surface = ensureSurface(canvas, layerBounds.size());
+				if (!surface) {
+					SingleChildElement::paintOverride(canvas);
+					return;
+				}
+
+				bool captured = canvas.captureRenderSurface(*surface, layerBounds);
+				if (!captured) {
+					renderSurface.reset();
+
+					surface = ensureSurface(canvas, layerBounds.size());
+					if (surface)
+						captured = canvas.captureRenderSurface(*surface, layerBounds);
+				}
+
+				if (!captured || !surface) {
+					SingleChildElement::paintOverride(canvas);
+					return;
+				}
+
+				bool pushed = canvas.pushRenderSurface(*surface, layerBounds.position(), false);
 				if (!pushed) {
+					renderSurface.reset();
+
+					surface = ensureSurface(canvas, layerBounds.size());
+					if (surface) {
+						captured = canvas.captureRenderSurface(*surface, layerBounds);
+						if (captured)
+							pushed = canvas.pushRenderSurface(*surface, layerBounds.position(), false);
+					}
+				}
+
+				if (!pushed || !surface) {
 					SingleChildElement::paintOverride(canvas);
 					return;
 				}
 
 				SingleChildElement::paintOverride(canvas);
 
-				canvas.popOpacity();
+				canvas.popRenderSurface();
+
+				canvas.drawRenderSurface(*surface, layerBounds, opacityValue);
 			}
 
 		private:
@@ -76,8 +115,35 @@ namespace tiny {
 				return childWidget->createElement();
 			}
 
+			bool surfaceMatches(const RenderSurface& surface, const Size& size, float dpiScale) const {
+				constexpr float Epsilon = 0.001f;
+
+				const Size& surfaceSize = surface.size();
+				if (std::abs(surfaceSize.width - size.width) > Epsilon)
+					return false;
+
+				if (std::abs(surfaceSize.height - size.height) > Epsilon)
+					return false;
+
+				if (std::abs(surface.dpiScale() - dpiScale) > Epsilon)
+					return false;
+
+				return true;
+			}
+
+			RenderSurface* ensureSurface(Canvas& canvas, const Size& size) {
+				float currentDpiScale = canvas.dpiScale();
+				if (renderSurface && surfaceMatches(*renderSurface, size, currentDpiScale))
+					return renderSurface.get();
+
+				renderSurface = canvas.createRenderSurface(size);
+				return renderSurface.get();
+			}
+
 		private:
 			float opacityValue = 1.0f;
+
+			std::unique_ptr<RenderSurface> renderSurface;
 		};
 	}
 

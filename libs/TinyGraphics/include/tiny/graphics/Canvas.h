@@ -32,15 +32,12 @@ namespace tiny {
 		void pushClip(const Rect& rect);
 		void popClip();
 
-		bool pushOpacity(float opacity);
-		void popOpacity();
-
 		void drawImage(const Image& image, const Rect& destination, ImageInterpolation interpolation = ImageInterpolation::Linear);
 		void drawImage(const Image& image, const Rect& destination, const Rect& source, ImageInterpolation interpolation = ImageInterpolation::Linear);
 
 		std::unique_ptr<RenderSurface> createRenderSurface(const Size& size);
 
-		bool pushRenderSurface(RenderSurface& surface, const Point& origin);
+		bool pushRenderSurface(RenderSurface& surface, const Point& origin, bool clear = true);
 		void popRenderSurface();
 
 		void drawRenderSurface(const RenderSurface& surface, const Rect& destination, float opacity = 1.0f);
@@ -51,6 +48,8 @@ namespace tiny {
 
 		float dpiScale() const;
 
+		Rect currentPaintBounds() const;
+
 	private:
 		Canvas(void* renderTarget, void* textFactory, void* solidBrush);
 
@@ -60,7 +59,6 @@ namespace tiny {
 		void* solidBrush = nullptr;
 
 		std::vector<Rect> clipRects;
-		std::vector<void*> opacityLayers;
 
 		Point renderTargetOrigin;
 
@@ -71,7 +69,6 @@ namespace tiny {
 			Point origin;
 
 			std::vector<Rect> clipRects;
-			std::vector<void*> opacityLayers;
 		};
 
 		std::vector<RenderSurfaceState> renderSurfaceStates;

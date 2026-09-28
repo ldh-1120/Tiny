@@ -56,10 +56,7 @@ namespace {
 namespace tiny {
 	Canvas::Canvas(void* renderTarget, void* textFactory, void* solidBrush) : renderTarget(renderTarget), textFactory(textFactory), solidBrush(solidBrush) { }
 
-	Canvas::~Canvas() {
-		while (!opacityLayers.empty())
-			popOpacity();
-	}
+	Canvas::~Canvas() = default;
 
 	void Canvas::clear(const Color& color) {
 		ID2D1RenderTarget* target = static_cast<ID2D1RenderTarget*>(renderTarget);
@@ -115,48 +112,6 @@ namespace tiny {
 
 		target->PopAxisAlignedClip();
 		clipRects.pop_back();
-	}
-
-	bool Canvas::pushOpacity(float opacity) {
-		ID2D1RenderTarget* target = static_cast<ID2D1RenderTarget*>(renderTarget);
-		if (!target)
-			return false;
-
-		float safeOpacity = std::clamp(opacity, 0.0f, 1.0f);
-
-		ID2D1Layer* layer = nullptr;
-		HRESULT result = target->CreateLayer(nullptr, &layer);
-		if (FAILED(result) || !layer)
-			return false;
-
-		D2D1_LAYER_PARAMETERS parameters = { };
-		parameters.contentBounds = D2D1::InfiniteRect();
-		parameters.geometricMask = nullptr;
-		parameters.maskAntialiasMode = D2D1_ANTIALIAS_MODE_PER_PRIMITIVE;
-		parameters.maskTransform = D2D1::Matrix3x2F::Identity();
-		parameters.opacity = safeOpacity;
-		parameters.opacityBrush = nullptr;
-		parameters.layerOptions = D2D1_LAYER_OPTIONS_NONE;
-
-		target->PushLayer(parameters, layer);
-		opacityLayers.push_back(layer);
-
-		return true;
-	}
-
-	void Canvas::popOpacity() {
-		if (opacityLayers.empty())
-			return;
-
-		ID2D1RenderTarget* target = static_cast<ID2D1RenderTarget*>(renderTarget);
-		ID2D1Layer* layer = static_cast<ID2D1Layer*>(opacityLayers.back());
-
-		opacityLayers.pop_back();
-		if (target)
-			target->PopLayer();
-
-		if (layer)
-			layer->Release();
 	}
 
 	void Canvas::drawImage(const Image& image, const Rect& destination, ImageInterpolation interpolation) {
@@ -237,7 +192,7 @@ namespace tiny {
 		return std::unique_ptr<RenderSurface>(new RenderSurface(size, scaleX, surfaceContext.Get(), bitmap.Get(), brush.Get()));
 	}
 
-	bool Canvas::pushRenderSurface(RenderSurface& surface, const Point& origin) {
+	bool Canvas::pushRenderSurface(RenderSurface& surface, const Point& origin, bool clear) {
 		ID2D1DeviceContext* context = static_cast<ID2D1DeviceContext*>(surface.contextHandle());
 		ID2D1Bitmap1* bitmap = static_cast<ID2D1Bitmap1*>(surface.bitmapHandle());
 		ID2D1SolidColorBrush* brush = static_cast<ID2D1SolidColorBrush*>(surface.brushHandle());
@@ -264,10 +219,8 @@ namespace tiny {
 		state.origin = renderTargetOrigin;
 
 		state.clipRects = std::move(clipRects);
-		state.opacityLayers = std::move(opacityLayers);
 
 		clipRects.clear();
-		opacityLayers.clear();
 
 		renderSurfaceStates.push_back(std::move(state));
 
@@ -279,7 +232,9 @@ namespace tiny {
 		context->BeginDraw();
 
 		context->SetTransform(D2D1::Matrix3x2F::Translation(-origin.x, -origin.y));
-		context->Clear(D2D1::ColorF(0.0f, 0.0f, 0.0f, 0.0f));
+
+		if (clear)
+			context->Clear(D2D1::ColorF(0.0f, 0.0f, 0.0f, 0.0f));
 
 		return true;
 	}
@@ -304,7 +259,6 @@ namespace tiny {
 		renderTargetOrigin = state.origin;
 
 		clipRects = std::move(state.clipRects);
-		opacityLayers = std::move(state.opacityLayers);
 	}
 
 	void Canvas::drawRenderSurface(const RenderSurface& surface, const Rect& destination, float opacity) {
@@ -378,9 +332,6 @@ namespace tiny {
 		destinationContext->GetDevice(destinationDevice.ReleaseAndGetAddressOf());
 
 		if (!sourceDevice || !destinationDevice || sourceDevice.Get() != destinationDevice.Get())
-			return false;
-
-		if (!opacityLayers.empty())
 			return false;
 
 		ClipSuspension clipSuspension(sourceContext, clipRects);
@@ -492,5 +443,29 @@ namespace tiny {
 		context->GetDpi(&dpiX, &dpiY);
 
 		return dpiX / 96.0f;
+	}
+
+	Rect Canvas::currentPaintBounds() const {
+		ID2D1DeviceContext* context = static_cast<ID2D1DeviceContext*>(renderTarget);
+		if (!context)
+			return Rect();
+
+		D2D1_SIZE_F size = context->GetSize();
+		Rect result(renderTargetOrigin.x, renderTargetOrigin.y, size.width, size.height);
+
+		for (const Rect& clip : clipRects) {
+			float left = std::max(result.left(), clip.left());
+			float top = std::max(result.top(), clip.top());
+
+			float right = std::min(result.right(), clip.right());
+			float bottom = std::min(result.bottom(), clip.bottom());
+
+			if (right <= left || bottom <= top)
+				return Rect(left, top, 0.0f, 0.0f);
+
+			result = Rect(left, top, right - left, bottom - top);
+		}
+
+		return result;
 	}
 }
