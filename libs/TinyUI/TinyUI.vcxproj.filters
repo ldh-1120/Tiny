@@ -212,5 +212,6 @@
     <ClInclude Include="include\tiny\ui\widgets\Blur.h" />
     <ClInclude Include="include\tiny\ui\widgets\DropShadow.h" />
     <ClInclude Include="include\tiny\ui\widgets\BackdropBlur.h" />
+    <ClInclude Include="src\widgets\EffectSurfaceCache.h" />
   </ItemGroup>
 </Project>

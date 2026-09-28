@@ -152,6 +152,7 @@
     <ClInclude Include="include\tiny\ui\widgets\TextBox.h" />
     <ClInclude Include="include\tiny\ui\widgets\TitleBar.h" />
     <ClInclude Include="src\pch.h" />
+    <ClInclude Include="src\widgets\EffectSurfaceCache.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\TinyCore\TinyCore.vcxproj">
