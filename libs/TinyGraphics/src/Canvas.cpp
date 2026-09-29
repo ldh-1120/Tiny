@@ -114,6 +114,102 @@ namespace tiny {
 		clipRects.pop_back();
 	}
 
+	void Canvas::pushBackdropSurface(const RenderSurface& surface, const Rect& bounds) {
+		if (bounds.isEmpty())
+			return;
+
+		BackdropSourceState state;
+		state.surface = &surface;
+		state.bounds = bounds;
+
+		backdropSources.push_back(state);
+	}
+
+	void Canvas::popBackdropSurface() {
+		if (backdropSources.empty())
+			return;
+
+		backdropSources.pop_back();
+	}
+
+	bool Canvas::captureBackdropSurface(RenderSurface& surface, const Rect& sourceBounds) {
+		if (sourceBounds.isEmpty())
+			return false;
+
+		if (backdropSources.empty())
+			return captureBackdropSurface(surface, sourceBounds);
+
+		const BackdropSourceState& source = backdropSources.back();
+		if (!source.surface)
+			return false;
+
+		ID2D1DeviceContext* destinationContext = static_cast<ID2D1DeviceContext*>(surface.contextHandle());
+		ID2D1Bitmap1* destinationBitmap = static_cast<ID2D1Bitmap1*>(surface.bitmapHandle());
+		ID2D1Bitmap1* sourceBitmap = static_cast<ID2D1Bitmap1*>(source.surface->bitmapHandle());
+
+		if (!destinationContext || !destinationBitmap || !sourceBitmap)
+			return false;
+
+		if (destinationBitmap == sourceBitmap)
+			return false;
+
+		destinationContext->SetTarget(destinationBitmap);
+		destinationContext->BeginDraw();
+
+		destinationContext->SetTransform(D2D1::Matrix3x2F::Identity());
+		destinationContext->Clear(D2D1::ColorF(0.0f, 0.0f, 0.0f, 0.0f));
+
+		HRESULT result = destinationContext->EndDraw();
+		if (FAILED(result))
+			return false;
+
+		Rect copyBounds = intersectRect(sourceBounds, source.bounds);
+		if (copyBounds.isEmpty())
+			return true;
+
+		float sourceScale = source.surface->dpiScale();
+		float desetinationScale = surface.dpiScale();
+
+		D2D1_SIZE_U sourcePixelSize = sourceBitmap->GetPixelSize();
+		D2D1_SIZE_U destinationPixelSize = destinationBitmap->GetPixelSize();
+
+		UINT32 sourceLeft = static_cast<UINT32>(std::max(std::floor((copyBounds.left() - source.bounds.left()) * sourceScale), 0.0f));
+		UINT32 sourceTop = static_cast<UINT32>(std::max(std::floor((copyBounds.top() - source.bounds.top()) * sourceScale), 0.0f));
+
+		UINT32 sourceRight = static_cast<UINT32>(std::max(std::ceil((copyBounds.right() - source.bounds.left()) * sourceScale), 0.0f));
+		UINT32 sourceBottom = static_cast<UINT32>(std::max(std::ceil((copyBounds.bottom() - source.bounds.top()) * sourceScale), 0.0f));
+
+		sourceLeft = std::min(sourceLeft, sourcePixelSize.width);
+		sourceTop = std::min(sourceTop, sourcePixelSize.height);
+
+		sourceRight = std::min(sourceRight, sourcePixelSize.width);
+		sourceBottom = std::min(sourceBottom, sourcePixelSize.height);
+
+		if (sourceRight <= sourceLeft || sourceBottom <= sourceTop)
+			return true;
+
+		UINT32 destinationX = static_cast<UINT32>(std::max(std::floor((copyBounds.left() - sourceBounds.left()) * desetinationScale), 0.0f));
+		UINT32 destinationY = static_cast<UINT32>(std::max(std::floor((copyBounds.top() - sourceBounds.top()) * desetinationScale), 0.0f));
+
+		if (destinationX >= destinationPixelSize.width || destinationY >= destinationPixelSize.height)
+			return true;
+
+		UINT32 copyWidth = sourceRight - sourceLeft;
+		UINT32 copyHeight = sourceBottom - sourceTop;
+
+		copyWidth = std::min(copyWidth, destinationPixelSize.width - destinationX);
+		copyHeight = std::min(copyHeight, destinationPixelSize.height - destinationY);
+
+		if (copyWidth == 0 || copyHeight == 0)
+			return true;
+
+		D2D1_POINT_2U destinationPoint = { destinationX, destinationY };
+		D2D1_RECT_U sourceRect = { sourceLeft, sourceTop, sourceLeft + copyWidth, sourceTop + copyHeight };
+
+		result = destinationBitmap->CopyFromBitmap(&destinationPoint, sourceBitmap, &sourceRect);
+		return SUCCEEDED(result);
+	}
+
 	void Canvas::drawImage(const Image& image, const Rect& destination, ImageInterpolation interpolation) {
 		drawImage(image, destination, Rect(0.0f, 0.0f, static_cast<float>(image.width()), static_cast<float>(image.height())), interpolation);
 	}

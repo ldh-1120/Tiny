@@ -32,6 +32,11 @@ namespace tiny {
 		void pushClip(const Rect& rect);
 		void popClip();
 
+		void pushBackdropSurface(const RenderSurface& surface, const Rect& bounds);
+		void popBackdropSurface();
+
+		bool captureBackdropSurface(RenderSurface& surface, const Rect& sourceBounds);
+
 		void drawImage(const Image& image, const Rect& destination, ImageInterpolation interpolation = ImageInterpolation::Linear);
 		void drawImage(const Image& image, const Rect& destination, const Rect& source, ImageInterpolation interpolation = ImageInterpolation::Linear);
 
@@ -72,6 +77,13 @@ namespace tiny {
 		};
 
 		std::vector<RenderSurfaceState> renderSurfaceStates;
+
+		struct BackdropSourceState {
+			const RenderSurface* surface = nullptr;
+			Rect bounds;
+		};
+
+		std::vector<BackdropSourceState> backdropSources;
 
 		friend class WindowRenderer;
 	};

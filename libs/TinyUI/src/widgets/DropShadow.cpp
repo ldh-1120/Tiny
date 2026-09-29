@@ -18,6 +18,7 @@
 
 #include "EffectSurfaceCache.h"
 #include "OffscreenLayer.h"
+#include "BackdropSnapshot.h"
 
 namespace tiny {
 	namespace {
@@ -73,6 +74,12 @@ namespace tiny {
 				if (effectBounds.isEmpty())
 					return;
 
+				Rect backdropBounds = intersectRect(child()->backdropReadBounds(), canvas.currentPaintBounds());
+				if (!backdropBounds.isEmpty() && !backdropSnapshot.capture(canvas, backdropBounds)) {
+					SingleChildElement::paintOverride(canvas);
+					return;
+				}
+
 				detail::OffscreenLayer layer(canvas, surfaceCache);
 
 				bool began = layer.begin(effectBounds.size(), effectBounds.position());
@@ -81,7 +88,10 @@ namespace tiny {
 					return;
 				}
 
-				SingleChildElement::paintOverride(canvas);
+				{
+					detail::BackdropScope backdropScope(canvas, backdropSnapshot);
+					SingleChildElement::paintOverride(canvas);
+				}
 
 				layer.end();
 
@@ -123,6 +133,7 @@ namespace tiny {
 			Color colorValue;
 
 			detail::EffectSurfaceCache surfaceCache;
+			detail::BackdropSnapshot backdropSnapshot;
 		};
 	}
 

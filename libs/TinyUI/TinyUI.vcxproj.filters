@@ -215,5 +215,6 @@
     <ClInclude Include="src\widgets\EffectSurfaceCache.h" />
     <ClInclude Include="src\widgets\OffscreenPass.h" />
     <ClInclude Include="src\widgets\OffscreenLayer.h" />
+    <ClInclude Include="src\widgets\BackdropSnapshot.h" />
   </ItemGroup>
 </Project>

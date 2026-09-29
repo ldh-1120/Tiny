@@ -154,19 +154,29 @@ tiny::WidgetPtr buildViewer(PlaygroundState& state, tiny::UIRoot& uiRoot, const 
 				stack(children(
 					make<ImageViewer>(previewImage, Size(360.0f, 220.0f), ImageInterpolation::Linear, Key("image-viewer"), std::move(zoomChanged)),
 					make<Box>(Size(1.0f, 1.0f), Color::fromRgba(137, 180, 250, 18)),
+					positioned(PositionedSpec { .right = 16.0f, .bottom = 48.0f, .width = 240.0f, .height = 72.0f },
+						ignorePointer(
+							blur(2.0f,
+								dropShadow(8.0f, Point(0.0f, 4.0f), Color::fromRgba(0, 0, 0, 120),
+									opacity(0.85f,
+										backdropBlur(10.0f,
+											stack(children(
+												make<Box>(Size(1.0f, 1.0f), Color::fromRgba(30, 30, 46, 90)),
+												align(Alignment::Center,
+													text(U"Nested Effects", Color::fromRgb(205, 214, 244), styles.overlay)))))))))),
 					positioned(PositionedSpec { .top = 16.0f, .right = 16.0f, .width = 240.0f, .height = 72.0f },
 						ignorePointer(
 							opacity(0.65f,
-							backdropBlur(12.0f,
-								stack(children(
-									make<Box>(Size(1.0f, 1.0f), Color::fromRgba(30, 30, 46, 110)),
-									align(Alignment::Center,
-										text(U"Backdrop Blur", Color::fromRgb(205, 214, 244), styles.overlay)))))))),
+								backdropBlur(12.0f,
+									stack(children(
+										make<Box>(Size(1.0f, 1.0f), Color::fromRgba(30, 30, 46, 110)),
+										align(Alignment::Center,
+											text(U"Backdrop Blur", Color::fromRgb(205, 214, 244), styles.overlay)))))))),
 					positioned(PositionedSpec { .left = 16.0f, .top = 16.0f },
 						ignorePointer(
 							opacity(0.35f,
-							dropShadow(12.0f, Point(0.0f, 8.0f), Color::fromRgba(0, 0, 0, 180),
-								button(U"Opacity Shadow", []() { }, styles.toolbarButton))))),
+								dropShadow(12.0f, Point(0.0f, 8.0f), Color::fromRgba(0, 0, 0, 180),
+									button(U"Opacity Shadow", []() { }, styles.toolbarButton))))),
 					positioned(PositionedSpec { .left = 16.0f, .top = 56.0f },
 						absorbPointer(
 							button(U"Block Pointer", []() { }, styles.toolbarButton))),

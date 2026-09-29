@@ -17,6 +17,7 @@
 
 #include "EffectSurfaceCache.h"
 #include "OffscreenLayer.h"
+#include "BackdropSnapshot.h"
 
 namespace tiny {
 	namespace {
@@ -61,26 +62,29 @@ namespace tiny {
 				}
 
 				Rect availableBounds = canvas.currentPaintBounds();
-				Rect visualBounds = child()->visualBounds();
-				Rect backdropBounds = child()->backdropReadBounds();
 
-				Rect requiredBounds = unionRect(visualBounds, backdropBounds);
-
-				Rect layerBounds = intersectRect(requiredBounds, availableBounds);
+				Rect layerBounds = intersectRect(child()->visualBounds(), availableBounds);
 				if (layerBounds.isEmpty())
 					return;
+
+				Rect backdropBounds = intersectRect(child()->backdropReadBounds(), availableBounds);
+				if (!backdropBounds.isEmpty() && !backdropSnapshot.capture(canvas, backdropBounds)) {
+					SingleChildElement::paintOverride(canvas);
+					return;
+				}
 				
 				detail::OffscreenLayer layer(canvas, surfaceCache);
 
-				bool began = layer.begin(layerBounds.size(), layerBounds.position(), false, [&canvas, &layerBounds](RenderSurface& surface) {
-					return canvas.captureRenderSurface(surface, layerBounds);
-				});
+				bool began = layer.begin(layerBounds.size(), layerBounds.position());
 				if (!began) {
 					SingleChildElement::paintOverride(canvas);
 					return;
 				}
 
-				SingleChildElement::paintOverride(canvas);
+				{
+					detail::BackdropScope backdropScope(canvas, backdropSnapshot);
+					SingleChildElement::paintOverride(canvas);
+				}
 
 				layer.end();
 
@@ -104,6 +108,7 @@ namespace tiny {
 			float opacityValue = 1.0f;
 
 			detail::EffectSurfaceCache surfaceCache;
+			detail::BackdropSnapshot backdropSnapshot;
 		};
 	}
 
