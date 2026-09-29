@@ -28,6 +28,21 @@ namespace {
 		return D2D1::RectF(rect.x, rect.y, rect.x + rect.width, rect.y + rect.height);
 	}
 
+	D2D1_MATRIX_3X2_F toD2DMatrix(const tiny::AffineTransform& transform) {
+		D2D1_MATRIX_3X2_F result = {
+			transform.m11,
+			transform.m12,
+
+			transform.m21,
+			transform.m22,
+
+			transform.dx,
+			transform.dy
+		};
+
+		return result;
+	}
+
 	class ClipSuspension {
 	public:
 		ClipSuspension(ID2D1RenderTarget* target, const std::vector<tiny::Rect>& clips) : target(target), clips(clips) {
@@ -55,6 +70,17 @@ namespace {
 
 namespace tiny {
 	Canvas::Canvas(void* renderTarget, void* textFactory, void* solidBrush) : renderTarget(renderTarget), textFactory(textFactory), solidBrush(solidBrush) { }
+
+	void Canvas::applyPaintTransform() {
+		ID2D1RenderTarget* target = static_cast<ID2D1RenderTarget*>(renderTarget);
+		if (!target)
+			return;
+
+		AffineTransform surfaceTransform = AffineTransform::translation(-renderTargetOrigin.x, -renderTargetOrigin.y);
+		AffineTransform finalTransform = paintTransform * surfaceTransform;
+
+		target->SetTransform(toD2DMatrix(finalTransform));
+	}
 
 	Canvas::~Canvas() = default;
 
@@ -112,6 +138,27 @@ namespace tiny {
 
 		target->PopAxisAlignedClip();
 		clipRects.pop_back();
+	}
+
+	bool Canvas::pushTransform(const AffineTransform& transform) {
+		ID2D1RenderTarget* target = static_cast<ID2D1RenderTarget*>(renderTarget);
+		if (!target)
+			return false;
+
+		transformStates.push_back(paintTransform);
+
+		paintTransform = transform * paintTransform;
+		applyPaintTransform();
+	}
+
+	void Canvas::popTransform() {
+		if (transformStates.empty())
+			return;
+
+		paintTransform = transformStates.back();
+		transformStates.pop_back();
+
+		applyPaintTransform();
 	}
 
 	void Canvas::pushBackdropSurface(const RenderSurface& surface, const Rect& bounds) {
@@ -315,6 +362,7 @@ namespace tiny {
 		state.renderTarget = renderTarget;
 		state.solidBrush = solidBrush;
 		state.origin = renderTargetOrigin;
+		state.transform = paintTransform;
 
 		state.clipRects = std::move(clipRects);
 
@@ -326,10 +374,12 @@ namespace tiny {
 		solidBrush = brush;
 		renderTargetOrigin = origin;
 
+		paintTransform = AffineTransform::identity();
+
 		context->SetTarget(bitmap);
 		context->BeginDraw();
 
-		context->SetTransform(D2D1::Matrix3x2F::Translation(-origin.x, -origin.y));
+		applyPaintTransform();
 
 		if (clear)
 			context->Clear(D2D1::ColorF(0.0f, 0.0f, 0.0f, 0.0f));
@@ -355,8 +405,11 @@ namespace tiny {
 		renderTarget = state.renderTarget;
 		solidBrush = state.solidBrush;
 		renderTargetOrigin = state.origin;
+		paintTransform = state.transform;
 
 		clipRects = std::move(state.clipRects);
+
+		applyPaintTransform();
 	}
 
 	void Canvas::drawRenderSurface(const RenderSurface& surface, const Rect& destination, float opacity) {

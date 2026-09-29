@@ -105,6 +105,7 @@
     <ClCompile Include="src\widgets\Text.cpp" />
     <ClCompile Include="src\widgets\TextBox.cpp" />
     <ClCompile Include="src\widgets\TitleBar.cpp" />
+    <ClCompile Include="src\widgets\Transform.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\tiny\TinyUI.h" />
@@ -151,6 +152,7 @@
     <ClInclude Include="include\tiny\ui\widgets\Text.h" />
     <ClInclude Include="include\tiny\ui\widgets\TextBox.h" />
     <ClInclude Include="include\tiny\ui\widgets\TitleBar.h" />
+    <ClInclude Include="include\tiny\ui\widgets\Transform.h" />
     <ClInclude Include="src\pch.h" />
     <ClInclude Include="src\widgets\BackdropSnapshot.h" />
     <ClInclude Include="src\widgets\EffectSurfaceCache.h" />

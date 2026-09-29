@@ -73,6 +73,7 @@
     <ClCompile Include="src\Unicode.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\tiny\core\AffineTransform.h" />
     <ClInclude Include="include\tiny\core\Color.h" />
     <ClInclude Include="include\tiny\core\Event.h" />
     <ClInclude Include="include\tiny\core\FrameEvent.h" />

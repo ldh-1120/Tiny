@@ -6,6 +6,7 @@
 
 #include <tiny/core/Color.h>
 #include <tiny/core/Rect.h>
+#include <tiny/core/AffineTransform.h>
 
 #include <tiny/graphics/TextStyle.h>
 #include <tiny/graphics/Image.h>
@@ -31,6 +32,9 @@ namespace tiny {
 
 		void pushClip(const Rect& rect);
 		void popClip();
+
+		bool pushTransform(const AffineTransform& transform);
+		void popTransform();
 
 		void pushBackdropSurface(const RenderSurface& surface, const Rect& bounds);
 		void popBackdropSurface();
@@ -58,6 +62,8 @@ namespace tiny {
 	private:
 		Canvas(void* renderTarget, void* textFactory, void* solidBrush);
 
+		void applyPaintTransform();
+
 	private:
 		void* renderTarget = nullptr;
 		void* textFactory = nullptr;
@@ -74,6 +80,8 @@ namespace tiny {
 			Point origin;
 
 			std::vector<Rect> clipRects;
+
+			AffineTransform transform;
 		};
 
 		std::vector<RenderSurfaceState> renderSurfaceStates;
@@ -84,6 +92,9 @@ namespace tiny {
 		};
 
 		std::vector<BackdropSourceState> backdropSources;
+
+		AffineTransform paintTransform;
+		std::vector<AffineTransform> transformStates;
 
 		friend class WindowRenderer;
 	};

@@ -97,6 +97,7 @@
     <ClCompile Include="src\widgets\Blur.cpp" />
     <ClCompile Include="src\widgets\DropShadow.cpp" />
     <ClCompile Include="src\widgets\BackdropBlur.cpp" />
+    <ClCompile Include="src\widgets\Transform.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\tiny\TinyUI.h">
@@ -216,5 +217,6 @@
     <ClInclude Include="src\widgets\OffscreenPass.h" />
     <ClInclude Include="src\widgets\OffscreenLayer.h" />
     <ClInclude Include="src\widgets\BackdropSnapshot.h" />
+    <ClInclude Include="include\tiny\ui\widgets\Transform.h" />
   </ItemGroup>
 </Project>

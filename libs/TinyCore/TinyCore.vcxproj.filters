@@ -71,5 +71,6 @@
     <ClInclude Include="src\pch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\tiny\core\AffineTransform.h" />
   </ItemGroup>
 </Project>

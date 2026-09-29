@@ -39,6 +39,7 @@
 #include <tiny/ui/widgets/Blur.h>
 #include <tiny/ui/widgets/DropShadow.h>
 #include <tiny/ui/widgets/BackdropBlur.h>
+#include <tiny/ui/widgets/Transform.h>
 
 namespace tiny::ui {
 	template <typename WidgetType, typename... Arguments>
@@ -156,5 +157,33 @@ namespace tiny::ui {
 
 	inline WidgetPtr backdropBlur(float radius, WidgetPtr child, Key key = Key()) {
 		return make<BackdropBlur>(radius, std::move(child), std::move(key));
+	}
+
+	inline WidgetPtr transform(TransformSpec spec, WidgetPtr child, Key key = Key()) {
+		return make<Transform>(spec, std::move(child), std::move(key));
+	}
+
+	inline WidgetPtr translate(Point offset, WidgetPtr child, Key key = Key()) {
+		TransformSpec spec;
+		spec.translation = offset;
+
+		return make<Transform>(spec, std::move(child), std::move(key));
+	}
+
+	inline WidgetPtr scale(float value, WidgetPtr child, Point pivot = Point(0.5f, 0.5f), Key key = Key()) {
+		TransformSpec spec;
+		spec.scaleX = value;
+		spec.scaleY = value;
+		spec.pivot = pivot;
+
+		return make<Transform>(spec, std::move(child), std::move(key));
+	}
+
+	inline WidgetPtr rotate(float degrees, WidgetPtr child, Point pivot = Point(0.5f, 0.5f), Key key = Key()) {
+		TransformSpec spec;
+		spec.rotationDegrees = degrees;
+		spec.pivot = pivot;
+
+		return make<Transform>(spec, std::move(child), std::move(key));
 	}
 }
