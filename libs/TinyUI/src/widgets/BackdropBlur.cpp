@@ -62,12 +62,12 @@ namespace tiny {
 
 				bool captured = false;
 				if (surface)
-					captured = canvas.captureRenderSurface(*surface, captureBounds);
+					captured = canvas.captureBackdropSurface(*surface, captureBounds);
 
 				if (!captured) {
 					surface = surfaceCache.recreate(canvas, captureBounds.size());
 					if (surface)
-						captured = canvas.captureRenderSurface(*surface, captureBounds);
+						captured = canvas.captureBackdropSurface(*surface, captureBounds);
 				}
 
 				if (captured && surface) {

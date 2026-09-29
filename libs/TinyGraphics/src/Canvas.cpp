@@ -137,7 +137,7 @@ namespace tiny {
 			return false;
 
 		if (backdropSources.empty())
-			return captureBackdropSurface(surface, sourceBounds);
+			return captureRenderSurface(surface, sourceBounds);
 
 		const BackdropSourceState& source = backdropSources.back();
 		if (!source.surface)
@@ -160,6 +160,8 @@ namespace tiny {
 		destinationContext->Clear(D2D1::ColorF(0.0f, 0.0f, 0.0f, 0.0f));
 
 		HRESULT result = destinationContext->EndDraw();
+		destinationContext->SetTarget(nullptr);
+
 		if (FAILED(result))
 			return false;
 
@@ -168,7 +170,7 @@ namespace tiny {
 			return true;
 
 		float sourceScale = source.surface->dpiScale();
-		float desetinationScale = surface.dpiScale();
+		float destinationScale = surface.dpiScale();
 
 		D2D1_SIZE_U sourcePixelSize = sourceBitmap->GetPixelSize();
 		D2D1_SIZE_U destinationPixelSize = destinationBitmap->GetPixelSize();
@@ -188,8 +190,8 @@ namespace tiny {
 		if (sourceRight <= sourceLeft || sourceBottom <= sourceTop)
 			return true;
 
-		UINT32 destinationX = static_cast<UINT32>(std::max(std::floor((copyBounds.left() - sourceBounds.left()) * desetinationScale), 0.0f));
-		UINT32 destinationY = static_cast<UINT32>(std::max(std::floor((copyBounds.top() - sourceBounds.top()) * desetinationScale), 0.0f));
+		UINT32 destinationX = static_cast<UINT32>(std::max(std::floor((copyBounds.left() - sourceBounds.left()) * destinationScale), 0.0f));
+		UINT32 destinationY = static_cast<UINT32>(std::max(std::floor((copyBounds.top() - sourceBounds.top()) * destinationScale), 0.0f));
 
 		if (destinationX >= destinationPixelSize.width || destinationY >= destinationPixelSize.height)
 			return true;
