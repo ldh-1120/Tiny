@@ -98,5 +98,11 @@ namespace tiny {
 
 			return true;
 		}
+
+		bool isIdentity(float epsilon = 0.000001f) const {
+			return std::abs(m11 - 1.0f) <= epsilon && std::abs(m12) <= epsilon &&
+				std::abs(m21) <= epsilon && std::abs(m22 - 1.0f) <= epsilon &&
+				std::abs(dx) <= epsilon && std::abs(dy) <= epsilon;
+		}
 	};
 }

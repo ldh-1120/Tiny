@@ -64,6 +64,9 @@ namespace tiny {
 
 		void applyPaintTransform();
 
+		bool captureBackdropSurfaceUntransformed(RenderSurface& surface, const Rect& sourceBounds);
+		bool captureBackdropSurfaceTransformed(RenderSurface& surface, const Rect& sourceBounds);
+
 	private:
 		void* renderTarget = nullptr;
 		void* textFactory = nullptr;
