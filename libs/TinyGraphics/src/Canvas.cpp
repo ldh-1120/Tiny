@@ -149,6 +149,8 @@ namespace tiny {
 
 		paintTransform = transform * paintTransform;
 		applyPaintTransform();
+
+		return true;
 	}
 
 	void Canvas::popTransform() {
