@@ -117,21 +117,21 @@ tiny::WidgetPtr buildControls(PlaygroundState& state, tiny::UIRoot& uiRoot, cons
 					text(U"Controls", Color::fromRgb(137, 180, 250), styles.title),
 					text(std::move(countText), Color::fromRgb(166, 173, 200), styles.body),
 					button(U"Add", [&state, &uiRoot]() {
-		++state.count;
-		uiRoot.requestRebuild();
-	}, styles.button, state.addEnabled),
+						++state.count;
+						uiRoot.requestRebuild();
+					}, styles.button, state.addEnabled),
 					button(U"Decrease", [&state, &uiRoot]() {
-		--state.count;
-		uiRoot.requestRebuild();
-	}, styles.button),
+						--state.count;
+						uiRoot.requestRebuild();
+					}, styles.button),
 					button(U"Reset", [&state, &uiRoot]() {
-		state.count = 0;
-		uiRoot.requestRebuild();
-	}, styles.button),
+						state.count = 0;
+						uiRoot.requestRebuild();
+					}, styles.button),
 					textBox(state.text, [&state, &uiRoot](const std::u32string& value) {
-		state.text = value;
-		uiRoot.requestRebuild();
-	}, styles.textBox)
+						state.text = value;
+						uiRoot.requestRebuild();
+					}, styles.textBox)
 				), 12.0f, CrossAxisAlignment::Stretch))));
 }
 
@@ -176,7 +176,7 @@ tiny::WidgetPtr buildViewer(PlaygroundState& state, tiny::UIRoot& uiRoot, const 
 						ignorePointer(
 							rotate(-8.0f,
 								scale(1.05f,
-										backdropBlur(12.0f,
+									backdropBlur(12.0f,
 											stack(children(
 												make<Box>(Size(1.0f, 1.0f), Color::fromRgba(30, 30, 46, 110)),
 												align(Alignment::Center,
