@@ -155,12 +155,13 @@ tiny::WidgetPtr buildViewer(PlaygroundState& state, tiny::UIRoot& uiRoot, const 
 					make<ImageViewer>(previewImage, Size(360.0f, 220.0f), ImageInterpolation::Linear, Key("image-viewer"), std::move(zoomChanged)),
 					make<Box>(Size(1.0f, 1.0f), Color::fromRgba(137, 180, 250, 18)),
 					positioned(PositionedSpec { .left = 150.0f, .top = 120.0f, .width = 180.0f, .height = 56.0f },
-						rotate(-12.0f,
-							scale(1.15f,
-								button(U"Transform Click", [&state, &uiRoot]() {
-									++state.count;
-									uiRoot.requestRebuild();
-								}, styles.toolbarButton)))),
+						dropShadow(12.0f, Point(0.0f, 8.0f), Color::fromRgba(0, 0, 0, 180),
+							rotate(-12.0f,
+								scale(1.15f,
+									button(U"Transform Click", [&state, &uiRoot]() {
+		++state.count;
+		uiRoot.requestRebuild();
+	}, styles.toolbarButton))))),
 					positioned(PositionedSpec { .right = 16.0f, .bottom = 48.0f, .width = 240.0f, .height = 72.0f },
 						ignorePointer(
 							blur(2.0f,

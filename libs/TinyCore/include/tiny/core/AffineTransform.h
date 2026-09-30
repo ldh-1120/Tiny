@@ -1,8 +1,10 @@
 #pragma once
 
 #include <cmath>
+#include <algorithm>
 
 #include <tiny/core/Point.h>
+#include <tiny/core/Rect.h>
 
 namespace tiny {
 	struct AffineTransform {
@@ -45,6 +47,25 @@ namespace tiny {
 			return Point(point.x * m11 + point.y * m21 + dx, point.x * m12 + point.y * m22 + dy);
 		}
 
+		Rect transformBounds(const Rect& rect) const {
+			if (rect.isEmpty())
+				return Rect();
+
+			Point topLeft = transformPoint(Point(rect.left(), rect.top()));
+			Point topRight = transformPoint(Point(rect.right(), rect.top()));
+
+			Point bottomLeft = transformPoint(Point(rect.left(), rect.bottom()));
+			Point bottomRight = transformPoint(Point(rect.right(), rect.bottom()));
+
+			float left = std::min(std::min(topLeft.x, topRight.x), std::min(bottomLeft.x, bottomRight.x));
+			float top = std::min(std::min(topLeft.y, topRight.y), std::min(bottomLeft.y, bottomRight.y));
+
+			float right = std::max(std::max(topLeft.x, topRight.x), std::max(bottomLeft.x, bottomRight.x));
+			float bottom = std::max(std::max(topLeft.y, topRight.y), std::max(bottomLeft.y, bottomRight.y));
+
+			return Rect(left, top, right - left, bottom - top);
+		}
+
 		constexpr AffineTransform operator*(const AffineTransform& other) const {
 			return AffineTransform(
 				m11 * other.m11 + m12 * other.m12, 
@@ -64,16 +85,16 @@ namespace tiny {
 			if (std::abs(determinant) <= Epsilon)
 				return false;
 
-			float inverseDeterment = 1.0f / determinant;
+			float inverseDeterminant = 1.0f / determinant;
 			result = AffineTransform(
-				m22 * inverseDeterment,
-				-m12 * inverseDeterment,
+				m22 * inverseDeterminant,
+				-m12 * inverseDeterminant,
 
-				-m21 * inverseDeterment,
-				m11 * inverseDeterment,
+				-m21 * inverseDeterminant,
+				m11 * inverseDeterminant,
 
-				(dy * m21 - dx * m22) * inverseDeterment,
-				(dx * m12 - dy * m11) * inverseDeterment);
+				(dy * m21 - dx * m22) * inverseDeterminant,
+				(dx * m12 - dy * m11) * inverseDeterminant);
 
 			return true;
 		}

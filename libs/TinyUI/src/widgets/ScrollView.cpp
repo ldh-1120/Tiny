@@ -189,6 +189,9 @@ namespace tiny {
 			}
 
 			Element* hitTestChildren(const Point& position) override {
+				if (!bounds().contains(position))
+					return nullptr;
+
 				if (scrollbarInteractive() && scrollbarHitBounds().contains(position))
 					return nullptr;
 
@@ -212,6 +215,21 @@ namespace tiny {
 					markNeedsPaint();
 
 				updateFrameDemand();
+			}
+
+			Rect visualBoundsOverride() const override {
+				return bounds();
+			}
+
+			Rect backdropReadBoundsOverride() const override {
+				if (!hasChild())
+					return Rect();
+
+				Rect childBounds = child()->backdropReadBounds();
+				if (childBounds.isEmpty())
+					return Rect();
+
+				return intersectRect(bounds(), childBounds);
 			}
 
 		private:

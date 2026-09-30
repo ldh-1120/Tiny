@@ -156,12 +156,12 @@ namespace tiny {
 		if (!mapHitTestPositionOverride(position, mappedPosition))
 			return nullptr;
 
-		if (!arrangedBounds.contains(mappedPosition))
-			return nullptr;
-
 		Element* childResult = hitTestChildren(mappedPosition);
 		if (childResult)
 			return childResult;
+
+		if (!arrangedBounds.contains(mappedPosition))
+			return nullptr;
 
 		if (!hitTestSelf(mappedPosition))
 			return nullptr;

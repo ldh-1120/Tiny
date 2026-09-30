@@ -70,6 +70,13 @@ namespace tiny {
 				return intersectRect(bounds(), childBounds);
 			}
 
+			Element* hitTestChildren(const Point& position) override {
+				if (!bounds().contains(position))
+					return nullptr;
+
+				return SingleChildElement::hitTestChildren(position);
+			}
+
 		private:
 			static std::unique_ptr<Element> createChild(const ClipRect& widget) {
 				const Widget* childWidget = widget.child();

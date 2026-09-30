@@ -67,6 +67,28 @@ namespace tiny {
 				return true;
 			}
 
+			Rect visualBoundsOverride() const override {
+				if (!hasChild())
+					return Rect();
+
+				Rect childBounds = child()->visualBounds();
+				if (childBounds.isEmpty())
+					return Rect();
+
+				return effectiveTransform().transformBounds(childBounds);
+			}
+
+			Rect backdropReadBoundsOverride() const override {
+				if (!hasChild())
+					return Rect();
+
+				Rect childBounds = child()->backdropReadBounds();
+				if (childBounds.isEmpty())
+					return Rect();
+
+				return effectiveTransform().transformBounds(childBounds);
+			}
+
 		private:
 			static std::unique_ptr<Element> createChild(const Transform& widget) {
 				const Widget* childWidget = widget.child();
