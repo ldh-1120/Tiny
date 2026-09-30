@@ -48,18 +48,23 @@ namespace tiny {
 				if (!hasChild())
 					return;
 
-				Point pivot(bounds().x + bounds().width * specValue.pivot.x, bounds().y + bounds().height * specValue.pivot.y);
-				AffineTransform transform = AffineTransform::translation(-pivot.x, -pivot.y)
-					* AffineTransform::scale(specValue.scaleX, specValue.scaleY)
-					* AffineTransform::rotation(specValue.rotationDegrees)
-					* AffineTransform::translation(pivot.x, pivot.y)
-					* AffineTransform::translation(specValue.translation.x, specValue.translation.y);
+				AffineTransform transform = effectiveTransform();
 
 				bool pushed = canvas.pushTransform(transform);
 				SingleChildElement::paintOverride(canvas);
 
 				if (pushed)
 					canvas.popTransform();
+			}
+
+			bool mapHitTestPositionOverride(const Point& position, Point& result) const override {
+				AffineTransform inverse;
+				if (!effectiveTransform().tryInverse(inverse))
+					return false;
+
+				result = inverse.transformPoint(position);
+
+				return true;
 			}
 
 		private:
@@ -69,6 +74,15 @@ namespace tiny {
 					return nullptr;
 
 				return childWidget->createElement();
+			}
+
+			AffineTransform effectiveTransform() const {
+				Point pivot(bounds().x + bounds().width * specValue.pivot.x, bounds().y + bounds().height * specValue.pivot.y);
+				return AffineTransform::translation(-pivot.x, -pivot.y)
+					* AffineTransform::scale(specValue.scaleX, specValue.scaleY)
+					* AffineTransform::rotation(specValue.rotationDegrees)
+					* AffineTransform::translation(pivot.x, pivot.y)
+					* AffineTransform::translation(specValue.translation.x, specValue.translation.y);
 			}
 
 		private:

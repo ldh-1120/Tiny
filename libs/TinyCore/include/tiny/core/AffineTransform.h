@@ -56,5 +56,26 @@ namespace tiny {
 				dx * other.m11 + dy * other.m21 + other.dx, 
 				dx * other.m12 + dy * other.m22 + other.dy);
 		}
+
+		bool tryInverse(AffineTransform& result) const {
+			float determinant = m11 * m22 - m12 * m21;
+
+			constexpr float Epsilon = 0.000001f;
+			if (std::abs(determinant) <= Epsilon)
+				return false;
+
+			float inverseDeterment = 1.0f / determinant;
+			result = AffineTransform(
+				m22 * inverseDeterment,
+				-m12 * inverseDeterment,
+
+				-m21 * inverseDeterment,
+				m11 * inverseDeterment,
+
+				(dy * m21 - dx * m22) * inverseDeterment,
+				(dx * m12 - dy * m11) * inverseDeterment);
+
+			return true;
+		}
 	};
 }

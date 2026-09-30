@@ -152,12 +152,16 @@ namespace tiny {
 		virtual Rect visualBoundsOverride() const;
 		virtual Rect backdropReadBoundsOverride() const;
 
+		virtual bool mapHitTestPositionOverride(const Point& position, Point& result) const;
+
 	private:
 		void setFocused(bool value);
 
 		void dispatchFrame(const FrameEvent& event);
 
 		void dispatchFocusVisibilityChanged(bool visible);
+
+		bool mapPointerPosition(const Point& position, Point& result) const;
 
 		friend class UIRoot;
 

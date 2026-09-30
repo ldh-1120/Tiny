@@ -152,14 +152,18 @@ namespace tiny {
 		if (!mounted || !enabledValue)
 			return nullptr;
 
-		if (!arrangedBounds.contains(position))
+		Point mappedPosition;
+		if (!mapHitTestPositionOverride(position, mappedPosition))
 			return nullptr;
 
-		Element* childResult = hitTestChildren(position);
+		if (!arrangedBounds.contains(mappedPosition))
+			return nullptr;
+
+		Element* childResult = hitTestChildren(mappedPosition);
 		if (childResult)
 			return childResult;
 
-		if (!hitTestSelf(position))
+		if (!hitTestSelf(mappedPosition))
 			return nullptr;
 
 		return this;
@@ -169,7 +173,14 @@ namespace tiny {
 		if (!mounted || !enabledValue)
 			return;
 
-		pointerEnterOverride(event);
+		Point mappedPosition;
+		if (!mapHitTestPositionOverride(event.position, mappedPosition))
+			return;
+
+		PointerEvent mappedEvent = event;
+		mappedEvent.position = mappedPosition;
+
+		pointerEnterOverride(mappedEvent);
 	}
 
 	void Element::pointerLeave() {
@@ -183,28 +194,56 @@ namespace tiny {
 		if (!mounted || !enabledValue)
 			return;
 
-		pointerMoveOverride(event);
+		Point mappedPosition;
+		if (!mapHitTestPositionOverride(event.position, mappedPosition))
+			return;
+
+		PointerEvent mappedEvent = event;
+		mappedEvent.position = mappedPosition;
+
+		pointerMoveOverride(mappedEvent);
 	}
 
 	bool Element::pointerDown(const PointerEvent& event) {
 		if (!mounted || !enabledValue)
 			return false;
 
-		return pointerDownOverride(event);
+		Point mappedPosition;
+		if (!mapHitTestPositionOverride(event.position, mappedPosition))
+			return false;
+
+		PointerEvent mappedEvent = event;
+		mappedEvent.position = mappedPosition;
+
+		return pointerDownOverride(mappedEvent);
 	}
 
 	void Element::pointerUp(const PointerEvent& event) {
 		if (!mounted || !enabledValue)
 			return;
 
-		pointerUpOverride(event);
+		Point mappedPosition;
+		if (!mapHitTestPositionOverride(event.position, mappedPosition))
+			return;
+
+		PointerEvent mappedEvent = event;
+		mappedEvent.position = mappedPosition;
+
+		pointerUpOverride(mappedEvent);
 	}
 
 	bool Element::pointerWheel(const PointerWheelEvent& event) {
 		if (!mounted || !enabledValue)
 			return false;
 
-		return pointerWheelOverride(event);
+		Point mappedPosition;
+		if (!mapHitTestPositionOverride(event.position, mappedPosition))
+			return false;
+
+		PointerWheelEvent mappedEvent = event;
+		mappedEvent.position = mappedPosition;
+
+		return pointerWheelOverride(mappedEvent);
 	}
 
 	void Element::pointerCancel() {
@@ -400,6 +439,11 @@ namespace tiny {
 
 	Rect Element::backdropReadBoundsOverride() const {
 		return Rect();
+	}
+
+	bool Element::mapHitTestPositionOverride(const Point& position, Point& result) const {
+		result = position;
+		return true;
 	}
 
 	void Element::setFocused(bool value) {
