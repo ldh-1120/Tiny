@@ -176,11 +176,11 @@ tiny::WidgetPtr buildViewer(PlaygroundState& state, tiny::UIRoot& uiRoot, const 
 						ignorePointer(
 							rotate(-8.0f,
 								scale(1.05f,
-									backdropBlur(12.0f,
-										stack(children(
-											make<Box>(Size(1.0f, 1.0f), Color::fromRgba(30, 30, 46, 110)),
-											align(Alignment::Center,
-												text(U"Backdrop Blur", Color::fromRgb(205, 214, 244), styles.overlay))))))))),
+										backdropBlur(12.0f,
+											stack(children(
+												make<Box>(Size(1.0f, 1.0f), Color::fromRgba(30, 30, 46, 110)),
+												align(Alignment::Center,
+													text(U"Backdrop Blur", Color::fromRgb(205, 214, 244), styles.overlay))))))))),
 					positioned(PositionedSpec { .left = 16.0f, .top = 16.0f },
 						ignorePointer(
 							opacity(0.35f,

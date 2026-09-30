@@ -19,6 +19,25 @@
 
 #pragma comment(lib, "d2d1.lib")
 
+namespace tiny {
+	class CanvasClipState {
+	public:
+		enum class Kind {
+			AxisAligned,
+			Geometry
+		};
+
+		Kind kind = Kind::AxisAligned;
+
+		Rect localBounds;
+		Rect worldBounds;
+
+		D2D1_MATRIX_3X2_F nativeTransform = D2D1::Matrix3x2F::Identity();
+
+		Microsoft::WRL::ComPtr<ID2D1RectangleGeometry> geometry;
+	};
+}
+
 namespace {
 	D2D1_COLOR_F toD2DColor(const tiny::Color& color) {
 		return D2D1::ColorF(color.r, color.g, color.b, color.a);
@@ -43,28 +62,85 @@ namespace {
 		return result;
 	}
 
+	bool isAxisAlignedTransform(const tiny::AffineTransform& transform) {
+		constexpr float Epsilon = 0.000001f;
+		return std::abs(transform.m12) <= Epsilon && std::abs(transform.m21) <= Epsilon;
+	}
+
+	void pushClipState(ID2D1DeviceContext* context, const tiny::CanvasClipState& state) {
+		if (!context)
+			return;
+
+		context->SetTransform(state.nativeTransform);
+		if (state.kind == tiny::CanvasClipState::Kind::AxisAligned) {
+			context->PushAxisAlignedClip(toD2DRect(state.localBounds), D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
+			return;
+		}
+
+		if (!state.geometry)
+			return;
+
+		D2D1_LAYER_PARAMETERS1 parameters = { };
+		parameters.contentBounds = D2D1::InfiniteRect();
+		parameters.geometricMask = state.geometry.Get();
+		parameters.maskAntialiasMode = D2D1_ANTIALIAS_MODE_PER_PRIMITIVE;
+		parameters.maskTransform = D2D1::Matrix3x2F::Identity();
+		parameters.opacity = 1.0f;
+		parameters.opacityBrush = nullptr;
+		parameters.layerOptions = D2D1_LAYER_OPTIONS1_NONE;
+
+		context->PushLayer(parameters, nullptr);
+	}
+
+	void popClipState(ID2D1DeviceContext* context, const tiny::CanvasClipState& state) {
+		if (!context)
+			return;
+
+		if (state.kind == tiny::CanvasClipState::Kind::AxisAligned) {
+			context->PopAxisAlignedClip();
+			return;
+		}
+
+		context->PopLayer();
+	}
+
 	class ClipSuspension {
 	public:
-		ClipSuspension(ID2D1RenderTarget* target, const std::vector<tiny::Rect>& clips) : target(target), clips(clips) {
+		ClipSuspension(ID2D1DeviceContext* target, const std::vector<std::shared_ptr<tiny::CanvasClipState>>& clips) : target(target), clips(clips) {
 			if (!target)
 				return;
 
-			for (std::size_t index = 0; index < clips.size(); ++index)
-				target->PopAxisAlignedClip();
+			target->GetTransform(&savedTransform);
+
+			for (std::size_t index = clips.size(); index > 0; --index) {
+				const std::shared_ptr<tiny::CanvasClipState>& clip = clips[index - 1];
+				if (!clip)
+					continue;
+
+				popClipState(target, *clip);
+			}
 		}
 
 		~ClipSuspension() {
 			if (!target)
 				return;
 
-			for (const tiny::Rect& clip : clips)
-				target->PushAxisAlignedClip(toD2DRect(clip), D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
+			for (const std::shared_ptr<tiny::CanvasClipState>& clip : clips) {
+				if (!clip)
+					continue;
+
+				pushClipState(target, *clip);
+			}
+
+			target->SetTransform(savedTransform);
 		}
 
 	private:
-		ID2D1RenderTarget* target = nullptr;
+		ID2D1DeviceContext* target = nullptr;
 
-		const std::vector<tiny::Rect>& clips;
+		const std::vector<std::shared_ptr<tiny::CanvasClipState>>& clips;
+
+		D2D1_MATRIX_3X2_F savedTransform = D2D1::Matrix3x2F::Identity();
 	};
 }
 
@@ -244,24 +320,47 @@ namespace tiny {
 	}
 
 	void Canvas::pushClip(const Rect& rect) {
-		ID2D1RenderTarget* target = static_cast<ID2D1RenderTarget*>(renderTarget);
-		if (!target)
+		ID2D1DeviceContext* context = static_cast<ID2D1DeviceContext*>(renderTarget);
+		if (!context)
 			return;
 
-		target->PushAxisAlignedClip(toD2DRect(rect), D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
-		clipRects.push_back(rect);
+		std::shared_ptr<CanvasClipState> state = std::make_shared<CanvasClipState>();
+		state->localBounds = rect;
+		state->worldBounds = paintTransform.transformBounds(rect);
+
+		context->GetTransform(&state->nativeTransform);
+		if (isAxisAlignedTransform(paintTransform))
+			state->kind = CanvasClipState::Kind::AxisAligned;
+		else {
+			Microsoft::WRL::ComPtr<ID2D1Factory> factory;
+			context->GetFactory(factory.ReleaseAndGetAddressOf());
+
+			if (factory) {
+				HRESULT result = factory->CreateRectangleGeometry(toD2DRect(rect), state->geometry.ReleaseAndGetAddressOf());
+				if (SUCCEEDED(result) && state->geometry)
+					state->kind = CanvasClipState::Kind::Geometry;
+			}
+		}
+
+		pushClipState(context, *state);
+		clipStates.push_back(std::move(state));
 	}
 
 	void Canvas::popClip() {
-		if (clipRects.empty())
+		if (clipStates.empty())
 			return;
 
-		ID2D1RenderTarget* target = static_cast<ID2D1RenderTarget*>(renderTarget);
-		if (!target)
+		ID2D1DeviceContext* context = static_cast<ID2D1DeviceContext*>(renderTarget);
+		if (!context)
 			return;
 
-		target->PopAxisAlignedClip();
-		clipRects.pop_back();
+		std::shared_ptr<CanvasClipState> state = clipStates.back();
+		clipStates.pop_back();
+
+		if (!state)
+			return;
+
+		popClipState(context, *state);
 	}
 
 	bool Canvas::pushTransform(const AffineTransform& transform) {
@@ -420,9 +519,9 @@ namespace tiny {
 		state.origin = renderTargetOrigin;
 		state.transform = paintTransform;
 
-		state.clipRects = std::move(clipRects);
+		state.clips = std::move(clipStates);
 
-		clipRects.clear();
+		clipStates.clear();
 
 		renderSurfaceStates.push_back(std::move(state));
 
@@ -463,7 +562,7 @@ namespace tiny {
 		renderTargetOrigin = state.origin;
 		paintTransform = state.transform;
 
-		clipRects = std::move(state.clipRects);
+		clipStates = std::move(state.clips);
 
 		applyPaintTransform();
 	}
@@ -541,7 +640,7 @@ namespace tiny {
 		if (!sourceDevice || !destinationDevice || sourceDevice.Get() != destinationDevice.Get())
 			return false;
 
-		ClipSuspension clipSuspension(sourceContext, clipRects);
+		ClipSuspension clipSuspension(sourceContext, clipStates);
 
 		HRESULT result = sourceContext->Flush();
 		if (FAILED(result))
@@ -572,12 +671,17 @@ namespace tiny {
 		float copyRight = std::min(sourceBounds.right(), targetRight);
 		float copyBottom = std::min(sourceBounds.bottom(), targetBottom);
 
-		for (const Rect& clip : clipRects) {
-			copyLeft = std::max(copyLeft, clip.left());
-			copyTop = std::max(copyTop, clip.top());
+		for (const std::shared_ptr<CanvasClipState>& clip : clipStates) {
+			if (!clip)
+				continue;
 
-			copyRight = std::min(copyRight, clip.right());
-			copyBottom = std::min(copyBottom, clip.bottom());
+			const Rect& bounds = clip->worldBounds;
+
+			copyLeft = std::max(copyLeft, bounds.left());
+			copyTop = std::max(copyTop, bounds.top());
+
+			copyRight = std::min(copyRight, bounds.right());
+			copyBottom = std::min(copyBottom, bounds.bottom());
 		}
 
 		if (copyRight <= copyLeft || copyBottom <= copyTop)
@@ -660,17 +764,13 @@ namespace tiny {
 		D2D1_SIZE_F size = context->GetSize();
 		Rect result(renderTargetOrigin.x, renderTargetOrigin.y, size.width, size.height);
 
-		for (const Rect& clip : clipRects) {
-			float left = std::max(result.left(), clip.left());
-			float top = std::max(result.top(), clip.top());
+		for (const std::shared_ptr<CanvasClipState>& clip : clipStates) {
+			if (!clip)
+				continue;
 
-			float right = std::min(result.right(), clip.right());
-			float bottom = std::min(result.bottom(), clip.bottom());
-
-			if (right <= left || bottom <= top)
-				return Rect(left, top, 0.0f, 0.0f);
-
-			result = Rect(left, top, right - left, bottom - top);
+			result = intersectRect(result, clip->worldBounds);
+			if (result.isEmpty())
+				return result;
 		}
 
 		return result;

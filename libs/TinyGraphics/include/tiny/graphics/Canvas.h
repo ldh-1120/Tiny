@@ -16,6 +16,7 @@ namespace tiny {
 	class TextLayout;
 	class Image;
 	class RenderSurface;
+	class CanvasClipState;
 
 	class Canvas {
 	public:
@@ -72,7 +73,7 @@ namespace tiny {
 		void* textFactory = nullptr;
 		void* solidBrush = nullptr;
 
-		std::vector<Rect> clipRects;
+		std::vector<std::shared_ptr<CanvasClipState>> clipStates;
 
 		Point renderTargetOrigin;
 
@@ -82,7 +83,7 @@ namespace tiny {
 
 			Point origin;
 
-			std::vector<Rect> clipRects;
+			std::vector<std::shared_ptr<CanvasClipState>> clips;
 
 			AffineTransform transform;
 		};
