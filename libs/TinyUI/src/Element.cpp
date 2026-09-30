@@ -174,7 +174,7 @@ namespace tiny {
 			return;
 
 		Point mappedPosition;
-		if (!mapHitTestPositionOverride(event.position, mappedPosition))
+		if (!mapPointerPosition(event.position, mappedPosition))
 			return;
 
 		PointerEvent mappedEvent = event;
@@ -195,7 +195,7 @@ namespace tiny {
 			return;
 
 		Point mappedPosition;
-		if (!mapHitTestPositionOverride(event.position, mappedPosition))
+		if (!mapPointerPosition(event.position, mappedPosition))
 			return;
 
 		PointerEvent mappedEvent = event;
@@ -209,7 +209,7 @@ namespace tiny {
 			return false;
 
 		Point mappedPosition;
-		if (!mapHitTestPositionOverride(event.position, mappedPosition))
+		if (!mapPointerPosition(event.position, mappedPosition))
 			return false;
 
 		PointerEvent mappedEvent = event;
@@ -223,7 +223,7 @@ namespace tiny {
 			return;
 
 		Point mappedPosition;
-		if (!mapHitTestPositionOverride(event.position, mappedPosition))
+		if (!mapPointerPosition(event.position, mappedPosition))
 			return;
 
 		PointerEvent mappedEvent = event;
@@ -237,7 +237,7 @@ namespace tiny {
 			return false;
 
 		Point mappedPosition;
-		if (!mapHitTestPositionOverride(event.position, mappedPosition))
+		if (!mapPointerPosition(event.position, mappedPosition))
 			return false;
 
 		PointerWheelEvent mappedEvent = event;
@@ -474,6 +474,16 @@ namespace tiny {
 			return;
 
 		focusVisibilityChangedOverride(visible);
+	}
+
+	bool Element::mapPointerPosition(const Point& position, Point& result) const {
+		Point parentPosition = position;
+		if (parentElement) {
+			if (!parentElement->mapPointerPosition(position, parentPosition))
+				return false;
+		}
+
+		return mapHitTestPositionOverride(parentPosition, result);
 	}
 
 	Rect Element::visualBounds() const {
