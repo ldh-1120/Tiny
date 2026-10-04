@@ -31,14 +31,13 @@ namespace tiny {
 		std::vector<bool> used(oldChildren.size(), false);
 		for (std::size_t newIndex = 0; newIndex < widgets.size(); ++newIndex) {
 			const Widget* widget = widgets[newIndex];
-			if (!widget)
+			if (!widget) {
+				childElements.push_back(nullptr);
 				continue;
+			}
 
 			std::unique_ptr<Element> matchedElement;
-			if (!widget->key().hasValue() && newIndex < oldChildren.size() && oldChildren[newIndex] && oldChildren[newIndex]->canUpdate(*widget)) {
-				matchedElement = std::move(oldChildren[newIndex]);
-				used[newIndex] = true;
-			} else {
+			if (widget->key().hasValue()) {
 				for (std::size_t oldIndex = 0; oldIndex < oldChildren.size(); ++oldIndex) {
 					if (used[oldIndex])
 						continue;
@@ -54,6 +53,9 @@ namespace tiny {
 
 					break;
 				}
+			} else if (newIndex < oldChildren.size() && !used[newIndex] && oldChildren[newIndex] && oldChildren[newIndex]->canUpdate(*widget)) {
+				matchedElement = std::move(oldChildren[newIndex]);
+				used[newIndex] = true;
 			}
 
 			if (matchedElement) {
