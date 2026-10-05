@@ -13,6 +13,7 @@
     <Project Path="libs/TinyUI/TinyUI.vcxproj" Id="5cee01a8-4399-42f6-ad0b-31ea70b029c9" />
   </Folder>
   <Folder Name="/Solution Items/" />
-  <Folder Name="/tests/" />
-  <Project Path="tests/TinyUITests/TinyUITests.vcxproj" Id="be3c52b1-520d-4b92-b137-507b66adefbc" />
+  <Folder Name="/tests/">
+    <Project Path="tests/TinyUITests/TinyUITests.vcxproj" Id="be3c52b1-520d-4b92-b137-507b66adefbc" />
+  </Folder>
 </Solution>

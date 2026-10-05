@@ -2,6 +2,7 @@
 
 #include <typeindex>
 #include <vector>
+#include <memory>
 
 #include <tiny/core/Rect.h>
 #include <tiny/core/Size.h>
@@ -14,6 +15,7 @@
 
 #include <tiny/ui/Key.h>
 #include <tiny/ui/layout/Constraints.h>
+#include <tiny/ui/layout/ParentData.h>
 
 namespace tiny {
 	class Canvas;
@@ -86,6 +88,16 @@ namespace tiny {
 		Rect visualBounds() const;
 		Rect backdropReadBounds() const;
 
+		template <typename ParentDataType>
+		ParentDataType* parentData() {
+			return dynamic_cast<ParentDataType*>(parentDataValue.get());
+		}
+
+		template <typename ParentDataType>
+		const ParentDataType* parentData() const {
+			return dynamic_cast<const ParentDataType*>(parentDataValue.get());
+		}
+
 	protected:
 		explicit Element(const Widget& widget);
 
@@ -154,6 +166,8 @@ namespace tiny {
 
 		virtual bool mapHitTestPositionOverride(const Point& position, Point& result) const;
 
+		void setParentData(std::unique_ptr<ParentData> data);
+
 	private:
 		void setFocused(bool value);
 
@@ -181,6 +195,8 @@ namespace tiny {
 		bool frameUpdatesEnabledValue = false;
 
 		bool enabledValue = true;
+
+		std::unique_ptr<ParentData> parentDataValue;
 
 		friend class FocusManager;
 	};

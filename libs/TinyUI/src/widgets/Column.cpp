@@ -79,7 +79,8 @@ namespace tiny {
 
 					++visibleChildCount;
 
-					float flex = boundedMainAxis ? detail::flexFactor(*child) : 0.0f;
+					const FlexParentData* flexData = child->parentData<FlexParentData>();
+					float flex = flexData && boundedMainAxis ? flexData->flex : 0.0f;
 					if (flex > 0.0f) {
 						totalFlex += flex;
 						continue;
@@ -102,13 +103,14 @@ namespace tiny {
 						if (!child)
 							continue;
 
-						float flex = detail::flexFactor(*child);
+						const FlexParentData* flexData = child->parentData<FlexParentData>();
+						float flex = flexData ? flexData->flex : 0.0f;
 						if (flex <= 0.0f)
 							continue;
 
 						float allocatedHeight = remainingHeight * flex / totalFlex;
 
-						FlexFit fit = detail::flexFit(*child);
+						FlexFit fit = flexData ? flexData->fit : FlexFit::Loose;
 
 						Constraints flexConstraints;
 						if (fit == FlexFit::Tight)

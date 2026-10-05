@@ -1,6 +1,7 @@
 #include <tiny/ui/Element.h>
 
 #include <typeinfo>
+#include <utility>
 
 #include <tiny/graphics/Canvas.h>
 
@@ -444,6 +445,10 @@ namespace tiny {
 	bool Element::mapHitTestPositionOverride(const Point& position, Point& result) const {
 		result = position;
 		return true;
+	}
+
+	void Element::setParentData(std::unique_ptr<ParentData> data) {
+		parentDataValue = std::move(data);
 	}
 
 	void Element::setFocused(bool value) {

@@ -16,22 +16,15 @@ namespace tiny {
 	namespace {
 		class FlexibleElement final : public SingleChildElement {
 		public:
-			explicit FlexibleElement(const Flexible& widget) : SingleChildElement(widget, createChild(widget)), flexValue(widget.flex()), fitValue(widget.fit()) { }
-
-			float flex() const {
-				return flexValue;
-			}
-
-			FlexFit fit() const {
-				return fitValue;
+			explicit FlexibleElement(const Flexible& widget) : SingleChildElement(widget, createChild(widget)) { 
+				updateParentData(widget);
 			}
 
 		protected:
 			void updateOverride(const Widget& widget) override {
 				const Flexible& flexible = static_cast<const Flexible&>(widget);
 
-				flexValue = flexible.flex();
-				fitValue = flexible.fit();
+				updateParentData(flexible);
 
 				updateChild(flexible.child());
 				markNeedsLayout();
@@ -61,28 +54,15 @@ namespace tiny {
 				return childWidget->createElement();
 			}
 
-		private:
-			float flexValue = 1.0f;
-			FlexFit fitValue = FlexFit::Loose;
+			void updateParentData(const Flexible& widget) {
+				std::unique_ptr<FlexParentData> data = std::make_unique<FlexParentData>();
+
+				data->flex = widget.flex();
+				data->fit = widget.fit();
+
+				setParentData(std::move(data));
+			}
 		};
-	}
-
-	namespace detail {
-		float flexFactor(const Element& element) {
-			const FlexibleElement* flexible = dynamic_cast<const FlexibleElement*>(&element);
-			if (!flexible)
-				return 0.0f;
-
-			return flexible->flex();
-		}
-
-		FlexFit flexFit(const Element& element) {
-			const FlexibleElement* flexible = dynamic_cast<const FlexibleElement*>(&element);
-			if (!flexible)
-				return FlexFit::Loose;
-
-			return flexible->fit();
-		}
 	}
 
 	Flexible::Flexible(std::unique_ptr<Widget> child, float flex, FlexFit fit, Key key) : Widget(std::move(key)), childWidget(std::move(child)), flexValue(std::max(flex, 0.0f)), fitValue(fit) { }

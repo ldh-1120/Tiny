@@ -4,11 +4,17 @@
 
 #include <tiny/ui/Key.h>
 #include <tiny/ui/Widget.h>
+#include <tiny/ui/layout/ParentData.h>
 
 namespace tiny {
 	enum class FlexFit {
 		Loose,
 		Tight
+	};
+
+	struct FlexParentData final : ParentData {
+		float flex = 0.0f;
+		FlexFit fit = FlexFit::Loose;
 	};
 
 	class Flexible : public Widget {

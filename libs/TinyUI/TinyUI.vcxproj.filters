@@ -218,5 +218,6 @@
     <ClInclude Include="src\widgets\OffscreenLayer.h" />
     <ClInclude Include="src\widgets\BackdropSnapshot.h" />
     <ClInclude Include="include\tiny\ui\widgets\Transform.h" />
+    <ClInclude Include="include\tiny\ui\layout\ParentData.h" />
   </ItemGroup>
 </Project>

@@ -118,6 +118,7 @@
     <ClInclude Include="include\tiny\ui\layout\Alignment.h" />
     <ClInclude Include="include\tiny\ui\layout\Constraints.h" />
     <ClInclude Include="include\tiny\ui\LayoutContext.h" />
+    <ClInclude Include="include\tiny\ui\layout\ParentData.h" />
     <ClInclude Include="include\tiny\ui\MultiChildElement.h" />
     <ClInclude Include="include\tiny\ui\scroll\ScrollModel.h" />
     <ClInclude Include="include\tiny\ui\SingleChildElement.h" />
