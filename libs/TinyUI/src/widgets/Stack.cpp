@@ -67,7 +67,7 @@ namespace tiny {
 					if (!child)
 						continue;
 
-					const ParentData* positionData = child->parentData<PositionedParentData>();
+					const PositionedParentData* positionData = child->parentData<PositionedParentData>();
 					if (positionData)
 						continue;
 

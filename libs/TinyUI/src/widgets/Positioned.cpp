@@ -8,14 +8,14 @@
 
 #include <tiny/ui/Element.h>
 #include <tiny/ui/LayoutContext.h>
-#include <tiny/ui/SingleChildElement.h>
+#include <tiny/ui/ProxyElement.h>
 #include <tiny/ui/layout/Constraints.h>
 
 namespace tiny {
 	namespace {
-		class PositionedElement final : public SingleChildElement {
+		class PositionedElement final : public ProxyElement {
 		public:
-			explicit PositionedElement(const Positioned& widget) : SingleChildElement(widget, createChild(widget)) { 
+			explicit PositionedElement(const Positioned& widget) : ProxyElement(widget, createChild(widget)) { 
 				updateParentData(widget);
 			}
 
@@ -27,21 +27,6 @@ namespace tiny {
 
 				updateChild(positioned.child());
 				markNeedsLayout();
-			}
-
-			Size measureOverride(LayoutContext& context, const Constraints& constraints) override {
-				if (!hasChild())
-					return constraints.smallest();
-
-				Size childSize = child()->measure(context, constraints);
-				return constraints.constrain(childSize);
-			}
-
-			void arrangeOverride(const Rect& bounds) override {
-				if (!hasChild())
-					return;
-
-				child()->arrange(bounds);
 			}
 
 		private:

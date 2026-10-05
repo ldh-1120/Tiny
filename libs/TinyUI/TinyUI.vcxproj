@@ -74,6 +74,7 @@
       <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</MultiProcessorCompilation>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'!='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="src\ProxyElement.cpp" />
     <ClCompile Include="src\scroll\ScrollModel.cpp" />
     <ClCompile Include="src\SingleChildElement.cpp" />
     <ClCompile Include="src\text\TextEditingModel.cpp" />
@@ -120,6 +121,7 @@
     <ClInclude Include="include\tiny\ui\LayoutContext.h" />
     <ClInclude Include="include\tiny\ui\layout\ParentData.h" />
     <ClInclude Include="include\tiny\ui\MultiChildElement.h" />
+    <ClInclude Include="include\tiny\ui\ProxyElement.h" />
     <ClInclude Include="include\tiny\ui\scroll\ScrollModel.h" />
     <ClInclude Include="include\tiny\ui\SingleChildElement.h" />
     <ClInclude Include="include\tiny\ui\text\TextEditingModel.h" />
