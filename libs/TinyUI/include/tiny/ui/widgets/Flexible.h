@@ -44,9 +44,4 @@ namespace tiny {
 	public:
 		explicit Spacer(float flex = 1.0f, Key key = Key());
 	};
-
-	namespace detail {
-		float flexFactor(const Element& element);
-		FlexFit flexFit(const Element& element);
-	}
 }

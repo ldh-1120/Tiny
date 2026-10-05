@@ -15,17 +15,15 @@ namespace tiny {
 	namespace {
 		class PositionedElement final : public SingleChildElement {
 		public:
-			explicit PositionedElement(const Positioned& widget) : SingleChildElement(widget, createChild(widget)), specValue(widget.spec()) { }
-
-			const PositionedSpec& spec() const {
-				return specValue;
+			explicit PositionedElement(const Positioned& widget) : SingleChildElement(widget, createChild(widget)) { 
+				updateParentData(widget);
 			}
 
 		protected:
 			void updateOverride(const Widget& widget) override {
 				const Positioned& positioned = static_cast<const Positioned&>(widget);
 
-				specValue = positioned.spec();
+				updateParentData(positioned);
 
 				updateChild(positioned.child());
 				markNeedsLayout();
@@ -55,19 +53,13 @@ namespace tiny {
 				return child->createElement();
 			}
 
-		private:
-			PositionedSpec specValue;
+			void updateParentData(const Positioned& widget) {
+				std::unique_ptr<PositionedParentData> data = std::make_unique<PositionedParentData>();
+				data->spec = widget.spec();
+
+				setParentData(std::move(data));
+			}
 		};
-	}
-
-	namespace detail {
-		const PositionedSpec* positionedSpec(const Element& element) {
-			const PositionedElement* positioned = dynamic_cast<const PositionedElement*>(&element);
-			if (!positioned)
-				return nullptr;
-
-			return &positioned->spec();
-		}
 	}
 
 	Positioned::Positioned(PositionedSpec spec, std::unique_ptr<Widget> child, Key key) : Widget(std::move(key)), positionSpec(std::move(spec)), childWidget(std::move(child)) { }

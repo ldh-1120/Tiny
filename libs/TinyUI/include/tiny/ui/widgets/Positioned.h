@@ -5,6 +5,7 @@
 
 #include <tiny/ui/Key.h>
 #include <tiny/ui/Widget.h>
+#include <tiny/ui/layout/ParentData.h>
 
 namespace tiny {
     struct PositionedSpec {
@@ -16,6 +17,10 @@ namespace tiny {
         std::optional<float> width;
         std::optional<float> height;
     };
+
+	struct PositionedParentData final : ParentData {
+		PositionedSpec spec;
+	};
 
     class Positioned : public Widget {
     public:
@@ -31,8 +36,4 @@ namespace tiny {
 
         std::unique_ptr<Widget> childWidget;
     };
-
-    namespace detail {
-        const PositionedSpec* positionedSpec(const Element& element);
-    }
 }

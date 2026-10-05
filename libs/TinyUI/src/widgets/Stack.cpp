@@ -67,7 +67,8 @@ namespace tiny {
 					if (!child)
 						continue;
 
-					if (detail::positionedSpec(*child))
+					const ParentData* positionData = child->parentData<PositionedParentData>();
+					if (positionData)
 						continue;
 
 					Size childSize = child->measure(context, childConstraints);
@@ -80,11 +81,11 @@ namespace tiny {
 					if (!child)
 						continue;
 
-					const PositionedSpec* spec = detail::positionedSpec(*child);
-					if (!spec)
+					const PositionedParentData* positionData = child->parentData<PositionedParentData>();
+					if (!positionData)
 						continue;
 
-					child->measure(context, positionedConstraints(*spec, stackSize));
+					child->measure(context, positionedConstraints(positionData->spec, stackSize));
 				}
 
 				return stackSize;
@@ -95,39 +96,41 @@ namespace tiny {
 					if (!child)
 						continue;
 
-					const PositionedSpec* spec = detail::positionedSpec(*child);
-					if (!spec) {
+					const PositionedParentData* positionData = child->parentData<PositionedParentData>();
+					if (!positionData) {
 						child->arrange(bounds);
 						continue;
 					}
+
+					const PositionedSpec& spec = positionData->spec;
 
 					Size desired = child->desiredSize();
 
 					float width = desired.width;
 					float height = desired.height;
 
-					if (spec->width.has_value())
-						width = std::max(spec->width.value(), 0.0f);
-					else if (spec->left.has_value() && spec->right.has_value())
-						width = std::max(bounds.width - spec->left.value() - spec->right.value(), 0.0f);
+					if (spec.width.has_value())
+						width = std::max(spec.width.value(), 0.0f);
+					else if (spec.left.has_value() && spec.right.has_value())
+						width = std::max(bounds.width - spec.left.value() - spec.right.value(), 0.0f);
 					
-					if (spec->height.has_value())
-						height = std::max(spec->height.value(), 0.0f);
-					else if (spec->top.has_value() && spec->bottom.has_value())
-						height = std::max(bounds.height - spec->top.value() - spec->bottom.value(), 0.0f);
+					if (spec.height.has_value())
+						height = std::max(spec.height.value(), 0.0f);
+					else if (spec.top.has_value() && spec.bottom.has_value())
+						height = std::max(bounds.height - spec.top.value() - spec.bottom.value(), 0.0f);
 
 					float x = bounds.x;
 					float y = bounds.y;
 
-					if (spec->left.has_value())
-						x += spec->left.value();
-					else if (spec->right.has_value())
-						x = bounds.x + bounds.width - spec->right.value() - width;
+					if (spec.left.has_value())
+						x += spec.left.value();
+					else if (spec.right.has_value())
+						x = bounds.x + bounds.width - spec.right.value() - width;
 
-					if (spec->top.has_value())
-						y += spec->top.value();
-					else if (spec->bottom.has_value())
-						y = bounds.y + bounds.height - spec->bottom.value() - height;
+					if (spec.top.has_value())
+						y += spec.top.value();
+					else if (spec.bottom.has_value())
+						y = bounds.y + bounds.height - spec.bottom.value() - height;
 
 					child->arrange(Rect(x, y, width, height));
 				}
