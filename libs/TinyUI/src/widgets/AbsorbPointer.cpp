@@ -9,14 +9,14 @@
 
 #include <tiny/ui/Element.h>
 #include <tiny/ui/LayoutContext.h>
-#include <tiny/ui/SingleChildElement.h>
+#include <tiny/ui/ProxyElement.h>
 #include <tiny/ui/layout/Constraints.h>
 
 namespace tiny {
 	namespace {
-		class AbsorbPointerElement final : public SingleChildElement {
+		class AbsorbPointerElement final : public ProxyElement {
         public:
-            explicit AbsorbPointerElement(const AbsorbPointer& widget) : SingleChildElement(widget,  createChild(widget)), absorbingValue(widget.absorbing()) { }
+            explicit AbsorbPointerElement(const AbsorbPointer& widget) : ProxyElement(widget,  createChild(widget)), absorbingValue(widget.absorbing()) { }
 
 		protected:
 			void updateOverride(const Widget& widget) override {
@@ -26,20 +26,6 @@ namespace tiny {
 
 				updateChild(absorbPointer.child());
 				markNeedsLayout();
-			}
-
-			Size measureOverride(LayoutContext& context, const Constraints& constraints) override {
-				if (!hasChild())
-					return constraints.smallest();
-
-				return child()->measure(context, constraints);
-			}
-
-			void arrangeOverride(const Rect& bounds) override {
-				if (!hasChild())
-					return;
-
-				child()->arrange(bounds);
 			}
 
 			Element* hitTestChildren(const Point& position) override {
