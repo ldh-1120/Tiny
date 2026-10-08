@@ -19,7 +19,7 @@ namespace tiny {
 
 		bool hasChild() const;
 
-		void updateChild(const Widget* widget);
+		bool updateChild(const Widget* widget);
 
 		void paintOverride(Canvas& canvas) override;
 

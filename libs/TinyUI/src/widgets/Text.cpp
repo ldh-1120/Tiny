@@ -21,6 +21,7 @@ namespace tiny {
 		protected:
 			void updateOverride(const Widget& widget) override {
 				const Text& textWidget = static_cast<const Text&>(widget);
+
 				textValue = textWidget.text();
 				textStyle = textWidget.style();
 				textColor = textWidget.color();

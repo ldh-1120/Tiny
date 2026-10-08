@@ -23,18 +23,20 @@ namespace tiny {
 		return childElement != nullptr;
 	}
 
-	void SingleChildElement::updateChild(const Widget* widget) {
+	bool SingleChildElement::updateChild(const Widget* widget) {
 		if (!widget) {
-			if (childElement)
-				childElement->unmount();
+			if (!childElement)
+				return false;
 
+			childElement->unmount();
 			childElement.reset();
-			return;
+
+			return true;
 		}
 
 		if (childElement && childElement->canUpdate(*widget)) {
 			childElement->update(*widget);
-			return;
+			return false;
 		}
 
 		if (childElement)
@@ -46,6 +48,8 @@ namespace tiny {
 			if (root)
 				childElement->mount(*root, this);
 		}
+
+		return true;
 	}
 
 	void SingleChildElement::paintOverride(Canvas& canvas) {

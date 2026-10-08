@@ -29,10 +29,17 @@ namespace tiny {
 			void updateOverride(const Widget& widget) override {
 				const Opacity& opacity = static_cast<const Opacity&>(widget);
 
+				bool opacityChanged = opacityValue != opacity.opacity();
 				opacityValue = opacity.opacity();
 
-				updateChild(opacity.child());
-				markNeedsLayout();
+				bool childStructureChanged = updateChild(opacity.child());
+				if (childStructureChanged) {
+					markNeedsLayout();
+					return;
+				}
+
+				if (opacityChanged)
+					markNeedsPaint();
 			}
 
 			void paintOverride(Canvas& canvas) override {
