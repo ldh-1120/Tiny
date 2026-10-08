@@ -10,8 +10,9 @@ namespace tiny {
 		float a = 1.0f;
 
 		constexpr Color() = default;
-
 		constexpr Color(float r, float g, float b, float a = 1.0f) : r(r), g(g), b(b), a(a) { }
+
+		constexpr bool operator==(const Color&) const = default;
 
 		static constexpr Color fromRgb(unsigned char r, unsigned char g, unsigned char b) {
 			return Color(static_cast<float>(r) / 255.0f, static_cast<float>(g) / 255.0f, static_cast<float>(b) / 255.0f, 1.0f);

@@ -22,9 +22,21 @@ namespace tiny {
 			void updateOverride(const Widget& widget) override {
 				const Text& textWidget = static_cast<const Text&>(widget);
 
+				bool textChanged = textValue != textWidget.text();
+				bool styleChanged = textStyle != textWidget.style();
+				bool colorChanged = textColor != textWidget.color();
+
 				textValue = textWidget.text();
 				textStyle = textWidget.style();
 				textColor = textWidget.color();
+
+				if (textChanged || styleChanged) {
+					markNeedsLayout();
+					return;
+				}
+
+				if (colorChanged)
+					markNeedsPaint();
 			}
 
 			Size measureOverride(LayoutContext& context, const Constraints& constraints) override {
