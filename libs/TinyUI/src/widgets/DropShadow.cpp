@@ -6,25 +6,22 @@
 #include <utility>
 
 #include <tiny/core/Rect.h>
-#include <tiny/core/Size.h>
 
 #include <tiny/graphics/Canvas.h>
 #include <tiny/graphics/RenderSurface.h>
 
 #include <tiny/ui/Element.h>
-#include <tiny/ui/LayoutContext.h>
-#include <tiny/ui/SingleChildElement.h>
-#include <tiny/ui/layout/Constraints.h>
+#include <tiny/ui/ProxyElement.h>
 
+#include "BackdropSnapshot.h"
 #include "EffectSurfaceCache.h"
 #include "OffscreenLayer.h"
-#include "BackdropSnapshot.h"
 
 namespace tiny {
 	namespace {
-		class DropShadowElement final : public SingleChildElement {
+		class DropShadowElement final : public ProxyElement {
 		public:
-			explicit DropShadowElement(const DropShadow& widget) : SingleChildElement(widget, createChild(widget)), blurRadiusValue(widget.blurRadius()), offsetValue(widget.offset()), colorValue(widget.color()) { }
+			explicit DropShadowElement(const DropShadow& widget) : ProxyElement(widget, createChild(widget)), blurRadiusValue(widget.blurRadius()), offsetValue(widget.offset()), colorValue(widget.color()) { }
 
 		protected:
 			void updateOverride(const Widget& widget) override {
@@ -36,20 +33,6 @@ namespace tiny {
 
 				updateChild(dropShadow.child());
 				markNeedsLayout();
-			}
-
-			Size measureOverride(LayoutContext& context, const Constraints& constraints) override {
-				if (!hasChild())
-					return constraints.smallest();
-
-				return child()->measure(context, constraints);
-			}
-
-			void arrangeOverride(const Rect& bounds) override {
-				if (!hasChild())
-					return;
-
-				child()->arrange(bounds);
 			}
 
 			void paintOverride(Canvas& canvas) override {

@@ -12,7 +12,7 @@
 
 #include <tiny/ui/Element.h>
 #include <tiny/ui/LayoutContext.h>
-#include <tiny/ui/SingleChildElement.h>
+#include <tiny/ui/ProxyElement.h>
 #include <tiny/ui/layout/Constraints.h>
 
 #include "EffectSurfaceCache.h"
@@ -21,9 +21,9 @@
 
 namespace tiny {
 	namespace {
-		class OpacityElement final : public SingleChildElement {
+		class OpacityElement final : public ProxyElement {
 		public:
-			explicit OpacityElement(const Opacity& widget) : SingleChildElement(widget, createChild(widget)), opacityValue(widget.opacity()) { }
+			explicit OpacityElement(const Opacity& widget) : ProxyElement(widget, createChild(widget)), opacityValue(widget.opacity()) { }
 
 		protected:
 			void updateOverride(const Widget& widget) override {
@@ -33,20 +33,6 @@ namespace tiny {
 
 				updateChild(opacity.child());
 				markNeedsLayout();
-			}
-
-			Size measureOverride(LayoutContext& context, const Constraints& constraints) override {
-				if (!hasChild())
-					return constraints.smallest();
-
-				return child()->measure(context, constraints);
-			}
-
-			void arrangeOverride(const Rect& bounds) override {
-				if (!hasChild())
-					return;
-
-				child()->arrange(bounds);
 			}
 
 			void paintOverride(Canvas& canvas) override {

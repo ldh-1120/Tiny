@@ -11,14 +11,14 @@
 
 #include <tiny/ui/Element.h>
 #include <tiny/ui/LayoutContext.h>
-#include <tiny/ui/SingleChildElement.h>
+#include <tiny/ui/ProxyElement.h>
 #include <tiny/ui/layout/Constraints.h>
 
 namespace tiny {
 	namespace {
-		class TransformElement final : public SingleChildElement {
+		class TransformElement final : public ProxyElement {
 		public:
-			explicit TransformElement(const Transform& widget) : SingleChildElement(widget, createChild(widget)), specValue(widget.spec()) {}
+			explicit TransformElement(const Transform& widget) : ProxyElement(widget, createChild(widget)), specValue(widget.spec()) {}
 
 		protected:
 			void updateOverride(const Widget& widget) override {
@@ -28,20 +28,6 @@ namespace tiny {
 
 				updateChild(transform.child());
 				markNeedsLayout();
-			}
-
-			Size measureOverride(LayoutContext& context, const Constraints& constraints) override {
-				if (!hasChild())
-					return constraints.smallest();
-
-				return child()->measure(context, constraints);
-			}
-
-			void arrangeOverride(const Rect& bounds) override {
-				if (!hasChild())
-					return;
-
-				child()->arrange(bounds);
 			}
 
 			void paintOverride(Canvas& canvas) override {
