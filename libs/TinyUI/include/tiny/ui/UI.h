@@ -115,6 +115,10 @@ namespace tiny::ui {
 		return make<Align>(std::move(child), alignment, std::move(key));
 	}
 
+	inline WidgetPtr center(WidgetPtr child, Key key = Key()) {
+		return make<Align>(std::move(child), Alignment::Center, std::move(key));
+	}
+
 	inline WidgetPtr text(std::u32string value, Color color, TextStyle style = TextStyle(), Key key = Key()) {
 		return make<Text>(std::move(value), color, std::move(style), std::move(key));
 	}
