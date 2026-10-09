@@ -19,6 +19,7 @@ namespace tiny {
 		CrossAxisAlignment crossAxisAlignment() const;
 
 		Size measureOverride(LayoutContext& context, const Constraints& constraints) override;
+		void arrangeOverride(const Rect& bounds) override;
 
 	private:
 		Axis axisValue = Axis::Horizontal;

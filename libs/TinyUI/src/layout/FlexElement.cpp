@@ -44,6 +44,22 @@ namespace tiny {
 			float minimumMainExtent = fit == FlexFit::Tight ? allocatedMainExtent : 0.0f;
 			return axis == Axis::Horizontal ? Constraints(minimumMainExtent, allocatedMainExtent, 0.0f, constraints.maxHeight()) : Constraints(0.0f, constraints.maxWidth(), minimumMainExtent, allocatedMainExtent);
 		}
+
+		float mainPosition(const Rect& rect, Axis axis) {
+			return axis == Axis::Horizontal ? rect.x : rect.y;
+		}
+
+		float crossPosition(const Rect& rect, Axis axis) {
+			return axis == Axis::Horizontal ? rect.y : rect.x;
+		}
+
+		float crossExtent(const Rect& rect, Axis axis) {
+			return axis == Axis::Horizontal ? rect.height : rect.width;
+		}
+
+		Rect makeRect(float mainPositionValue, float crossPositionValue, float mainExtentValue, float crossExtentValue, Axis axis) {
+			return axis == Axis::Horizontal ? Rect(mainPositionValue, crossPositionValue, mainExtentValue, crossExtentValue) : Rect(crossPositionValue, mainPositionValue, crossExtentValue, mainExtentValue);
+		}
 	}
 
 	FlexElement::FlexElement(const Widget& widget, std::vector<std::unique_ptr<Element>> children, Axis axis, float spacing, CrossAxisAlignment crossAxisAlignment)
@@ -125,5 +141,40 @@ namespace tiny {
 
 		totalMainExtent += totalSpacing;
 		return makeSize(totalMainExtent, maximumCrossExtentValue, axisValue);
+	}
+
+	void FlexElement::arrangeOverride(const Rect& bounds) {
+		float currentMainPosition = mainPosition(bounds, axisValue);
+		float availableCrossExtent = crossExtent(bounds, axisValue);
+
+		for (const std::unique_ptr<Element>& child : children()) {
+			if (!child)
+				continue;
+
+			Size childSize = child->desiredSize();
+			float childMainExtent = mainExtent(childSize, axisValue);
+			float childCrossExtent = std::min(crossExtent(childSize, axisValue), availableCrossExtent);
+			float childCrossPosition = crossPosition(bounds, axisValue);
+
+			switch (crossAxisAlignmentValue) {
+				case CrossAxisAlignment::Start:
+					break;
+
+				case CrossAxisAlignment::Center:
+					childCrossPosition += (availableCrossExtent - childCrossExtent) * 0.5f;
+					break;
+
+				case CrossAxisAlignment::End:
+					childCrossPosition += availableCrossExtent - childCrossExtent;
+					break;
+
+				case CrossAxisAlignment::Stretch:
+					childCrossExtent = availableCrossExtent;
+					break;
+			}
+
+			child->arrange(makeRect(currentMainPosition, childCrossPosition, childMainExtent, childCrossExtent, axisValue));
+			currentMainPosition += childMainExtent + spacingValue;
+		}
 	}
 }

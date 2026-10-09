@@ -57,43 +57,6 @@ namespace tiny {
 
 				updateChildren(createChildWidgetPointers(row));
 			}
-
-			void arrangeOverride(const Rect& bounds) override {
-				float currentX = bounds.x;
-				for (const std::unique_ptr<Element>& child : children()) {
-					if (!child)
-						continue;
-
-					Size childSize = child->desiredSize();
-
-					float childWidth = childSize.width;
-					float childHeight = std::min(childSize.height, bounds.height);
-
-					float childY = bounds.y;
-					switch (crossAxisAlignment()) {
-						case CrossAxisAlignment::Start:
-							childY = bounds.y;
-							break;
-
-						case CrossAxisAlignment::Center:
-							childY = bounds.y + (bounds.height - childHeight) * 0.5f;
-							break;
-
-						case CrossAxisAlignment::End:
-							childY = bounds.y + bounds.height - childHeight;
-							break;
-
-						case CrossAxisAlignment::Stretch:
-							childY = bounds.y;
-							childHeight = bounds.height;
-							break;
-					}
-
-					child->arrange(Rect(currentX, childY, childWidth, childHeight));
-
-					currentX += childWidth + spacing();
-				}
-			}
 		};
 	}
 
