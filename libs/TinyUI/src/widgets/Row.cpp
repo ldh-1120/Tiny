@@ -43,7 +43,7 @@ namespace tiny {
 
 		class RowElement final : public FlexElement {
 		public:
-			explicit RowElement(const Row& widget) : FlexElement(widget, createChildElements(widget), Axis::Horizontal, widget.spacing(), widget.crossAxisAlignment()) {}
+			explicit RowElement(const Row& widget) : FlexElement(widget, createChildElements(widget), Axis::Horizontal, widget.spacing(), widget.mainAxisAlignment(), widget.crossAxisAlignment()) {}
 
 		protected:
 			void updateOverride(const Widget& widget) override {

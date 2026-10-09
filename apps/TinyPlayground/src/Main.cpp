@@ -132,7 +132,7 @@ tiny::WidgetPtr buildControls(PlaygroundState& state, tiny::UIRoot& uiRoot, cons
 						state.text = value;
 						uiRoot.requestRebuild();
 					}, styles.textBox)
-				), 12.0f, CrossAxisAlignment::Stretch))));
+				), 12.0f, CrossAxisAlignment::Stretch, MainAxisAlignment::Start))));
 }
 
 tiny::WidgetPtr buildViewer(PlaygroundState& state, tiny::UIRoot& uiRoot, const PlaygroundStyles& styles, const std::shared_ptr<tiny::Image>& previewImage) {
@@ -212,7 +212,7 @@ tiny::WidgetPtr buildScrollTest(const PlaygroundStyles& styles) {
 				text(U"Scroll Text", Color::fromRgb(137, 180, 250), styles.body),
 				expanded(
 					scroll(
-						column(std::move(items), 12.0f, CrossAxisAlignment::Stretch)))), 12.0f, CrossAxisAlignment::Stretch)));
+						column(std::move(items), 12.0f, CrossAxisAlignment::Stretch, MainAxisAlignment::Start)))), 12.0f, CrossAxisAlignment::Stretch, MainAxisAlignment::Start)));
 }
 
 tiny::WidgetPtr buildStatusBar(const PlaygroundStyles& styles) {
@@ -237,7 +237,7 @@ tiny::WidgetPtr buildToolbar(PlaygroundState& state, tiny::UIRoot& uiRoot, const
 		state.count = 0;
 		uiRoot.requestRebuild();
 	}, styles.toolbarButton)
-	), 8.0f, CrossAxisAlignment::Center);
+	), 8.0f, CrossAxisAlignment::Center, MainAxisAlignment::Start);
 }
 
 tiny::WidgetPtr buildContent(PlaygroundState& state, tiny::UIRoot& uiRoot, const std::shared_ptr<tiny::Image>& previewImage, const PlaygroundStyles& styles) {
@@ -248,12 +248,12 @@ tiny::WidgetPtr buildContent(PlaygroundState& state, tiny::UIRoot& uiRoot, const
 		buildControls(state, uiRoot, styles),
 		buildViewer(state, uiRoot, styles, previewImage),
 		buildScrollTest(styles)
-	), 1.0f, CrossAxisAlignment::Stretch);
+	), 1.0f, CrossAxisAlignment::Stretch, MainAxisAlignment::Start);
 
 	return column(children(
 		expanded(std::move(main)),
 		buildStatusBar(styles)
-	), 0.0f, CrossAxisAlignment::Stretch);
+	), 0.0f, CrossAxisAlignment::Stretch, MainAxisAlignment::Start);
 }
 
 void handleTitleBarAction(tiny::Window& window, tiny::TitleBarAction action) {

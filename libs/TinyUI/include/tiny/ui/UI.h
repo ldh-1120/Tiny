@@ -59,16 +59,8 @@ namespace tiny::ui {
 		return result;
 	}
 
-	inline WidgetPtr row(std::vector<WidgetPtr> children, float spacing = 0.0f, CrossAxisAlignment alignment = CrossAxisAlignment::Start, Key key = Key()) {
-		return make<Row>(std::move(children), spacing, alignment, std::move(key));
-	}
-
 	inline WidgetPtr row(std::vector<WidgetPtr> children, float spacing, CrossAxisAlignment crossAlignment, MainAxisAlignment mainAlignment, Key key = Key()) {
 		return make<Row>(std::move(children), spacing, crossAlignment, mainAlignment, std::move(key));
-	}
-
-	inline WidgetPtr column(std::vector<WidgetPtr> children, float spacing = 0.0f, CrossAxisAlignment alignment = CrossAxisAlignment::Start, Key key = Key()) {
-		return make<Column>(std::move(children), spacing, alignment, std::move(key));
 	}
 
 	inline WidgetPtr column(std::vector<WidgetPtr> children, float spacing, CrossAxisAlignment crossAlignment, MainAxisAlignment mainAlignment, Key key = Key()) {

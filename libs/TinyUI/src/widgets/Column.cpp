@@ -43,7 +43,7 @@ namespace tiny {
 
 		class ColumnElement final : public FlexElement {
 		public:
-			explicit ColumnElement(const Column& widget) : FlexElement(widget, createChildElements(widget), Axis::Vertical, widget.spacing(), widget.crossAxisAlignment()) { }
+			explicit ColumnElement(const Column& widget) : FlexElement(widget, createChildElements(widget), Axis::Vertical, widget.spacing(), widget.mainAxisAlignment(), widget.crossAxisAlignment()) { }
 
 		protected:
 			void updateOverride(const Widget& widget) override {
@@ -51,6 +51,7 @@ namespace tiny {
 
 				setSpacing(column.spacing());
 				setCrossAxisAlignment(column.crossAxisAlignment());
+				setMainAxisAlignment(column.mainAxisAlignment());
 
 				updateChildren(createChildWidgetPointers(column));
 			}
