@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <limits>
 #include <memory>
+#include <stdexcept>
 
 #include <tiny/core/Size.h>
 
@@ -109,6 +110,8 @@ namespace tiny {
 			++visibleChildCount;
 
 			const FlexParentData* flexData = child->parentData<FlexParentData>();
+			if (flexData && flexData->flex > 0.0f && !boundedMainAxis && flexData->fit == FlexFit::Tight)
+				throw std::runtime_error("Tight flex requires bounded main-axis constraints.");
 
 			float flex = 0.0f;
 			if (flexData && boundedMainAxis)
