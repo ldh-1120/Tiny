@@ -1,10 +1,8 @@
 #include <tiny/ui/layout/FlexElement.h>
 
 #include <algorithm>
-#include <cstddef>
 #include <limits>
 #include <memory>
-#include <utility>
 
 #include <tiny/core/Size.h>
 
@@ -53,6 +51,10 @@ namespace tiny {
 			return axis == Axis::Horizontal ? rect.y : rect.x;
 		}
 
+		float mainExtent(const Rect& rect, Axis axis) {
+			return axis == Axis::Horizontal ? rect.width : rect.height;
+		}
+
 		float crossExtent(const Rect& rect, Axis axis) {
 			return axis == Axis::Horizontal ? rect.height : rect.width;
 		}
@@ -62,11 +64,15 @@ namespace tiny {
 		}
 	}
 
-	FlexElement::FlexElement(const Widget& widget, std::vector<std::unique_ptr<Element>> children, Axis axis, float spacing, CrossAxisAlignment crossAxisAlignment)
-		: MultiChildElement(widget, std::move(children)), axisValue(axis), spacingValue(spacing), crossAxisAlignmentValue(crossAxisAlignment) {}
+	FlexElement::FlexElement(const Widget& widget, std::vector<std::unique_ptr<Element>> children, Axis axis, float spacing, MainAxisAlignment mainAxisAlignment, CrossAxisAlignment crossAxisAlignment)
+		: MultiChildElement(widget, std::move(children)), axisValue(axis), spacingValue(spacing), mainAxisAlignmentValue(mainAxisAlignment), crossAxisAlignmentValue(crossAxisAlignment) {}
 
 	void FlexElement::setSpacing(float spacing) {
 		spacingValue = std::max(spacing, 0.0f);
+	}
+
+	void FlexElement::setMainAxisAlignment(MainAxisAlignment alignment) {
+		mainAxisAlignmentValue = alignment;
 	}
 
 	void FlexElement::setCrossAxisAlignment(CrossAxisAlignment alignment) {
@@ -75,6 +81,10 @@ namespace tiny {
 
 	float FlexElement::spacing() const {
 		return spacingValue;
+	}
+
+	MainAxisAlignment FlexElement::mainAxisAlignment() const {
+		return mainAxisAlignmentValue;
 	}
 
 	CrossAxisAlignment FlexElement::crossAxisAlignment() const {
@@ -144,7 +154,45 @@ namespace tiny {
 	}
 
 	void FlexElement::arrangeOverride(const Rect& bounds) {
-		float currentMainPosition = mainPosition(bounds, axisValue);
+		std::size_t visibleChildCount = 0;
+
+		float occupiedMainExtent = 0.0f;
+		for (const std::unique_ptr<Element>& child : children()) {
+			if (!child)
+				continue;
+
+			++visibleChildCount;
+			occupiedMainExtent += mainExtent(child->desiredSize(), axisValue);
+		}
+
+		if (visibleChildCount > 1)
+			occupiedMainExtent += spacingValue * static_cast<float>(visibleChildCount - 1);
+
+		float availableMainExtent = mainExtent(bounds, axisValue);
+		float freeMainExtent = std::max(availableMainExtent - occupiedMainExtent, 0.0f);
+
+		float leadingSpace = 0.0f;
+		float additionalSpacing = 0.0f;
+
+		switch (mainAxisAlignmentValue) {
+			case MainAxisAlignment::Start:
+				break;
+
+			case MainAxisAlignment::Center:
+				leadingSpace = freeMainExtent * 0.5f;
+				break;
+
+			case MainAxisAlignment::End:
+				leadingSpace = freeMainExtent;
+				break;
+
+			case MainAxisAlignment::SpaceBetween:
+				if (visibleChildCount > 1)
+					additionalSpacing = freeMainExtent / static_cast<float>(visibleChildCount - 1);
+				break;
+		}
+
+		float currentMainPosition = mainPosition(bounds, axisValue) + leadingSpace;
 		float availableCrossExtent = crossExtent(bounds, axisValue);
 
 		for (const std::unique_ptr<Element>& child : children()) {
@@ -174,7 +222,7 @@ namespace tiny {
 			}
 
 			child->arrange(makeRect(currentMainPosition, childCrossPosition, childMainExtent, childCrossExtent, axisValue));
-			currentMainPosition += childMainExtent + spacingValue;
+			currentMainPosition += childMainExtent + spacingValue + additionalSpacing;
 		}
 	}
 }

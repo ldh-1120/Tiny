@@ -1,21 +1,13 @@
 #include <tiny/ui/widgets/Column.h>
 
 #include <algorithm>
-#include <cstddef>
 #include <memory>
 #include <utility>
 #include <vector>
-#include <limits>
-
-#include <tiny/core/Rect.h>
-#include <tiny/core/Size.h>
 
 #include <tiny/ui/Element.h>
-#include <tiny/ui/LayoutContext.h>
 #include <tiny/ui/MultiChildElement.h>
-#include <tiny/ui/layout/Constraints.h>
 #include <tiny/ui/layout/FlexElement.h>
-#include <tiny/ui/widgets/Flexible.h>
 
 namespace tiny {
 	namespace {
@@ -65,7 +57,8 @@ namespace tiny {
 		};
 	}
 
-	Column::Column(std::vector<std::unique_ptr<Widget>> children, float spacing, CrossAxisAlignment crossAxisAlignment, Key key) : Widget(std::move(key)), childWidgets(std::move(children)), childSpacing(std::max(0.0f, spacing)), childAlignment(crossAxisAlignment) { }
+	Column::Column(std::vector<std::unique_ptr<Widget>> children, float spacing, CrossAxisAlignment crossAxisAlignment, MainAxisAlignment mainAxisAlignment, Key key)
+		: Widget(std::move(key)), childWidgets(std::move(children)), childSpacing(std::max(0.0f, spacing)), childAlignment(crossAxisAlignment), mainAlignment(mainAxisAlignment) { }
 
 	const std::vector<std::unique_ptr<Widget>>& Column::children() const {
 		return childWidgets;
@@ -73,6 +66,10 @@ namespace tiny {
 
 	float Column::spacing() const {
 		return childSpacing;
+	}
+
+	MainAxisAlignment Column::mainAxisAlignment() const {
+		return mainAlignment;
 	}
 
 	CrossAxisAlignment Column::crossAxisAlignment() const {

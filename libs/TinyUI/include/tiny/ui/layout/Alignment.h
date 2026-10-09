@@ -21,4 +21,11 @@ namespace tiny {
 		End,
 		Stretch
 	};
+
+	enum class MainAxisAlignment {
+		Start,
+		Center,
+		End,
+		SpaceBetween
+	};
 }

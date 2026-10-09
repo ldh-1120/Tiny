@@ -1,7 +1,6 @@
 #include <tiny/ui/widgets/TextBox.h>
 
 #include <algorithm>
-#include <cstddef>
 #include <functional>
 #include <limits>
 #include <memory>

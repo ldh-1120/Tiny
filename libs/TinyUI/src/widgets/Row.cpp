@@ -5,9 +5,6 @@
 #include <utility>
 #include <vector>
 
-#include <tiny/core/Rect.h>
-#include <tiny/core/Size.h>
-
 #include <tiny/ui/Element.h>
 #include <tiny/ui/MultiChildElement.h>
 #include <tiny/ui/layout/FlexElement.h>
@@ -53,6 +50,7 @@ namespace tiny {
 				const Row& row = static_cast<const Row&>(widget);
 
 				setSpacing(row.spacing());
+				setMainAxisAlignment(row.mainAxisAlignment());
 				setCrossAxisAlignment(row.crossAxisAlignment());
 
 				updateChildren(createChildWidgetPointers(row));
@@ -60,8 +58,8 @@ namespace tiny {
 		};
 	}
 
-	Row::Row(std::vector<std::unique_ptr<Widget>> children, float spacing, CrossAxisAlignment crossAxisAlignment, Key key)
-		: Widget(std::move(key)), childWidgets(std::move(children)), childSpacing(std::max(spacing, 0.0f)), childAlignment(crossAxisAlignment) {}
+	Row::Row(std::vector<std::unique_ptr<Widget>> children, float spacing, CrossAxisAlignment crossAxisAlignment, MainAxisAlignment mainAxisAlignment, Key key)
+		: Widget(std::move(key)), childWidgets(std::move(children)), childSpacing(std::max(spacing, 0.0f)), childAlignment(crossAxisAlignment), mainAlignment(mainAxisAlignment) {}
 
 	const std::vector<std::unique_ptr<Widget>>& Row::children() const {
 		return childWidgets;
@@ -73,6 +71,10 @@ namespace tiny {
 
 	CrossAxisAlignment Row::crossAxisAlignment() const {
 		return childAlignment;
+	}
+
+	MainAxisAlignment Row::mainAxisAlignment() const {
+		return mainAlignment;
 	}
 
 	std::unique_ptr<Element> Row::createElement() const {

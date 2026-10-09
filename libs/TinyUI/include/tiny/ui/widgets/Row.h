@@ -11,13 +11,14 @@
 namespace tiny {
 	class Row : public Widget {
 	public:
-		explicit Row(std::vector<std::unique_ptr<Widget>> children, float spacing = 0.0f, CrossAxisAlignment crossAxisAlignment = CrossAxisAlignment::Start, Key key = Key());
+		explicit Row(std::vector<std::unique_ptr<Widget>> children, float spacing, CrossAxisAlignment crossAxisAlignment, MainAxisAlignment mainAxisAlignment, Key key = Key());
 
 		const std::vector<std::unique_ptr<Widget>>& children() const;
 
 		float spacing() const;
 
 		CrossAxisAlignment crossAxisAlignment() const;
+		MainAxisAlignment mainAxisAlignment() const;
 
 		std::unique_ptr<Element> createElement() const override;
 
@@ -27,5 +28,6 @@ namespace tiny {
 		float childSpacing = 0.0f;
 
 		CrossAxisAlignment childAlignment = CrossAxisAlignment::Start;
+		MainAxisAlignment mainAlignment = MainAxisAlignment::Start;
 	};
 }
