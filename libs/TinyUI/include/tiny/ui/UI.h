@@ -40,6 +40,7 @@
 #include <tiny/ui/widgets/DropShadow.h>
 #include <tiny/ui/widgets/BackdropBlur.h>
 #include <tiny/ui/widgets/Transform.h>
+#include <tiny/ui/widgets/AspectRatio.h>
 
 namespace tiny::ui {
 	template <typename WidgetType, typename... Arguments>
@@ -189,5 +190,9 @@ namespace tiny::ui {
 		spec.pivot = pivot;
 
 		return make<Transform>(spec, std::move(child), std::move(key));
+	}
+
+	inline WidgetPtr aspectRatio(float ratio, WidgetPtr child, Key key = Key()) {
+		return make<AspectRatio>(ratio, std::move(child), std::move(key));
 	}
 }
