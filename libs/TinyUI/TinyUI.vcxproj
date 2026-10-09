@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -117,6 +117,7 @@
     <ClInclude Include="include\tiny\ui\FocusManager.h" />
     <ClInclude Include="include\tiny\ui\Key.h" />
     <ClInclude Include="include\tiny\ui\layout\Alignment.h" />
+    <ClInclude Include="include\tiny\ui\layout\Axis.h" />
     <ClInclude Include="include\tiny\ui\layout\Constraints.h" />
     <ClInclude Include="include\tiny\ui\LayoutContext.h" />
     <ClInclude Include="include\tiny\ui\layout\ParentData.h" />
