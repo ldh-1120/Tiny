@@ -34,14 +34,38 @@ namespace tiny {
 			return axis == Axis::Horizontal ? constraints.maxWidth() : constraints.maxHeight();
 		}
 
-		Constraints makeNonFlexConstraints(const Constraints& constraints, Axis axis) {
+		Constraints makeNonFlexConstraints(const Constraints& constraints, Axis axis, CrossAxisAlignment crossAlignment) {
 			constexpr float infinity = std::numeric_limits<float>::infinity();
-			return axis == Axis::Horizontal ? Constraints(0.0f, infinity, 0.0f, constraints.maxHeight()) : Constraints(0.0f, constraints.maxWidth(), 0.0f, infinity);
+			if (axis == Axis::Horizontal) {
+				float minimumHeight = 0.0f;
+				if (crossAlignment == CrossAxisAlignment::Stretch && constraints.hasBoundedHeight())
+					minimumHeight = constraints.maxHeight();
+
+				return Constraints(0.0f, infinity, minimumHeight, constraints.maxHeight());
+			}
+
+			float minimumWidth = 0.0f;
+			if (crossAlignment == CrossAxisAlignment::Stretch && constraints.hasBoundedWidth())
+				minimumWidth = constraints.maxWidth();
+
+			return Constraints(minimumWidth, constraints.maxWidth(), 0.0f, infinity);
 		}
 
-		Constraints makeFlexConstraints(const Constraints& constraints, Axis axis, float allocatedMainExtent, FlexFit fit) {
+		Constraints makeFlexConstraints(const Constraints& constraints, Axis axis, float allocatedMainExtent, FlexFit fit, CrossAxisAlignment crossAlignment) {
 			float minimumMainExtent = fit == FlexFit::Tight ? allocatedMainExtent : 0.0f;
-			return axis == Axis::Horizontal ? Constraints(minimumMainExtent, allocatedMainExtent, 0.0f, constraints.maxHeight()) : Constraints(0.0f, constraints.maxWidth(), minimumMainExtent, allocatedMainExtent);
+			if (axis == Axis::Horizontal) {
+				float minimumHeight = 0.0f;
+				if (crossAlignment == CrossAxisAlignment::Stretch && constraints.hasBoundedHeight())
+					minimumHeight = constraints.maxHeight();
+
+				return Constraints(minimumMainExtent, allocatedMainExtent, minimumHeight, constraints.maxHeight());
+			}
+
+			float minimumWidth = 0.0f;
+			if (crossAlignment == CrossAxisAlignment::Stretch && constraints.hasBoundedWidth())
+				minimumWidth = constraints.maxWidth();
+
+			return Constraints(minimumWidth, constraints.maxWidth(), minimumMainExtent, allocatedMainExtent);
 		}
 
 		float mainPosition(const Rect& rect, Axis axis) {
@@ -101,7 +125,7 @@ namespace tiny {
 		std::size_t visibleChildCount = 0;
 
 		bool boundedMainAxis = hasBoundedMainAxis(constraints, axisValue);
-		Constraints normalChildConstraints = makeNonFlexConstraints(constraints, axisValue);
+		Constraints normalChildConstraints = makeNonFlexConstraints(constraints, axisValue, crossAxisAlignmentValue);
 
 		for (const std::unique_ptr<Element>& child : children()) {
 			if (!child)
@@ -143,7 +167,7 @@ namespace tiny {
 					continue;
 
 				float allocatedMainExtent = remainingMainExtent * flexData->flex / totalFlex;
-				Constraints flexConstraints = makeFlexConstraints(constraints, axisValue, allocatedMainExtent, flexData->fit);
+				Constraints flexConstraints = makeFlexConstraints(constraints, axisValue, allocatedMainExtent, flexData->fit, crossAxisAlignmentValue);
 
 				Size childSize = child->measure(context, flexConstraints);
 				totalMainExtent += mainExtent(childSize, axisValue);
