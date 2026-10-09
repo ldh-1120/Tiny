@@ -33,6 +33,9 @@ namespace tiny {
 		void* d2dFactoryHandle() const;
 		void* dwriteFactoryHandle() const;
 
+		void* d3dDeviceHandle() const;
+		void* d2dDeviceHandle() const;
+
 		friend class WindowRenderer;
 	};
 }

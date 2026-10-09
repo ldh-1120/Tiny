@@ -25,9 +25,9 @@
 namespace tiny {
 	class WindowRenderer::Impl {
 	public:
-		Impl(void* d2dFactoryHandle, void* dwriteFactoryHandle, Window& window) : d2dFactory(static_cast<ID2D1Factory1*>(d2dFactoryHandle)), dwriteFactory(static_cast<IDWriteFactory*>(dwriteFactoryHandle)), window(window) {
-			createD3DDevice();
-			createD2DDevice(d2dFactory);
+		Impl(void* d3dDeviceHandle, void* d2dDeviceHandle, void* dwriteFactoryHandle, Window& window)
+			: d3dDevice(static_cast<ID3D11Device*>(d3dDeviceHandle)), d2dDevice(static_cast<ID2D1Device*>(d2dDeviceHandle)), dwriteFactory(static_cast<IDWriteFactory*>(dwriteFactoryHandle)), window(window) {
+			createDeviceContext();
 			createSwapChain();
 
 			Size clientSize = window.clientSize();
@@ -41,28 +41,9 @@ namespace tiny {
 			resizedSubscription = window.resized.subscribe([this](const Size& size) { resize(size); });
 			dpiScaleSubscription = window.dpiChanged.subscribe([this](float scale) { updateDpi(scale); });
 		}
-
-		void createD3DDevice() {
-			UINT flags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
-			HRESULT result = D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, flags, nullptr, 0, D3D11_SDK_VERSION, d3dDevice.ReleaseAndGetAddressOf(), nullptr, nullptr);
-			if (FAILED(result))
-				result = D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_WARP, nullptr, flags, nullptr, 0, D3D11_SDK_VERSION, d3dDevice.ReleaseAndGetAddressOf(), nullptr, nullptr);
-
-			if (FAILED(result))
-				throw std::runtime_error("Failed to create D3D11 device.");
-		}
-
-		void createD2DDevice(ID2D1Factory1* factory) {
-			Microsoft::WRL::ComPtr<IDXGIDevice> dxgiDevice;
-			HRESULT result = d3dDevice.As(&dxgiDevice);
-			if (FAILED(result))
-				throw std::runtime_error("Failed to get DXGI device.");
-
-			result = factory->CreateDevice(dxgiDevice.Get(), d2dDevice.ReleaseAndGetAddressOf());
-			if (FAILED(result))
-				throw std::runtime_error("Failed to create D2D device.");
-
-			result = d2dDevice->CreateDeviceContext(D2D1_DEVICE_CONTEXT_OPTIONS_NONE, d2dContext.ReleaseAndGetAddressOf());
+		
+		void createDeviceContext() {
+			HRESULT result = d2dDevice->CreateDeviceContext(D2D1_DEVICE_CONTEXT_OPTIONS_NONE, d2dContext.ReleaseAndGetAddressOf());
 			if (FAILED(result))
 				throw std::runtime_error("Failed to create D2D device context.");
 		}
@@ -223,7 +204,6 @@ namespace tiny {
 		}
 
 	private:
-		ID2D1Factory1* d2dFactory = nullptr;
 		IDWriteFactory* dwriteFactory = nullptr;
 
 		Window& window;
@@ -247,7 +227,7 @@ namespace tiny {
 		Subscription resizeEndedSubscription;
 	};
 
-	WindowRenderer::WindowRenderer(GraphicsContext& graphicsContext, Window& window) : impl(std::make_unique<Impl>(graphicsContext.d2dFactoryHandle(), graphicsContext.dwriteFactoryHandle(), window)) { }
+	WindowRenderer::WindowRenderer(GraphicsContext& graphicsContext, Window& window) : impl(std::make_unique<Impl>(graphicsContext.d3dDeviceHandle(), graphicsContext.d2dDeviceHandle(), graphicsContext.dwriteFactoryHandle(), window)) { }
 	WindowRenderer::~WindowRenderer() = default;
 
 	void WindowRenderer::render(const DrawCallback& callback) {

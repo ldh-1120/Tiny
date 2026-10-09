@@ -15,6 +15,8 @@
 #include <vector>
 
 #include <Windows.h>
+#include <d3d11.h>
+#include <dxgi1_2.h>
 #include <d2d1_1.h>
 #include <dwrite.h>
 #include <wincodec.h>
@@ -24,6 +26,8 @@
 #pragma comment(lib, "dwrite.lib")
 #pragma comment(lib, "windowscodecs.lib")
 #pragma comment(lib, "ole32.lib")
+#pragma comment(lib, "d3d11.lib")
+#pragma comment(lib, "dxgi.lib")
 
 namespace {
 	DWRITE_FONT_WEIGHT getFontWeight(const tiny::TextStyle& style) {
@@ -57,12 +61,33 @@ namespace tiny {
 		Microsoft::WRL::ComPtr<ID2D1Factory1> d2dFactory;
 		Microsoft::WRL::ComPtr<IDWriteFactory> dwriteFactory;
 		Microsoft::WRL::ComPtr<IWICImagingFactory> wicFactory;
+
+		Microsoft::WRL::ComPtr<ID3D11Device> d3dDevice;
+		Microsoft::WRL::ComPtr<ID2D1Device> d2dDevice;
 	};
 
 	GraphicsContext::GraphicsContext() : impl(std::make_unique<Impl>()) {
 		HRESULT result = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, impl->d2dFactory.ReleaseAndGetAddressOf());
 		if (FAILED(result))
 			throw std::runtime_error("Failed to create D2D factory");
+
+		UINT flags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
+		result = D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, flags, nullptr, 0, D3D11_SDK_VERSION, impl->d3dDevice.ReleaseAndGetAddressOf(), nullptr, nullptr);
+		if (FAILED(result))
+			result = D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_WARP, nullptr, flags, nullptr, 0, D3D11_SDK_VERSION, impl->d3dDevice.ReleaseAndGetAddressOf(), nullptr, nullptr);
+
+		if (FAILED(result))
+			throw std::runtime_error("Failed to create D3D11 device.");
+
+		Microsoft::WRL::ComPtr<IDXGIDevice> dxgiDevice;
+
+		result = impl->d3dDevice.As(&dxgiDevice);
+		if (FAILED(result))
+			throw std::runtime_error("Failed to get DXGI device.");
+
+		result = impl->d2dFactory->CreateDevice(dxgiDevice.Get(), impl->d2dDevice.ReleaseAndGetAddressOf());
+		if (FAILED(result))
+			throw std::runtime_error("Failed to create D2D device.");
 
 		result = DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory), reinterpret_cast<IUnknown**>(impl->dwriteFactory.ReleaseAndGetAddressOf()));
 		if (FAILED(result))
@@ -225,5 +250,13 @@ namespace tiny {
 
 	void* GraphicsContext::dwriteFactoryHandle() const {
 		return impl->dwriteFactory.Get();
+	}
+
+	void* GraphicsContext::d3dDeviceHandle() const {
+		return impl->d3dDevice.Get();
+	}
+
+	void* GraphicsContext::d2dDeviceHandle() const {
+		return impl->d2dDevice.Get();
 	}
 }
