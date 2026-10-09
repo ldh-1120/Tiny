@@ -68,6 +68,7 @@
     <ClCompile Include="src\animation\AnimationController.cpp" />
     <ClCompile Include="src\Element.cpp" />
     <ClCompile Include="src\FocusManager.cpp" />
+    <ClCompile Include="src\layout\FlexElement.cpp" />
     <ClCompile Include="src\MultiChildElement.cpp" />
     <ClCompile Include="src\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -120,6 +121,7 @@
     <ClInclude Include="include\tiny\ui\layout\Axis.h" />
     <ClInclude Include="include\tiny\ui\layout\Constraints.h" />
     <ClInclude Include="include\tiny\ui\LayoutContext.h" />
+    <ClInclude Include="include\tiny\ui\layout\FlexElement.h" />
     <ClInclude Include="include\tiny\ui\layout\ParentData.h" />
     <ClInclude Include="include\tiny\ui\MultiChildElement.h" />
     <ClInclude Include="include\tiny\ui\ProxyElement.h" />

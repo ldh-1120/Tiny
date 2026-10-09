@@ -99,6 +99,7 @@
     <ClCompile Include="src\widgets\BackdropBlur.cpp" />
     <ClCompile Include="src\widgets\Transform.cpp" />
     <ClCompile Include="src\ProxyElement.cpp" />
+    <ClCompile Include="src\layout\FlexElement.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\tiny\TinyUI.h">
@@ -221,5 +222,7 @@
     <ClInclude Include="include\tiny\ui\widgets\Transform.h" />
     <ClInclude Include="include\tiny\ui\layout\ParentData.h" />
     <ClInclude Include="include\tiny\ui\ProxyElement.h" />
+    <ClInclude Include="include\tiny\ui\layout\Axis.h" />
+    <ClInclude Include="include\tiny\ui\layout\FlexElement.h" />
   </ItemGroup>
 </Project>
