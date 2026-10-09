@@ -330,6 +330,19 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previousInstance, PWSTR comman
 		tiny::UIRoot uiRoot;
 		uiRoot.setClipboard(clipboard);
 		uiRoot.setTextInputContext(textInputContext);
+		uiRoot.setOverlay(
+			tiny::ui::stack(tiny::ui::children(
+				tiny::ui::positioned(
+					tiny::PositionedSpec {
+						.left = 300.0f,
+						.top = 200.0f,
+						.width = 160.0f,
+						.height = 80.0f
+					},
+					tiny::ui::button(U"Click Me", [&uiRoot]() { })
+				)
+			))
+		);
 
 		tiny::Subscription uiRepaintSubscription = uiRoot.repaintRequested.subscribe([&window]() {
 			window.requestRepaint();

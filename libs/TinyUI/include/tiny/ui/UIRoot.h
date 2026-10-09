@@ -79,6 +79,8 @@ namespace tiny {
 
 		PointerCursor pointerCursor() const;
 
+		void setOverlay(std::unique_ptr<Widget> widget);
+
 	private:
 		Element* hitTest(const Point& position);
 
@@ -115,6 +117,8 @@ namespace tiny {
 
 		void removeHoveredPathFrom(Element* element);
 
+		void reconcileOverlayWidget(std::unique_ptr<Widget> widget);
+
 	private:
 		std::unique_ptr<Widget> rootWidget;
 		std::unique_ptr<Element> rootElement;
@@ -141,6 +145,9 @@ namespace tiny {
 		std::unordered_set<Element*> frameElements;
 
 		bool focusVisibilityValue = false;
+
+		std::unique_ptr<Widget> overlayWidget;
+		std::unique_ptr<Element> overlayElement;
 
 		friend class Element;
 	};

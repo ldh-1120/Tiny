@@ -100,6 +100,7 @@
     <ClCompile Include="src\widgets\Transform.cpp" />
     <ClCompile Include="src\ProxyElement.cpp" />
     <ClCompile Include="src\layout\FlexElement.cpp" />
+    <ClCompile Include="src\widgets\AspectRatio.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\tiny\TinyUI.h">
@@ -224,5 +225,6 @@
     <ClInclude Include="include\tiny\ui\ProxyElement.h" />
     <ClInclude Include="include\tiny\ui\layout\Axis.h" />
     <ClInclude Include="include\tiny\ui\layout\FlexElement.h" />
+    <ClInclude Include="include\tiny\ui\widgets\AspectRatio.h" />
   </ItemGroup>
 </Project>

@@ -20,6 +20,9 @@ namespace tiny {
 	UIRoot::~UIRoot() {
 		clearPointerState();
 
+		if (overlayElement)
+			overlayElement->unmount();
+
 		if (rootElement)
 			rootElement->unmount();
 	}
@@ -63,29 +66,33 @@ namespace tiny {
 		lastLayoutSize = safeSize;
 		hasLayoutSize = true;
 
-		if (!rootElement) {
-			layoutDirty = true;
-			return;
-		}
-
 		Constraints constraints = Constraints::tight(safeSize);
+		Rect rootBounds(0.0f, 0.0f, safeSize.width, safeSize.height);
 
 		LayoutContext context(graphicsContext);
-		rootElement->measure(context, constraints);
-		rootElement->arrange(Rect(0.0f, 0.0f, safeSize.width, safeSize.height));
+		if (rootElement) {
+			rootElement->measure(context, constraints);
+			rootElement->arrange(rootBounds);
+		}
+
+		if (overlayElement) {
+			overlayElement->measure(context, constraints);
+			overlayElement->arrange(rootBounds);
+		}
 
 		layoutDirty = false;
 	}
 
 	void UIRoot::paint(Canvas& canvas) {
-		if (!rootElement)
-			return;
+		if (rootElement)
+			rootElement->paint(canvas);
 
-		rootElement->paint(canvas);
+		if (overlayElement)
+			overlayElement->paint(canvas);
 	}
 
 	bool UIRoot::empty() const {
-		return rootElement == nullptr;
+		return rootElement == nullptr && overlayElement == nullptr;
 	}
 
 	bool UIRoot::keyPressed(const KeyEvent& event) {
@@ -168,11 +175,22 @@ namespace tiny {
 		return target->pointerCursor();
 	}
 
-	Element* UIRoot::hitTest(const Point& position) {
-		if (!rootElement)
-			return nullptr;
+	void UIRoot::setOverlay(std::unique_ptr<Widget> widget) {
+		reconcileOverlayWidget(std::move(widget));
+		invalidateLayout();
+	}
 
-		return rootElement->hitTest(position);
+	Element* UIRoot::hitTest(const Point& position) {
+		if (overlayElement) {
+			Element* result = overlayElement->hitTest(position);
+			if (result)
+				return result;
+		}
+
+		if (rootElement)
+			return rootElement->hitTest(position);
+
+		return nullptr;
 	}
 
 	void UIRoot::updateHoveredElement(Element* element, const PointerEvent& event) {
@@ -309,7 +327,11 @@ namespace tiny {
 			return false;
 
 		std::vector<Element*> focusableElements;
-		rootElement->collectFocusableElements(focusableElements);
+		if (rootElement)
+			rootElement->collectFocusableElements(focusableElements);
+
+		if (overlayElement)
+			overlayElement->collectFocusableElements(focusableElements);
 
 		if (focusableElements.empty())
 			return false;
@@ -512,5 +534,35 @@ namespace tiny {
 		hoveredPath.resize(targetIndex);
 		
 		hoveredElement = hoveredPath.empty() ? nullptr : hoveredPath.back();
+	}
+
+	void UIRoot::reconcileOverlayWidget(std::unique_ptr<Widget> widget) {
+		if (!widget) {
+			if (overlayElement)
+				overlayElement->unmount();
+
+			overlayElement.reset();
+			overlayWidget.reset();
+
+			return;
+		}
+
+		if (overlayElement && overlayElement->canUpdate(*widget)) {
+			overlayElement->update(*widget);
+			overlayWidget = std::move(widget);
+
+			return;
+		}
+
+		if (overlayElement)
+			overlayElement->unmount();
+
+		overlayElement.reset();
+
+		overlayElement = widget->createElement();
+		if (overlayElement)
+			overlayElement->mount(*this, nullptr);
+
+		overlayWidget = std::move(widget);
 	}
 }

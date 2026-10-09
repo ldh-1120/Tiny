@@ -85,6 +85,7 @@
     <ClCompile Include="src\visual\FocusRing.cpp" />
     <ClCompile Include="src\widgets\AbsorbPointer.cpp" />
     <ClCompile Include="src\widgets\Align.cpp" />
+    <ClCompile Include="src\widgets\AspectRatio.cpp" />
     <ClCompile Include="src\widgets\BackdropBlur.cpp" />
     <ClCompile Include="src\widgets\Blur.cpp" />
     <ClCompile Include="src\widgets\Box.cpp" />
@@ -160,6 +161,7 @@
     <ClInclude Include="include\tiny\ui\widgets\TitleBar.h" />
     <ClInclude Include="include\tiny\ui\widgets\Transform.h" />
     <ClInclude Include="src\pch.h" />
+    <ClInclude Include="include\tiny\ui\widgets\AspectRatio.h" />
     <ClInclude Include="src\widgets\BackdropSnapshot.h" />
     <ClInclude Include="src\widgets\EffectSurfaceCache.h" />
     <ClInclude Include="src\widgets\OffscreenLayer.h" />
