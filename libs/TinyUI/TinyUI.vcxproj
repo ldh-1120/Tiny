@@ -70,6 +70,7 @@
     <ClCompile Include="src\FocusManager.cpp" />
     <ClCompile Include="src\layout\FlexElement.cpp" />
     <ClCompile Include="src\MultiChildElement.cpp" />
+    <ClCompile Include="src\overlay\PopupController.cpp" />
     <ClCompile Include="src\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</MultiProcessorCompilation>
@@ -125,6 +126,7 @@
     <ClInclude Include="include\tiny\ui\layout\FlexElement.h" />
     <ClInclude Include="include\tiny\ui\layout\ParentData.h" />
     <ClInclude Include="include\tiny\ui\MultiChildElement.h" />
+    <ClInclude Include="include\tiny\ui\overlay\PopupController.h" />
     <ClInclude Include="include\tiny\ui\ProxyElement.h" />
     <ClInclude Include="include\tiny\ui\scroll\ScrollModel.h" />
     <ClInclude Include="include\tiny\ui\SingleChildElement.h" />

@@ -41,6 +41,8 @@
 #include <tiny/ui/widgets/BackdropBlur.h>
 #include <tiny/ui/widgets/Transform.h>
 #include <tiny/ui/widgets/AspectRatio.h>
+#include <tiny/ui/widgets/PopupAnchor.h>
+#include <tiny/ui/overlay/PopupController.h>
 
 namespace tiny::ui {
 	template <typename WidgetType, typename... Arguments>
@@ -194,5 +196,9 @@ namespace tiny::ui {
 
 	inline WidgetPtr aspectRatio(float ratio, WidgetPtr child, Key key = Key()) {
 		return make<AspectRatio>(ratio, std::move(child), std::move(key));
+	}
+
+	inline WidgetPtr popupAnchor(PopupController& controller, WidgetPtr child, Key key = Key()) {
+		return make<PopupAnchor>(controller, std::move(child), std::move(key));
 	}
 }
