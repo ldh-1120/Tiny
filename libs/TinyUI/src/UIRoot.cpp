@@ -48,7 +48,7 @@ namespace tiny {
 	}
 
 	void UIRoot::requestRebuild() {
-		if (!uiBuilder.valid())
+		if (!uiBuilder.valid() && overlayEntries.empty())
 			return;
 
 		if (rebuildDirty)
@@ -199,7 +199,7 @@ namespace tiny {
 		entry.id = id;
 		entry.builder = std::move(builder);
 
-		overlayEntries.push_back(entry);
+		overlayEntries.push_back(std::move(entry));
 
 		rebuildOverlayEntry(overlayEntries.back());
 		invalidateLayout();
@@ -371,7 +371,7 @@ namespace tiny {
 	bool UIRoot::moveFocus(bool forward) {
 		applyFocusReason(FocusReason::Keyboard);
 
-		if (!rootElement)
+		if (!rootElement && overlayEntries.empty())
 			return false;
 
 		std::vector<Element*> focusableElements;
