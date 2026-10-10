@@ -3,6 +3,7 @@
 #include <memory>
 #include <unordered_set>
 #include <vector>
+#include <cstdint>
 
 #include <tiny/core/Event.h>
 #include <tiny/core/Size.h>
@@ -19,6 +20,7 @@
 #include <tiny/ui/focus/FocusReason.h>
 
 namespace tiny {
+	using OverlayEntryId = std::uint64_t;
 	class Canvas;
 	class Element;
 	class Widget;
@@ -79,9 +81,19 @@ namespace tiny {
 
 		PointerCursor pointerCursor() const;
 
-		void setOverlay(std::unique_ptr<Widget> widget);
+		OverlayEntryId insertOverlay(UIBuilder builder);
+		bool removeOverlay(OverlayEntryId id);
 
 	private:
+		struct OverlayEntryRecord {
+			OverlayEntryId id = 0;
+
+			UIBuilder builder;
+
+			std::unique_ptr<Widget> widget;
+			std::unique_ptr<Element> element;
+		};
+
 		Element* hitTest(const Point& position);
 
 		void updateHoveredElement(Element* element, const PointerEvent& event);
@@ -117,7 +129,7 @@ namespace tiny {
 
 		void removeHoveredPathFrom(Element* element);
 
-		void reconcileOverlayWidget(std::unique_ptr<Widget> widget);
+		void rebuildOverlayEntry(OverlayEntryRecord& entry);
 
 	private:
 		std::unique_ptr<Widget> rootWidget;
@@ -146,8 +158,8 @@ namespace tiny {
 
 		bool focusVisibilityValue = false;
 
-		std::unique_ptr<Widget> overlayWidget;
-		std::unique_ptr<Element> overlayElement;
+		std::vector<OverlayEntryRecord> overlayEntries;
+		OverlayEntryId nextOverlayEntryId = 1;
 
 		friend class Element;
 	};
