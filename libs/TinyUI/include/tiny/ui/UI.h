@@ -41,7 +41,7 @@
 #include <tiny/ui/widgets/BackdropBlur.h>
 #include <tiny/ui/widgets/Transform.h>
 #include <tiny/ui/widgets/AspectRatio.h>
-#include <tiny/ui/widgets/PopupAnchor.h>
+#include <tiny/ui/overlay/PopupAnchor.h>
 #include <tiny/ui/overlay/PopupController.h>
 
 namespace tiny::ui {

@@ -17,11 +17,18 @@ namespace tiny {
 			return;
 
 		entryId = rootValue->insertOverlay(std::move(builder));
+		if (anchorStateValue)
+			anchorStateValue->popupOpen = entryId != 0;
 	}
 
 	void PopupController::close() {
-		if (!rootValue)
+		if (anchorStateValue)
+			anchorStateValue->popupOpen = false;
+
+		if (!rootValue) {
+			entryId = 0;
 			return;
+		}
 
 		if (entryId == 0)
 			return;

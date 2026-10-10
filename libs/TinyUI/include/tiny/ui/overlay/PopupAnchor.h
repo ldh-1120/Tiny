@@ -22,9 +22,12 @@ namespace tiny {
 		std::unique_ptr<Element> createElement() const override;
 
 	private:
-		std::shared_ptr<detail::PopupAnchorState> anchorStateValue;
+		std::shared_ptr<detail::PopupAnchorState> anchorStateHandle() const;
 
+	private:
 		std::unique_ptr<Widget> childWidget;
+
+		std::shared_ptr<detail::PopupAnchorState> anchorStateValue;
 
 		friend class PopupAnchorElement;
 	};

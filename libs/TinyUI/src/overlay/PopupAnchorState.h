@@ -7,5 +7,6 @@ namespace tiny::detail {
 		const void* owner = nullptr;
 
 		Rect bounds;
+		bool popupOpen = false;
 	};
 }
