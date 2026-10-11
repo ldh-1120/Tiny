@@ -228,6 +228,18 @@ tiny::WidgetPtr buildToolbar(PlaygroundState& state, tiny::UIRoot& uiRoot, tiny:
 	using namespace tiny;
 	using namespace tiny::ui;
 
+	UIBuilder popupContent([&state, &uiRoot, &styles]() -> WidgetPtr {
+		return sizedBox(Size(220.0f, 128.0f),
+			stack(children(
+				make<Box>(Size(1.0f, 1.0f), Color::fromRgb(49, 50, 68)),
+				padding(12.0f, column(children(
+					text(U"Popup Playground", Color::fromRgb(205, 214, 244), styles.body),
+					button(U"Count +1", [&state, &uiRoot]() {
+			++state.count;
+			uiRoot.requestRebuild();
+		}, styles.toolbarButton)), 8.0f, CrossAxisAlignment::Stretch, MainAxisAlignment::Start)))));
+	});
+
 	return row(children(
 		button(U"Toggle Add", [&state, &uiRoot]() {
 		state.addEnabled = !state.addEnabled;
@@ -237,20 +249,7 @@ tiny::WidgetPtr buildToolbar(PlaygroundState& state, tiny::UIRoot& uiRoot, tiny:
 		state.count = 0;
 		uiRoot.requestRebuild();
 	}, styles.toolbarButton),
-		popupAnchor(popup,
-			button(U"Open Popup", [&popup, &state, &uiRoot, &styles]() {
-		popup.toggleAnchored(UIBuilder([&state, &uiRoot, &styles]() -> WidgetPtr {
-			return sizedBox(Size(220.0f, 128.0f),
-				stack(children(
-					make<Box>(Size(1.0f, 1.0f), Color::fromRgb(49, 50, 68)),
-					padding(12.0f, column(children(
-						text(U"Popup Playground", Color::fromRgb(205, 214, 244), styles.body),
-						button(U"Count +1", [&state, &uiRoot]() {
-				++state.count;
-				uiRoot.requestRebuild();
-			}, styles.toolbarButton)), 8.0f, CrossAxisAlignment::Stretch, MainAxisAlignment::Start)))));
-		}));
-	}, styles.toolbarButton))), 8.0f, CrossAxisAlignment::Center, MainAxisAlignment::Start);
+		popupButton(popup, U"Open Popup", std::move(popupContent), styles.toolbarButton, 6.0f)), 8.0f, CrossAxisAlignment::Center, MainAxisAlignment::Start);
 }
 
 tiny::WidgetPtr buildContent(PlaygroundState& state, tiny::UIRoot& uiRoot, const std::shared_ptr<tiny::Image>& previewImage, const PlaygroundStyles& styles) {
