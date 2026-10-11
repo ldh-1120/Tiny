@@ -220,7 +220,7 @@ namespace tiny {
 		if (!rootValue || !builder.valid())
 			return;
 
-		entryId = rootValue->insertOverlay(std::move(builder), std::move(onOutsidePointerDown), std::move(onEscapePressed));
+		entryId = rootValue->insertOverlay(std::move(builder), std::move(onOutsidePointerDown), std::move(onEscapePressed), true);
 		if (anchorStateValue)
 			anchorStateValue->popupOpen = entryId != 0;
 	}

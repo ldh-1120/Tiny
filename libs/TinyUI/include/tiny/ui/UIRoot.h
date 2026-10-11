@@ -82,8 +82,10 @@ namespace tiny {
 
 		PointerCursor pointerCursor() const;
 
-		OverlayEntryId insertOverlay(UIBuilder builder, std::function<bool(const Point&)> onOutsidePointerDown = { }, std::function<bool()> onEscapePressed = { });
+		OverlayEntryId insertOverlay(UIBuilder builder, std::function<bool(const Point&)> onOutsidePointerDown = { }, std::function<bool()> onEscapePressed = { }, bool trapFocus = false);
 		bool removeOverlay(OverlayEntryId id);
+
+		bool collectFocusTargets(std::vector<Element*>& result);
 
 	private:
 		struct OverlayEntryRecord {
@@ -96,6 +98,9 @@ namespace tiny {
 
 			std::function<bool(const Point&)> onOutsidePointerDown;
 			std::function<bool()> onEscapePressed;
+
+			bool trapFocus = false;
+			Element* previousFocus = nullptr;
 		};
 
 		Element* hitTest(const Point& position);

@@ -213,7 +213,7 @@ namespace tiny {
 		return target->pointerCursor();
 	}
 
-	OverlayEntryId UIRoot::insertOverlay(UIBuilder builder, std::function<bool(const Point&)> onOutsidePointerDown, std::function<bool()> onEscapePressed) {
+	OverlayEntryId UIRoot::insertOverlay(UIBuilder builder, std::function<bool(const Point&)> onOutsidePointerDown, std::function<bool()> onEscapePressed, bool trapFocus) {
 		if (!builder.valid())
 			return 0;
 
@@ -224,10 +224,28 @@ namespace tiny {
 		entry.builder = std::move(builder);
 		entry.onOutsidePointerDown = std::move(onOutsidePointerDown);
 		entry.onEscapePressed = std::move(onEscapePressed);
+		entry.trapFocus = trapFocus;
+
+		if (trapFocus)
+			entry.previousFocus = focusManager.focusedElement();
 
 		overlayEntries.push_back(std::move(entry));
 
+		OverlayEntryRecord& inserted = overlayEntries.back();
+
 		rebuildOverlayEntry(overlayEntries.back());
+
+		if (trapFocus) {
+			std::vector<Element*> focusableElements;
+			if (inserted.element)
+				inserted.element->collectFocusableElements(focusableElements);
+
+			if (!focusableElements.empty())
+				requestFocus(focusableElements.front(), FocusReason::Programmatic);
+			else
+				focusManager.clearFocus();
+		}
+
 		invalidateLayout();
 
 		return id;
@@ -241,13 +259,59 @@ namespace tiny {
 		if (iterator == overlayEntries.end())
 			return false;
 
+		bool restoreFocus = iterator->trapFocus;
+		Element* previousFocus = iterator->previousFocus;
+
 		if (iterator->element)
 			iterator->element->unmount();
 
 		overlayEntries.erase(iterator);
+		if (restoreFocus) {
+			std::vector<Element*> focusableElements;
+
+			bool trapped = collectFocusTargets(focusableElements);
+
+			std::vector<Element*>::iterator previous = std::find(focusableElements.begin(), focusableElements.end(), previousFocus);
+			if (previousFocus != nullptr && previous != focusableElements.end())
+				requestFocus(previousFocus, FocusReason::Programmatic);
+			else if (trapped) {
+				Element* current = focusManager.focusedElement();
+
+				bool currentIsValid = std::find(focusableElements.begin(), focusableElements.end(), current) != focusableElements.end();
+				if (!currentIsValid) {
+					if (!focusableElements.empty())
+						requestFocus(focusableElements.front(), FocusReason::Programmatic);
+					else
+						focusManager.clearFocus();
+				}
+			}
+		}
+
 		invalidateLayout();
 
 		return true;
+	}
+
+	bool UIRoot::collectFocusTargets(std::vector<Element*>& result) {
+		for (std::size_t index = overlayEntries.size(); index > 0; --index) {
+			OverlayEntryRecord& entry = overlayEntries[index - 1];
+			if (!entry.trapFocus)
+				continue;
+
+			if (entry.element)
+				entry.element->collectFocusableElements(result);
+
+			return true;
+		}
+
+		if (rootElement)
+			rootElement->collectFocusableElements(result);
+
+		for (OverlayEntryRecord& entry : overlayEntries)
+			if (entry.element)
+				entry.element->collectFocusableElements(result);
+
+		return false;
 	}
 
 	Element* UIRoot::hitTest(const Point& position) {
@@ -426,18 +490,10 @@ namespace tiny {
 			return false;
 
 		std::vector<Element*> focusableElements;
-		if (rootElement)
-			rootElement->collectFocusableElements(focusableElements);
 
-		for (OverlayEntryRecord& entry : overlayEntries) {
-			if (!entry.element)
-				continue;
-
-			entry.element->collectFocusableElements(focusableElements);
-		}
-
+		bool trapped = collectFocusTargets(focusableElements);
 		if (focusableElements.empty())
-			return false;
+			return trapped;
 
 		Element* current = focusManager.focusedElement();
 
