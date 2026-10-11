@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <functional>
 
 #include <tiny/core/Rect.h>
 #include <tiny/ui/UIBuilder.h>
@@ -34,6 +35,9 @@ namespace tiny {
 	private:
 		std::shared_ptr<detail::PopupAnchorState> anchorStateHandle() const;
 
+		void openInternal(UIBuilder builder, std::function<bool(const Point&)> onOutsidePointerDown);
+
+	private:
 		UIRoot* rootValue = nullptr;
 		OverlayEntryId entryId = 0;
 

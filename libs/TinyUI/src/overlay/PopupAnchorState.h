@@ -8,5 +8,8 @@ namespace tiny::detail {
 
 		Rect bounds;
 		bool popupOpen = false;
+
+		Rect popupBounds;
+		bool popupBoundsValid = false;
 	};
 }

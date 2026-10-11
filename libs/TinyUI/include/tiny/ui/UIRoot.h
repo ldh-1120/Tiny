@@ -4,6 +4,7 @@
 #include <unordered_set>
 #include <vector>
 #include <cstdint>
+#include <functional>
 
 #include <tiny/core/Event.h>
 #include <tiny/core/Size.h>
@@ -81,7 +82,7 @@ namespace tiny {
 
 		PointerCursor pointerCursor() const;
 
-		OverlayEntryId insertOverlay(UIBuilder builder);
+		OverlayEntryId insertOverlay(UIBuilder builder, std::function<bool(const Point&)> onOutsidePointerDown = { });
 		bool removeOverlay(OverlayEntryId id);
 
 	private:
@@ -92,6 +93,8 @@ namespace tiny {
 
 			std::unique_ptr<Widget> widget;
 			std::unique_ptr<Element> element;
+
+			std::function<bool(const Point&)> onOutsidePointerDown;
 		};
 
 		Element* hitTest(const Point& position);

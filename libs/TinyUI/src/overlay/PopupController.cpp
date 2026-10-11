@@ -66,6 +66,9 @@ namespace tiny {
 			}
 
 			void arrangeOverride(const Rect& bounds) override {
+				if (stateValue)
+					stateValue->popupBoundsValid = false;
+
 				if (!hasChild() || !stateValue || !stateValue->owner)
 					return;
 
@@ -89,7 +92,11 @@ namespace tiny {
 				float maximumY = std::max(bounds.top(), bounds.bottom() - height);
 				y = std::clamp(y, bounds.top(), maximumY);
 
-				child()->arrange(Rect(x, y, width, height));
+				Rect popupBounds = Rect(x, y, width, height);
+				child()->arrange(popupBounds);
+
+				stateValue->popupBounds = popupBounds;
+				stateValue->popupBoundsValid = true;
 			}
 
 			void paintOverride(Canvas& canvas) override {
@@ -104,6 +111,16 @@ namespace tiny {
 					return nullptr;
 
 				return SingleChildElement::hitTestChildren(position);
+			}
+
+			bool hitTestSelf(const Point& position) const override {
+				if (!stateValue || !stateValue->owner)
+					return false;
+
+				if (!stateValue->popupBoundsValid)
+					return false;
+
+				return stateValue->popupBounds.contains(position);
 			}
 
 		private:
@@ -122,14 +139,7 @@ namespace tiny {
 	}
 
 	void PopupController::open(UIBuilder builder) {
-		close();
-
-		if (!rootValue)
-			return;
-
-		entryId = rootValue->insertOverlay(std::move(builder));
-		if (anchorStateValue)
-			anchorStateValue->popupOpen = entryId != 0;
+		openInternal(std::move(builder), { });
 	}
 
 	void PopupController::openAnchored(UIBuilder builder, float gap) {
@@ -139,18 +149,33 @@ namespace tiny {
 		std::shared_ptr<detail::PopupAnchorState> state = anchorStateValue;
 
 		float safeGap = std::max(gap, 0.0f);
-		open(UIBuilder([
+		UIBuilder popupBuilder([
 			builder = std::move(builder),
 			state = std::move(state),
 			safeGap
 		]() -> WidgetPtr {
 			return std::make_unique<AnchoredPopupWidget>(state, builder.build(), safeGap);
-		}));
+		});
+
+		std::function<bool(const Point&)> outsideHandler = [this, state](const Point& position) -> bool {
+			if (!state->popupBoundsValid)
+				return false;
+
+			if (state->owner && state->popupBounds.contains(position))
+				return false;
+
+			close();
+			return true;
+		};
+
+		openInternal(std::move(popupBuilder), std::move(outsideHandler));
 	}
 
 	void PopupController::close() {
-		if (anchorStateValue)
+		if (anchorStateValue) {
 			anchorStateValue->popupOpen = false;
+			anchorStateValue->popupBoundsValid = false;
+		}
 
 		if (!rootValue) {
 			entryId = 0;
@@ -181,5 +206,16 @@ namespace tiny {
 
 	std::shared_ptr<detail::PopupAnchorState> PopupController::anchorStateHandle() const {
 		return anchorStateValue;
+	}
+
+	void PopupController::openInternal(UIBuilder builder, std::function<bool(const Point&)> onOutsidePointerDown) {
+		close();
+
+		if (!rootValue || !builder.valid())
+			return;
+
+		entryId = rootValue->insertOverlay(std::move(builder), std::move(onOutsidePointerDown));
+		if (anchorStateValue)
+			anchorStateValue->popupOpen = entryId != 0;
 	}
 }

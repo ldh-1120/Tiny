@@ -189,7 +189,7 @@ namespace tiny {
 		return target->pointerCursor();
 	}
 
-	OverlayEntryId UIRoot::insertOverlay(UIBuilder builder) {
+	OverlayEntryId UIRoot::insertOverlay(UIBuilder builder, std::function<bool(const Point&)> onOutsidePointerDown) {
 		if (!builder.valid())
 			return 0;
 
@@ -198,6 +198,7 @@ namespace tiny {
 		OverlayEntryRecord entry;
 		entry.id = id;
 		entry.builder = std::move(builder);
+		entry.onOutsidePointerDown = std::move(onOutsidePointerDown);
 
 		overlayEntries.push_back(std::move(entry));
 
@@ -267,6 +268,21 @@ namespace tiny {
 	}
 
 	bool UIRoot::pointerPressed(const PointerEvent& event) {
+		if (event.button == PointerButton::Left && hasLayoutSize && !layoutDirty) {
+			for (std::size_t index = overlayEntries.size(); index > 0; --index) {
+				std::function<bool(const Point&)> handler = overlayEntries[index - 1].onOutsidePointerDown;
+				if (!handler)
+					continue;
+
+				if (handler(event.position)) {
+					updateHoveredElement(hitTest(event.position));
+					return true;
+				}
+
+				break;
+			}
+		}
+
 		Element* target = hitTest(event.position);
 		updateHoveredElement(target, event);
 
