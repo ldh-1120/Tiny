@@ -101,6 +101,7 @@
     <ClCompile Include="src\widgets\ImageViewer.cpp" />
     <ClCompile Include="src\widgets\Opacity.cpp" />
     <ClCompile Include="src\widgets\Padding.cpp" />
+    <ClCompile Include="src\overlay\PopupAnchor.cpp" />
     <ClCompile Include="src\widgets\Positioned.cpp" />
     <ClCompile Include="src\widgets\Row.cpp" />
     <ClCompile Include="src\widgets\ScrollView.cpp" />
@@ -126,6 +127,7 @@
     <ClInclude Include="include\tiny\ui\layout\FlexElement.h" />
     <ClInclude Include="include\tiny\ui\layout\ParentData.h" />
     <ClInclude Include="include\tiny\ui\MultiChildElement.h" />
+    <ClInclude Include="src\overlay\PopupAnchorState.h" />
     <ClInclude Include="include\tiny\ui\overlay\PopupController.h" />
     <ClInclude Include="include\tiny\ui\ProxyElement.h" />
     <ClInclude Include="include\tiny\ui\scroll\ScrollModel.h" />
@@ -153,6 +155,7 @@
     <ClInclude Include="include\tiny\ui\widgets\ImageViewer.h" />
     <ClInclude Include="include\tiny\ui\widgets\Opacity.h" />
     <ClInclude Include="include\tiny\ui\widgets\Padding.h" />
+    <ClInclude Include="include\tiny\ui\overlay\PopupAnchor.h" />
     <ClInclude Include="include\tiny\ui\widgets\Positioned.h" />
     <ClInclude Include="include\tiny\ui\widgets\Row.h" />
     <ClInclude Include="include\tiny\ui\widgets\ScrollView.h" />

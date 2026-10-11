@@ -39,13 +39,15 @@ namespace tiny {
 			if (!anchorStateValue)
 				return;
 
-			bool changed = anchorStateValue->owner != this || !sameRect(anchorStateValue->bounds, bounds);
-
 			anchorStateValue->owner = this;
 			anchorStateValue->bounds = bounds;
+		}
 
-			if (changed && anchorStateValue->popupOpen)
-				markNeedsLayout();
+		void unmountOverride() override {
+			clearAnchor();
+
+			if (hasChild())
+				child()->unmount();
 		}
 
 	private:
@@ -66,7 +68,7 @@ namespace tiny {
 		}
 
 		void clearAnchor() {
-			if (anchorStateValue)
+			if (!anchorStateValue)
 				return;
 
 			if (anchorStateValue->owner != this)

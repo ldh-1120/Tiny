@@ -29,6 +29,8 @@ namespace tiny {
 		bool hasAnchor() const;
 		Rect anchorBounds() const;
 
+		void openAnchored(UIBuilder builder, float gap = 4.0f);
+
 	private:
 		std::shared_ptr<detail::PopupAnchorState> anchorStateHandle() const;
 
