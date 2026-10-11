@@ -35,7 +35,7 @@ namespace tiny {
 	private:
 		std::shared_ptr<detail::PopupAnchorState> anchorStateHandle() const;
 
-		void openInternal(UIBuilder builder, std::function<bool(const Point&)> onOutsidePointerDown);
+		void openInternal(UIBuilder builder, std::function<bool(const Point&)> onOutsidePointerDown, std::function<bool()> onEscapePressed);
 
 	private:
 		UIRoot* rootValue = nullptr;

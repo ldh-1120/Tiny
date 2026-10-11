@@ -139,7 +139,10 @@ namespace tiny {
 	}
 
 	void PopupController::open(UIBuilder builder) {
-		openInternal(std::move(builder), { });
+		openInternal(std::move(builder), { }, [this]() -> bool {
+			close();
+			return true;
+		});
 	}
 
 	void PopupController::openAnchored(UIBuilder builder, float gap) {
@@ -168,7 +171,10 @@ namespace tiny {
 			return true;
 		};
 
-		openInternal(std::move(popupBuilder), std::move(outsideHandler));
+		openInternal(std::move(popupBuilder), std::move(outsideHandler), [this]() -> bool {
+			close();
+			return true;
+		});
 	}
 
 	void PopupController::close() {
@@ -208,13 +214,13 @@ namespace tiny {
 		return anchorStateValue;
 	}
 
-	void PopupController::openInternal(UIBuilder builder, std::function<bool(const Point&)> onOutsidePointerDown) {
+	void PopupController::openInternal(UIBuilder builder, std::function<bool(const Point&)> onOutsidePointerDown, std::function<bool()> onEscapePressed) {
 		close();
 
 		if (!rootValue || !builder.valid())
 			return;
 
-		entryId = rootValue->insertOverlay(std::move(builder), std::move(onOutsidePointerDown));
+		entryId = rootValue->insertOverlay(std::move(builder), std::move(onOutsidePointerDown), std::move(onEscapePressed));
 		if (anchorStateValue)
 			anchorStateValue->popupOpen = entryId != 0;
 	}

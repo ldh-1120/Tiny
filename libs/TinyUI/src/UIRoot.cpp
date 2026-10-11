@@ -110,6 +110,25 @@ namespace tiny {
 	}
 
 	bool UIRoot::keyPressed(const KeyEvent& event) {
+		if (event.key == KeyCode::Escape) {
+			if (suppressNextEscapeKeyRelease)
+				return true;
+
+			if (!event.repeated) {
+				for (std::size_t index = overlayEntries.size(); index > 0; --index) {
+					std::function<bool()> handler = overlayEntries[index - 1].onEscapePressed;
+					if (!handler)
+						continue;
+
+					if (handler()) {
+						suppressNextEscapeKeyRelease = true;
+						return true;
+					}
+
+					break;
+				}
+			}
+		}
 		if (event.key == KeyCode::Tab && !event.modifiers.control && !event.modifiers.alt && !event.repeated)
 			return moveFocus(!event.modifiers.shift);
 
@@ -121,6 +140,11 @@ namespace tiny {
 	}
 
 	bool UIRoot::keyReleased(const KeyEvent& event) {
+		if (event.key == KeyCode::Escape && suppressNextEscapeKeyRelease) {
+			suppressNextEscapeKeyRelease = false;
+			return true;
+		}
+
 		if (event.key == KeyCode::Tab && !event.modifiers.control && !event.modifiers.alt)
 			return focusManager.focusedElement() != nullptr;
 
@@ -189,7 +213,7 @@ namespace tiny {
 		return target->pointerCursor();
 	}
 
-	OverlayEntryId UIRoot::insertOverlay(UIBuilder builder, std::function<bool(const Point&)> onOutsidePointerDown) {
+	OverlayEntryId UIRoot::insertOverlay(UIBuilder builder, std::function<bool(const Point&)> onOutsidePointerDown, std::function<bool()> onEscapePressed) {
 		if (!builder.valid())
 			return 0;
 
@@ -199,6 +223,7 @@ namespace tiny {
 		entry.id = id;
 		entry.builder = std::move(builder);
 		entry.onOutsidePointerDown = std::move(onOutsidePointerDown);
+		entry.onEscapePressed = std::move(onEscapePressed);
 
 		overlayEntries.push_back(std::move(entry));
 
@@ -359,6 +384,8 @@ namespace tiny {
 
 		capturedElement->pointerCancel();
 		capturedElement = nullptr;
+
+		suppressNextLeftPointerRelease = false;
 	}
 
 	void UIRoot::clearPointerState() {

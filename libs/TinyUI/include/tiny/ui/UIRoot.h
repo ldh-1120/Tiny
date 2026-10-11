@@ -82,7 +82,7 @@ namespace tiny {
 
 		PointerCursor pointerCursor() const;
 
-		OverlayEntryId insertOverlay(UIBuilder builder, std::function<bool(const Point&)> onOutsidePointerDown = { });
+		OverlayEntryId insertOverlay(UIBuilder builder, std::function<bool(const Point&)> onOutsidePointerDown = { }, std::function<bool()> onEscapePressed = { });
 		bool removeOverlay(OverlayEntryId id);
 
 	private:
@@ -95,6 +95,7 @@ namespace tiny {
 			std::unique_ptr<Element> element;
 
 			std::function<bool(const Point&)> onOutsidePointerDown;
+			std::function<bool()> onEscapePressed;
 		};
 
 		Element* hitTest(const Point& position);
@@ -165,6 +166,7 @@ namespace tiny {
 		OverlayEntryId nextOverlayEntryId = 1;
 
 		bool suppressNextLeftPointerRelease = false;
+		bool suppressNextEscapeKeyRelease = false;
 
 		friend class Element;
 	};
