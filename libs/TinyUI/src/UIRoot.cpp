@@ -86,6 +86,24 @@ namespace tiny {
 			entry.element->arrange(rootBounds);
 		}
 
+		std::vector<OverlayEntryId> entryIds;
+		entryIds.reserve(overlayEntries.size());
+
+		for (const OverlayEntryRecord& entry : overlayEntries)
+			entryIds.push_back(entry.id);
+
+		for (OverlayEntryId id : entryIds) {
+			std::vector<OverlayEntryRecord>::iterator iterator = std::find_if(overlayEntries.begin(), overlayEntries.end(), [id](const OverlayEntryRecord& entry) {
+				return entry.id == id;
+			});
+			if (iterator == overlayEntries.end())
+				continue;
+
+			std::function<void()> callback = iterator->onAfterLayout;
+			if (callback)
+				callback();
+		}
+
 		layoutDirty = false;
 	}
 
@@ -213,7 +231,7 @@ namespace tiny {
 		return target->pointerCursor();
 	}
 
-	OverlayEntryId UIRoot::insertOverlay(UIBuilder builder, std::function<bool(const Point&)> onOutsidePointerDown, std::function<bool()> onEscapePressed, bool trapFocus) {
+	OverlayEntryId UIRoot::insertOverlay(UIBuilder builder, std::function<bool(const Point&)> onOutsidePointerDown, std::function<bool()> onEscapePressed, bool trapFocus, std::function<void()> onAfterLayout) {
 		if (!builder.valid())
 			return 0;
 
@@ -225,6 +243,7 @@ namespace tiny {
 		entry.onOutsidePointerDown = std::move(onOutsidePointerDown);
 		entry.onEscapePressed = std::move(onEscapePressed);
 		entry.trapFocus = trapFocus;
+		entry.onAfterLayout = std::move(onAfterLayout);
 
 		if (trapFocus)
 			entry.previousFocus = focusManager.focusedElement();
@@ -443,13 +462,13 @@ namespace tiny {
 	}
 
 	void UIRoot::pointerCaptureLost() {
+		suppressNextLeftPointerRelease = false;
+
 		if (!capturedElement)
 			return;
 
 		capturedElement->pointerCancel();
 		capturedElement = nullptr;
-
-		suppressNextLeftPointerRelease = false;
 	}
 
 	void UIRoot::clearPointerState() {

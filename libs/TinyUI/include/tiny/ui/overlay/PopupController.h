@@ -31,11 +31,12 @@ namespace tiny {
 		Rect anchorBounds() const;
 
 		void openAnchored(UIBuilder builder, float gap = 4.0f);
+		void toggleAnchored(UIBuilder builder, float gap = 4.0f);
 
 	private:
 		std::shared_ptr<detail::PopupAnchorState> anchorStateHandle() const;
 
-		void openInternal(UIBuilder builder, std::function<bool(const Point&)> onOutsidePointerDown, std::function<bool()> onEscapePressed);
+		void openInternal(UIBuilder builder, std::function<bool(const Point&)> onOutsidePointerDown, std::function<bool()> onEscapePressed, std::function<void()> onAfterLayout = { });
 
 	private:
 		UIRoot* rootValue = nullptr;

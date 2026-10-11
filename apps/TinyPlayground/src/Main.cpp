@@ -239,7 +239,7 @@ tiny::WidgetPtr buildToolbar(PlaygroundState& state, tiny::UIRoot& uiRoot, tiny:
 	}, styles.toolbarButton),
 		popupAnchor(popup,
 			button(U"Open Popup", [&popup, &state, &uiRoot, &styles]() {
-		popup.openAnchored(UIBuilder([&state, &uiRoot, &styles]() -> WidgetPtr {
+		popup.toggleAnchored(UIBuilder([&state, &uiRoot, &styles]() -> WidgetPtr {
 			return sizedBox(Size(220.0f, 128.0f),
 				stack(children(
 					make<Box>(Size(1.0f, 1.0f), Color::fromRgb(49, 50, 68)),
