@@ -275,7 +275,7 @@ namespace tiny {
 					continue;
 
 				if (handler(event.position)) {
-					updateHoveredElement(hitTest(event.position));
+					updateHoveredElement(hitTest(event.position), event);
 					return true;
 				}
 

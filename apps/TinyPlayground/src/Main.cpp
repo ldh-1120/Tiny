@@ -117,21 +117,21 @@ tiny::WidgetPtr buildControls(PlaygroundState& state, tiny::UIRoot& uiRoot, cons
 					text(U"Controls", Color::fromRgb(137, 180, 250), styles.title),
 					text(std::move(countText), Color::fromRgb(166, 173, 200), styles.body),
 					button(U"Add", [&state, &uiRoot]() {
-						++state.count;
-						uiRoot.requestRebuild();
-					}, styles.button, state.addEnabled),
+		++state.count;
+		uiRoot.requestRebuild();
+	}, styles.button, state.addEnabled),
 					button(U"Decrease", [&state, &uiRoot]() {
-						--state.count;
-						uiRoot.requestRebuild();
-					}, styles.button),
+		--state.count;
+		uiRoot.requestRebuild();
+	}, styles.button),
 					button(U"Reset", [&state, &uiRoot]() {
-						state.count = 0;
-						uiRoot.requestRebuild();
-					}, styles.button),
+		state.count = 0;
+		uiRoot.requestRebuild();
+	}, styles.button),
 					textBox(state.text, [&state, &uiRoot](const std::u32string& value) {
-						state.text = value;
-						uiRoot.requestRebuild();
-					}, styles.textBox)
+		state.text = value;
+		uiRoot.requestRebuild();
+	}, styles.textBox)
 				), 12.0f, CrossAxisAlignment::Stretch, MainAxisAlignment::Start))));
 }
 
@@ -177,10 +177,10 @@ tiny::WidgetPtr buildViewer(PlaygroundState& state, tiny::UIRoot& uiRoot, const 
 							rotate(-8.0f,
 								scale(1.05f,
 									backdropBlur(12.0f,
-											stack(children(
-												make<Box>(Size(1.0f, 1.0f), Color::fromRgba(30, 30, 46, 110)),
-												align(Alignment::Center,
-													text(U"Backdrop Blur", Color::fromRgb(205, 214, 244), styles.overlay))))))))),
+										stack(children(
+											make<Box>(Size(1.0f, 1.0f), Color::fromRgba(30, 30, 46, 110)),
+											align(Alignment::Center,
+												text(U"Backdrop Blur", Color::fromRgb(205, 214, 244), styles.overlay))))))))),
 					positioned(PositionedSpec { .left = 16.0f, .top = 16.0f },
 						ignorePointer(
 							opacity(0.35f,
@@ -224,7 +224,7 @@ tiny::WidgetPtr buildStatusBar(const PlaygroundStyles& styles) {
 			text(U"Playground  |  Flex / Scroll / Stack / Align", Color::fromRgb(108, 112, 134), styles.status)));
 }
 
-tiny::WidgetPtr buildToolbar(PlaygroundState& state, tiny::UIRoot& uiRoot, const PlaygroundStyles& styles) {
+tiny::WidgetPtr buildToolbar(PlaygroundState& state, tiny::UIRoot& uiRoot, tiny::PopupController& popup, const PlaygroundStyles& styles) {
 	using namespace tiny;
 	using namespace tiny::ui;
 
@@ -236,8 +236,22 @@ tiny::WidgetPtr buildToolbar(PlaygroundState& state, tiny::UIRoot& uiRoot, const
 		button(U"Reset", [&state, &uiRoot]() {
 		state.count = 0;
 		uiRoot.requestRebuild();
-	}, styles.toolbarButton)
-	), 8.0f, CrossAxisAlignment::Center, MainAxisAlignment::Start);
+	}, styles.toolbarButton),
+		popupAnchor(popup,
+			button(U"Open Popup", [&popup, &state, &uiRoot, &styles]() {
+		popup.openAnchored(UIBuilder([&state, &uiRoot, &styles]() -> WidgetPtr {
+			return sizedBox(Size(220.0f, 128.0f),
+				stack(children(
+					make<Box>(Size(1.0f, 1.0f), Color::fromRgb(49, 50, 68)),
+					padding(12.0f, column(children(
+						text(U"Popup Playground", Color::fromRgb(205, 214, 244), styles.body),
+						button(U"Count +1", [&state, &uiRoot]() {
+				++state.count;
+				uiRoot.requestRebuild();
+			}, styles.toolbarButton)), 8.0f, CrossAxisAlignment::Stretch, MainAxisAlignment::Start)))));
+		}));
+	}))
+			), 8.0f, CrossAxisAlignment::Center, MainAxisAlignment::Start);
 }
 
 tiny::WidgetPtr buildContent(PlaygroundState& state, tiny::UIRoot& uiRoot, const std::shared_ptr<tiny::Image>& previewImage, const PlaygroundStyles& styles) {
@@ -272,14 +286,14 @@ void handleTitleBarAction(tiny::Window& window, tiny::TitleBarAction action) {
 	}
 }
 
-tiny::WidgetPtr buildPlayground(PlaygroundState& state, tiny::UIRoot& uiRoot, tiny::Window& window, float titleBarHeight, const std::shared_ptr<tiny::Image>& appIcon, const std::shared_ptr<tiny::Image>& previewImage, const PlaygroundStyles& styles) {
+tiny::WidgetPtr buildPlayground(PlaygroundState& state, tiny::UIRoot& uiRoot, tiny::PopupController& popup, tiny::Window& window, float titleBarHeight, const std::shared_ptr<tiny::Image>& appIcon, const std::shared_ptr<tiny::Image>& previewImage, const PlaygroundStyles& styles) {
 	using namespace tiny;
 	using namespace tiny::ui;
 
 	WidgetPtr content = padding(8.0f,
 		buildContent(state, uiRoot, previewImage, styles));
 
-	WidgetPtr toolbar = buildToolbar(state, uiRoot, styles);
+	WidgetPtr toolbar = buildToolbar(state, uiRoot, popup, styles);
 
 	return make<TitleBar>(U"Tiny Playground", std::move(content), [&window](TitleBarAction action) {
 		handleTitleBarAction(window, action);
@@ -331,13 +345,15 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previousInstance, PWSTR comman
 		uiRoot.setClipboard(clipboard);
 		uiRoot.setTextInputContext(textInputContext);
 
+		tiny::PopupController popup(uiRoot);
+
 		tiny::Subscription uiRepaintSubscription = uiRoot.repaintRequested.subscribe([&window]() {
 			window.requestRepaint();
 		});
 
 		uiRoot.setBuilder(
-			tiny::UIBuilder([&state, &uiRoot, &window, &createInfo, &appIcon, &previewImage, &styles]() -> std::unique_ptr<tiny::Widget> {
-			return buildPlayground(state, uiRoot, window, createInfo.titleBarHeight, appIcon, previewImage, styles);
+			tiny::UIBuilder([&state, &uiRoot, &popup, &window, &createInfo, &appIcon, &previewImage, &styles]() -> std::unique_ptr<tiny::Widget> {
+			return buildPlayground(state, uiRoot, popup, window, createInfo.titleBarHeight, appIcon, previewImage, styles);
 		}));
 
 		tiny::Subscription paintSubscription = window.paintRequested.subscribe([&window, &graphicsContext, &renderer, &uiRoot]() {
