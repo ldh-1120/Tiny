@@ -275,6 +275,8 @@ namespace tiny {
 					continue;
 
 				if (handler(event.position)) {
+					suppressNextLeftPointerRelease = true;
+
 					updateHoveredElement(hitTest(event.position), event);
 					return true;
 				}
@@ -319,6 +321,12 @@ namespace tiny {
 	}
 
 	void UIRoot::pointerReleased(const PointerEvent& event) {
+		if (suppressNextLeftPointerRelease && event.button == PointerButton::Left) {
+			suppressNextLeftPointerRelease = false;
+			capturedElement = nullptr;
+			return;
+		}
+
 		Element* target = hitTest(event.position);
 		updateHoveredElement(target, event);
 

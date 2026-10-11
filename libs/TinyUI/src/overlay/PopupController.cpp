@@ -151,7 +151,7 @@ namespace tiny {
 		float safeGap = std::max(gap, 0.0f);
 		UIBuilder popupBuilder([
 			builder = std::move(builder),
-			state = std::move(state),
+			state,
 			safeGap
 		]() -> WidgetPtr {
 			return std::make_unique<AnchoredPopupWidget>(state, builder.build(), safeGap);

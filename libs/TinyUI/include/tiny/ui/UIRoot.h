@@ -164,6 +164,8 @@ namespace tiny {
 		std::vector<OverlayEntryRecord> overlayEntries;
 		OverlayEntryId nextOverlayEntryId = 1;
 
+		bool suppressNextLeftPointerRelease = false;
+
 		friend class Element;
 	};
 }

@@ -250,8 +250,7 @@ tiny::WidgetPtr buildToolbar(PlaygroundState& state, tiny::UIRoot& uiRoot, tiny:
 				uiRoot.requestRebuild();
 			}, styles.toolbarButton)), 8.0f, CrossAxisAlignment::Stretch, MainAxisAlignment::Start)))));
 		}));
-	}))
-			), 8.0f, CrossAxisAlignment::Center, MainAxisAlignment::Start);
+	}, styles.toolbarButton))), 8.0f, CrossAxisAlignment::Center, MainAxisAlignment::Start);
 }
 
 tiny::WidgetPtr buildContent(PlaygroundState& state, tiny::UIRoot& uiRoot, const std::shared_ptr<tiny::Image>& previewImage, const PlaygroundStyles& styles) {
