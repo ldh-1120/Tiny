@@ -104,6 +104,25 @@ namespace tiny {
 			Element* previousFocus = nullptr;
 		};
 
+		class DispatchScope {
+		public:
+			explicit DispatchScope(UIRoot& root) : rootValue(root) {
+				++rootValue.dispatchDepth;
+			}
+
+			~DispatchScope() {
+				--rootValue.dispatchDepth;
+				if (rootValue.dispatchDepth == 0)
+					rootValue.flushRetiredOverlays();
+			}
+
+			DispatchScope(const DispatchScope&) = delete;
+			DispatchScope& operator=(const DispatchScope&) = delete;
+
+		private:
+			UIRoot& rootValue;
+		};
+
 		Element* hitTest(const Point& position);
 
 		void updateHoveredElement(Element* element, const PointerEvent& event);
@@ -141,6 +160,8 @@ namespace tiny {
 
 		void rebuildOverlayEntry(OverlayEntryRecord& entry);
 
+		void flushRetiredOverlays();
+
 	private:
 		std::unique_ptr<Widget> rootWidget;
 		std::unique_ptr<Element> rootElement;
@@ -173,6 +194,11 @@ namespace tiny {
 
 		bool suppressNextLeftPointerRelease = false;
 		bool suppressNextEscapeKeyRelease = false;
+
+		std::vector<OverlayEntryRecord> retiredOverlays;
+
+		int dispatchDepth = 0;
+		bool flushingRetiredOverlays = false;
 
 		friend class Element;
 	};

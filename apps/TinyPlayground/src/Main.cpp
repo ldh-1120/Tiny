@@ -228,15 +228,17 @@ tiny::WidgetPtr buildToolbar(PlaygroundState& state, tiny::UIRoot& uiRoot, tiny:
 	using namespace tiny;
 	using namespace tiny::ui;
 
-	UIBuilder popupContent([&state, &uiRoot, &styles]() -> WidgetPtr {
+	UIBuilder popupContent([&state, &uiRoot, &styles, &popup]() -> WidgetPtr {
 		return sizedBox(Size(220.0f, 128.0f),
 			stack(children(
 				make<Box>(Size(1.0f, 1.0f), Color::fromRgb(49, 50, 68)),
 				padding(12.0f, column(children(
 					text(U"Popup Playground", Color::fromRgb(205, 214, 244), styles.body),
-					button(U"Count +1", [&state, &uiRoot]() {
+					button(U"Count +1", [&state, &uiRoot, &popup]() {
 			++state.count;
 			uiRoot.requestRebuild();
+
+			popup.close();
 		}, styles.toolbarButton)), 8.0f, CrossAxisAlignment::Stretch, MainAxisAlignment::Start)))));
 	});
 

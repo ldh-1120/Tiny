@@ -60,6 +60,8 @@ namespace tiny {
 	}
 
 	void UIRoot::layout(GraphicsContext& graphicsContext, const Size& size) {
+		DispatchScope dispatch(*this);
+
 		rebuildIfNeeded();
 
 		Size safeSize(size.width > 0.0f ? size.width : 0.0f, size.height > 0.0f ? size.height : 0.0f);
@@ -86,6 +88,8 @@ namespace tiny {
 			entry.element->arrange(rootBounds);
 		}
 
+		layoutDirty = false;
+
 		std::vector<OverlayEntryId> entryIds;
 		entryIds.reserve(overlayEntries.size());
 
@@ -103,8 +107,6 @@ namespace tiny {
 			if (callback)
 				callback();
 		}
-
-		layoutDirty = false;
 	}
 
 	void UIRoot::paint(Canvas& canvas) {
@@ -128,6 +130,8 @@ namespace tiny {
 	}
 
 	bool UIRoot::keyPressed(const KeyEvent& event) {
+		DispatchScope dispatch(*this);
+
 		if (event.key == KeyCode::Escape) {
 			if (suppressNextEscapeKeyRelease)
 				return true;
@@ -158,6 +162,8 @@ namespace tiny {
 	}
 
 	bool UIRoot::keyReleased(const KeyEvent& event) {
+		DispatchScope dispatch(*this);
+
 		if (event.key == KeyCode::Escape && suppressNextEscapeKeyRelease) {
 			suppressNextEscapeKeyRelease = false;
 			return true;
@@ -174,6 +180,8 @@ namespace tiny {
 	}
 
 	bool UIRoot::textInput(const TextInputEvent& event) {
+		DispatchScope dispatch(*this);
+
 		Element* focused = focusManager.focusedElement();
 		if (!focused)
 			return false;
@@ -182,6 +190,8 @@ namespace tiny {
 	}
 
 	bool UIRoot::textComposition(const TextCompositionEvent& event) {
+		DispatchScope dispatch(*this);
+
 		Element* focused = focusManager.focusedElement();
 		if (!focused)
 			return false;
@@ -198,6 +208,8 @@ namespace tiny {
 	}
 
 	void UIRoot::onFrame(const FrameEvent& event) {
+		DispatchScope dispatch(*this);
+
 		std::vector<Element*> snapshot(frameElements.begin(), frameElements.end());
 		for (Element* element : snapshot) {
 			if (!frameElements.contains(element))
@@ -278,35 +290,13 @@ namespace tiny {
 		if (iterator == overlayEntries.end())
 			return false;
 
-		bool restoreFocus = iterator->trapFocus;
-		Element* previousFocus = iterator->previousFocus;
-
-		if (iterator->element)
-			iterator->element->unmount();
-
+		retiredOverlays.push_back(std::move(*iterator));
 		overlayEntries.erase(iterator);
-		if (restoreFocus) {
-			std::vector<Element*> focusableElements;
-
-			bool trapped = collectFocusTargets(focusableElements);
-
-			std::vector<Element*>::iterator previous = std::find(focusableElements.begin(), focusableElements.end(), previousFocus);
-			if (previousFocus != nullptr && previous != focusableElements.end())
-				requestFocus(previousFocus, FocusReason::Programmatic);
-			else if (trapped) {
-				Element* current = focusManager.focusedElement();
-
-				bool currentIsValid = std::find(focusableElements.begin(), focusableElements.end(), current) != focusableElements.end();
-				if (!currentIsValid) {
-					if (!focusableElements.empty())
-						requestFocus(focusableElements.front(), FocusReason::Programmatic);
-					else
-						focusManager.clearFocus();
-				}
-			}
-		}
 
 		invalidateLayout();
+
+		if (dispatchDepth == 0)
+			flushRetiredOverlays();
 
 		return true;
 	}
@@ -376,6 +366,8 @@ namespace tiny {
 	}
 
 	bool UIRoot::pointerPressed(const PointerEvent& event) {
+		DispatchScope dispatch(*this);
+
 		if (event.button == PointerButton::Left && hasLayoutSize && !layoutDirty) {
 			for (std::size_t index = overlayEntries.size(); index > 0; --index) {
 				std::function<bool(const Point&)> handler = overlayEntries[index - 1].onOutsidePointerDown;
@@ -418,6 +410,8 @@ namespace tiny {
 	}
 
 	void UIRoot::pointerMoved(const PointerEvent& event) {
+		DispatchScope dispatch(*this);
+
 		Element* target = hitTest(event.position);
 		updateHoveredElement(target, event);
 
@@ -429,6 +423,8 @@ namespace tiny {
 	}
 
 	void UIRoot::pointerReleased(const PointerEvent& event) {
+		DispatchScope dispatch(*this);
+
 		if (suppressNextLeftPointerRelease && event.button == PointerButton::Left) {
 			suppressNextLeftPointerRelease = false;
 			capturedElement = nullptr;
@@ -446,6 +442,8 @@ namespace tiny {
 	}
 
 	bool UIRoot::pointerWheel(const PointerWheelEvent& event) {
+		DispatchScope dispatch(*this);
+
 		Element* target = hitTest(event.position);
 		if (!target)
 			return false;
@@ -454,6 +452,8 @@ namespace tiny {
 	}
 
 	void UIRoot::pointerExited() {
+		DispatchScope dispatch(*this);
+
 		for (std::size_t index = hoveredPath.size(); index > 0; --index)
 			hoveredPath[index - 1]->pointerLeave();
 
@@ -462,6 +462,8 @@ namespace tiny {
 	}
 
 	void UIRoot::pointerCaptureLost() {
+		DispatchScope dispatch(*this);
+
 		suppressNextLeftPointerRelease = false;
 
 		if (!capturedElement)
@@ -748,5 +750,46 @@ namespace tiny {
 			entry.element->mount(*this, nullptr);
 
 		entry.widget = std::move(widget);
+	}
+
+	void UIRoot::flushRetiredOverlays() {
+		if (dispatchDepth != 0 || flushingRetiredOverlays)
+			return;
+
+		flushingRetiredOverlays = true;
+
+		while (!retiredOverlays.empty()) {
+			OverlayEntryRecord entry = std::move(retiredOverlays.back());
+			retiredOverlays.pop_back();
+
+			Element* focused = focusManager.focusedElement();
+
+			bool shouldRestoreFocus = focused == nullptr;
+			if (entry.element) {
+				for (Element* current = focused; current != nullptr; current = current->parent())
+					if (current == entry.element.get()) {
+						shouldRestoreFocus = true;
+						break;
+					}
+
+				entry.element->unmount();
+			}
+
+			if (entry.trapFocus && shouldRestoreFocus) {
+				std::vector<Element*> focusableElements;
+
+				bool trapped = collectFocusTargets(focusableElements);
+				std::vector<Element*>::iterator previous = std::find(focusableElements.begin(), focusableElements.end(), entry.previousFocus);
+
+				if (entry.previousFocus != nullptr && previous != focusableElements.end())
+					requestFocus(entry.previousFocus, FocusReason::Programmatic);
+				else if (trapped && !focusableElements.empty())
+					requestFocus(focusableElements.front(), FocusReason::Programmatic);
+				else
+					focusManager.clearFocus();
+			}
+		}
+
+		flushingRetiredOverlays = false;
 	}
 }
