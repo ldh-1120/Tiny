@@ -434,11 +434,11 @@ namespace tiny {
 		Element* target = hitTest(event.position);
 		updateHoveredElement(target, event);
 
-		Element* deliveryTarget = capturedElement ? capturedElement : target;
+		Element* deliveryTarget = capturedElement;
+		capturedElement = nullptr;
+
 		if (deliveryTarget)
 			deliveryTarget->pointerUp(event);
-
-		capturedElement = nullptr;
 	}
 
 	bool UIRoot::pointerWheel(const PointerWheelEvent& event) {
@@ -466,26 +466,26 @@ namespace tiny {
 
 		suppressNextLeftPointerRelease = false;
 
-		if (!capturedElement)
-			return;
-
-		capturedElement->pointerCancel();
+		Element* captured = capturedElement;
 		capturedElement = nullptr;
+
+		if (captured)
+			captured->pointerCancel();
 	}
 
 	void UIRoot::clearPointerState() {
-		if (capturedElement) {
-			capturedElement->pointerCancel();
-			capturedElement = nullptr;
-		}
+		Element* captured = capturedElement;
+		capturedElement = nullptr;
 
-		if (hoveredElement) {
+		if (captured)
+			captured->pointerCancel();
+
+		if (hoveredElement)
 			for (std::size_t index = hoveredPath.size(); index > 0; --index)
 				hoveredPath[index - 1]->pointerLeave();
 
-			hoveredPath.clear();
-			hoveredElement = nullptr;
-		}
+		hoveredPath.clear();
+		hoveredElement = nullptr;
 	}
 
 	void UIRoot::invalidatePaint() {
@@ -541,9 +541,19 @@ namespace tiny {
 		if (!element)
 			return;
 
+		for (OverlayEntryRecord& entry : overlayEntries) {
+			if (entry.previousFocus == element)
+				entry.previousFocus = nullptr;
+		}
+
+		for (OverlayEntryRecord& entry : retiredOverlays) {
+			if (entry.previousFocus == element)
+				entry.previousFocus = nullptr;
+		}
+
 		if (capturedElement == element) {
-			capturedElement->pointerCancel();
 			capturedElement = nullptr;
+			element->pointerCancel();
 		}
 
 		removeHoveredPathFrom(element);
