@@ -31,6 +31,9 @@ namespace tiny {
 
 		void drawLine(const Point& start, const Point& end, const Color& color, float strokeWidth = 1.0f);
 
+		void fillEllipse(const Rect& rect, const Color& color);
+		void drawEllipse(const Rect& rect, const Color& color, float strokeWidth = 1.0f);
+
 		void drawTextLayout(const TextLayout& layout, const Point& origin, const Color& color);
 
 		void pushClip(const Rect& rect);

@@ -317,6 +317,38 @@ namespace tiny {
 		target->DrawLine(D2D1::Point2F(start.x, start.y), D2D1::Point2F(end.x, end.y), brush, strokeWidth);
 	}
 
+	void Canvas::fillEllipse(const Rect& rect, const Color& color) {
+		if (!std::isfinite(rect.width) || !std::isfinite(rect.height) || rect.width <= 0.0f || rect.height <= 0.0f)
+			return;
+
+		ID2D1RenderTarget* target = static_cast<ID2D1RenderTarget*>(renderTarget);
+		ID2D1SolidColorBrush* brush = static_cast<ID2D1SolidColorBrush*>(solidBrush);
+
+		if (!target || !brush)
+			return;
+
+		brush->SetColor(toD2DColor(color));
+
+		D2D1_ELLIPSE ellipse = D2D1::Ellipse(D2D1::Point2F(rect.x + rect.width * 0.5f, rect.y + rect.height * 0.5f), rect.width * 0.5f, rect.height * 0.5f);
+		target->FillEllipse(ellipse, brush);
+	}
+
+	void Canvas::drawEllipse(const Rect& rect, const Color& color, float strokeWidth) {
+		if (!std::isfinite(rect.width) || !std::isfinite(rect.height) || rect.width <= 0.0f || rect.height <= 0.0f || strokeWidth <= 0.0f)
+			return;
+
+		ID2D1RenderTarget* target = static_cast<ID2D1RenderTarget*>(renderTarget);
+		ID2D1SolidColorBrush* brush = static_cast<ID2D1SolidColorBrush*>(solidBrush);
+
+		if (!target || !brush)
+			return;
+
+		brush->SetColor(toD2DColor(color));
+
+		D2D1_ELLIPSE ellipse = D2D1::Ellipse(D2D1::Point2F(rect.x + rect.width * 0.5f, rect.y + rect.height * 0.5f), rect.width * 0.5f, rect.height * 0.5f);
+		target->DrawEllipse(ellipse, brush, strokeWidth);
+	}
+
 	void Canvas::drawTextLayout(const TextLayout& layout, const Point& origin, const Color& color) {
 		if (!layout.impl)
 			return;
