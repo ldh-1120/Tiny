@@ -116,6 +116,10 @@ tiny::WidgetPtr buildControls(PlaygroundState& state, tiny::UIRoot& uiRoot, cons
 				column(children(
 					text(U"Controls", Color::fromRgb(137, 180, 250), styles.title),
 					text(std::move(countText), Color::fromRgb(166, 173, 200), styles.body),
+					checkBox(state.addEnabled, U"Enable Add", [&state, &uiRoot](bool checked) {
+		state.addEnabled = checked;
+		uiRoot.requestRebuild();
+	}, CheckBoxStyle(), true, Key("enable-add-checkbox")),
 					button(U"Add", [&state, &uiRoot]() {
 		++state.count;
 		uiRoot.requestRebuild();

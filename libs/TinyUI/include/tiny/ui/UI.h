@@ -44,6 +44,7 @@
 #include <tiny/ui/overlay/PopupAnchor.h>
 #include <tiny/ui/overlay/PopupController.h>
 #include <tiny/ui/widgets/PopupButton.h>
+#include <tiny/ui/widgets/CheckBox.h>
 
 namespace tiny::ui {
 	template <typename WidgetType, typename... Arguments>
@@ -205,5 +206,9 @@ namespace tiny::ui {
 
 	inline WidgetPtr popupButton(PopupController& controller, std::u32string label, UIBuilder content, ButtonStyle style = ButtonStyle(), float gap = 4.0f, bool enabled = true, Key key = Key()) {
 		return make<PopupButton>(controller, std::move(label), std::move(content), std::move(style), gap, enabled, std::move(key));
+	}
+
+	inline WidgetPtr checkBox(bool checked, std::u32string label, CheckBox::ChangedCallback onChanged, CheckBoxStyle style = CheckBoxStyle(), bool enabled = true, Key key = Key()) {
+		return make<CheckBox>(checked, std::move(label), std::move(onChanged), std::move(style), enabled, std::move(key));
 	}
 }

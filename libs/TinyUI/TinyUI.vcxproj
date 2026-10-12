@@ -91,6 +91,7 @@
     <ClCompile Include="src\widgets\Blur.cpp" />
     <ClCompile Include="src\widgets\Box.cpp" />
     <ClCompile Include="src\widgets\Button.cpp" />
+    <ClCompile Include="src\widgets\CheckBox.cpp" />
     <ClCompile Include="src\widgets\ClipRect.cpp" />
     <ClCompile Include="src\widgets\Column.cpp" />
     <ClCompile Include="src\widgets\ConstrainedBox.cpp" />
@@ -128,6 +129,7 @@
     <ClInclude Include="include\tiny\ui\layout\FlexElement.h" />
     <ClInclude Include="include\tiny\ui\layout\ParentData.h" />
     <ClInclude Include="include\tiny\ui\MultiChildElement.h" />
+    <ClInclude Include="include\tiny\ui\widgets\CheckBox.h" />
     <ClInclude Include="include\tiny\ui\widgets\PopupButton.h" />
     <ClInclude Include="src\overlay\PopupAnchorState.h" />
     <ClInclude Include="include\tiny\ui\overlay\PopupController.h" />
