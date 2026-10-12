@@ -15,20 +15,20 @@
 
 namespace tiny {
     struct CheckBoxStyle {
-        float boxSize = 18.0f;
-        float spacing = 8.0f;
+        float boxSize = 16.0f;
+        float spacing = 9.0f;
         float borderWidth = 1.0f;
 
         Thickness padding = Thickness(4.0f, 3.0f);
 
-        Color background = Color::fromRgb(36, 38, 52);
-        Color hoveredBackground = Color::fromRgb(49, 52, 70);
-        Color checkedBackground = Color::fromRgb(95, 145, 205);
-        Color checkedHoveredBackground = Color::fromRgb(112, 160, 219);
+        Color background = Color::fromRgb(30, 32, 42);
+        Color hoveredBackground = Color::fromRgb(43, 46, 58);
+        Color checkedBackground = Color::fromRgb(103, 143, 190);
+        Color checkedHoveredBackground = Color::fromRgb(118, 157, 203);
         Color disabledBackground = Color::fromRgb(42, 43, 51);
 
-        Color borderColor = Color::fromRgb(91, 96, 116);
-        Color checkColor = Color::fromRgb(245, 247, 252);
+        Color borderColor = Color::fromRgb(90, 95, 110);
+        Color checkColor = Color::fromRgb(250, 251, 253);
         Color disabledCheckColor = Color::fromRgb(116, 120, 132);
 
         Color textColor = Color::fromRgb(205, 214, 244);

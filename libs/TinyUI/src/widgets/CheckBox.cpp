@@ -95,7 +95,9 @@ namespace tiny {
 					background = checkBoxStyle.disabledBackground;
 
 				canvas.fillRect(box, background);
-				canvas.drawRect(box, checkBoxStyle.borderColor, checkBoxStyle.borderWidth);
+
+				Color border = checkedValue && isEnabled() ? background : checkBoxStyle.borderColor;
+				canvas.drawRect(box, border, checkBoxStyle.borderWidth);
 
 				if (checkedValue)
 					paintCheckMark(canvas, box);
@@ -208,20 +210,18 @@ namespace tiny {
 			}
 
 			void paintCheckMark(Canvas& canvas, const Rect& box) const {
-				const int pixels[7][2] = {
-					{ 1, 4 },
-					{ 2, 5 },
-					{ 3, 6 },
-					{ 4, 5 },
-					{ 5, 4 },
-					{ 6, 3 },
-					{ 7, 2 }
-				};
+				if (box.width <= 0.0f || box.height <= 0.0f)
+					return;
 
-				float unit = box.width / 9.0f;
 				Color color = isEnabled() ? checkBoxStyle.checkColor : checkBoxStyle.disabledCheckColor;
-				for (const int(&pixel)[2] : pixels)
-					canvas.fillRect(Rect(box.x + pixel[0] * unit, box.y + pixel[1] * unit, unit * 1.5f, unit * 1.5f), color);
+				float strokeWidth = std::clamp(box.width * 0.12f, 1.5f, 2.25f);
+
+				Point start(box.x + box.width * 0.21f, box.y + box.height * 0.52f);
+				Point middle(box.x + box.width * 0.41f, box.y + box.height * 0.72f);
+				Point end(box.x + box.width * 0.80f, box.y + box.height * 0.29f);
+
+				canvas.drawLine(start, middle, color, strokeWidth);
+				canvas.drawLine(middle, end, color, strokeWidth);
 			}
 
 		private:

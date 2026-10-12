@@ -303,6 +303,20 @@ namespace tiny {
 		target->DrawRectangle(toD2DRect(rect), brush, strokeWidth);
 	}
 
+	void Canvas::drawLine(const Point& start, const Point& end, const Color& color, float strokeWidth) {
+		if (!std::isfinite(strokeWidth) || strokeWidth <= 0.0f)
+			return;
+
+		ID2D1RenderTarget* target = static_cast<ID2D1RenderTarget*>(renderTarget);
+		ID2D1SolidColorBrush* brush = static_cast<ID2D1SolidColorBrush*>(solidBrush);
+
+		if (!target || !brush)
+			return;
+
+		brush->SetColor(toD2DColor(color));
+		target->DrawLine(D2D1::Point2F(start.x, start.y), D2D1::Point2F(end.x, end.y), brush, strokeWidth);
+	}
+
 	void Canvas::drawTextLayout(const TextLayout& layout, const Point& origin, const Color& color) {
 		if (!layout.impl)
 			return;

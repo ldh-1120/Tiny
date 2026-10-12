@@ -1,14 +1,13 @@
 #pragma once
 
-#include <string_view>
 #include <vector>
 #include <memory>
 
+#include <tiny/core/Point.h>
 #include <tiny/core/Color.h>
 #include <tiny/core/Rect.h>
 #include <tiny/core/AffineTransform.h>
 
-#include <tiny/graphics/TextStyle.h>
 #include <tiny/graphics/Image.h>
 
 namespace tiny {
@@ -29,6 +28,9 @@ namespace tiny {
 
 		void fillRect(const Rect& rect, const Color& color);
 		void drawRect(const Rect& rect, const Color& color, float strokeWidth = 1.0f);
+
+		void drawLine(const Point& start, const Point& end, const Color& color, float strokeWidth = 1.0f);
+
 		void drawTextLayout(const TextLayout& layout, const Point& origin, const Color& color);
 
 		void pushClip(const Rect& rect);
