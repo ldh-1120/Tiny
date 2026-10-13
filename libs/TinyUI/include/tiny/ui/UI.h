@@ -45,6 +45,7 @@
 #include <tiny/ui/overlay/PopupController.h>
 #include <tiny/ui/widgets/PopupButton.h>
 #include <tiny/ui/widgets/CheckBox.h>
+#include <tiny/ui/widgets/RadioButton.h>
 
 namespace tiny::ui {
 	template <typename WidgetType, typename... Arguments>
@@ -210,5 +211,29 @@ namespace tiny::ui {
 
 	inline WidgetPtr checkBox(bool checked, std::u32string label, CheckBox::ChangedCallback onChanged, CheckBoxStyle style = CheckBoxStyle(), bool enabled = true, Key key = Key()) {
 		return make<CheckBox>(checked, std::move(label), std::move(onChanged), std::move(style), enabled, std::move(key));
+	}
+
+	struct RadioOption {
+		std::u32string label;
+		bool enabled = true;
+	};
+
+	inline WidgetPtr radioButton(bool selected, std::u32string label, RadioButton::SelectedCallback onSelected, RadioButtonStyle style = RadioButtonStyle(), bool enabled = true, Key key = Key()) {
+		return make<RadioButton>(selected, std::move(label), std::move(onSelected), std::move(style), enabled, std::move(key));
+	}
+
+	inline WidgetPtr radioGroup(int selectedIndex, std::vector<RadioOption> options, std::function<void(int)> onChanged, RadioButtonStyle style = RadioButtonStyle(), float spacing = 6.0f, Key key = Key()) {
+		std::vector<WidgetPtr> items;
+		items.reserve(options.size());
+
+		for (std::size_t i = 0; i < options.size(); ++i) {
+			int index = static_cast<int>(i);
+			items.push_back(radioButton(selectedIndex == index, std::move(options[i].label), [index, selectedIndex, onChanged]() {
+				if (index != selectedIndex && onChanged)
+					onChanged(index);
+			}, style, options[i].enabled, Key("radio-" + std::to_string(index))));
+		}
+
+		return column(std::move(items), spacing, CrossAxisAlignment::Start, MainAxisAlignment::Start, std::move(key));
 	}
 }

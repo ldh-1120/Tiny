@@ -105,6 +105,7 @@
     <ClCompile Include="src\overlay\PopupAnchor.cpp" />
     <ClCompile Include="src\widgets\PopupButton.cpp" />
     <ClCompile Include="src\widgets\CheckBox.cpp" />
+    <ClCompile Include="src\widgets\RadioButton.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\tiny\TinyUI.h">
@@ -235,5 +236,6 @@
     <ClInclude Include="include\tiny\ui\overlay\PopupAnchor.h" />
     <ClInclude Include="include\tiny\ui\widgets\PopupButton.h" />
     <ClInclude Include="include\tiny\ui\widgets\CheckBox.h" />
+    <ClInclude Include="include\tiny\ui\widgets\RadioButton.h" />
   </ItemGroup>
 </Project>

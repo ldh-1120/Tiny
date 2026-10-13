@@ -42,6 +42,8 @@ namespace {
 		bool addEnabled = true;
 
 		int viewerZoomPercent = 100;
+
+		int selectedLayout = 1;
 	};
 
 	struct PlaygroundStyles {
@@ -135,8 +137,16 @@ tiny::WidgetPtr buildControls(PlaygroundState& state, tiny::UIRoot& uiRoot, cons
 					textBox(state.text, [&state, &uiRoot](const std::u32string& value) {
 		state.text = value;
 		uiRoot.requestRebuild();
-	}, styles.textBox)
-				), 12.0f, CrossAxisAlignment::Stretch, MainAxisAlignment::Start))));
+	}, styles.textBox),
+					text(U"Layout Dencity", Color::fromRgb(137, 180, 250), styles.body),
+					radioGroup(state.selectedLayout, std::vector<RadioOption> {
+						{ U"Compact" },
+						{ U"Comfortable" },
+						{ U"Spacious" }
+	}, [&state, &uiRoot](int index) {
+							state.selectedLayout = index;
+							uiRoot.requestRebuild();
+						}, RadioButtonStyle(), 6.0f, Key("layout-dencity-group"))), 12.0f, CrossAxisAlignment::Stretch, MainAxisAlignment::Start))));
 }
 
 tiny::WidgetPtr buildViewer(PlaygroundState& state, tiny::UIRoot& uiRoot, const PlaygroundStyles& styles, const std::shared_ptr<tiny::Image>& previewImage) {

@@ -105,6 +105,7 @@
     <ClCompile Include="src\overlay\PopupAnchor.cpp" />
     <ClCompile Include="src\widgets\PopupButton.cpp" />
     <ClCompile Include="src\widgets\Positioned.cpp" />
+    <ClCompile Include="src\widgets\RadioButton.cpp" />
     <ClCompile Include="src\widgets\Row.cpp" />
     <ClCompile Include="src\widgets\ScrollView.cpp" />
     <ClCompile Include="src\widgets\SizedBox.cpp" />
@@ -131,6 +132,7 @@
     <ClInclude Include="include\tiny\ui\MultiChildElement.h" />
     <ClInclude Include="include\tiny\ui\widgets\CheckBox.h" />
     <ClInclude Include="include\tiny\ui\widgets\PopupButton.h" />
+    <ClInclude Include="include\tiny\ui\widgets\RadioButton.h" />
     <ClInclude Include="src\overlay\PopupAnchorState.h" />
     <ClInclude Include="include\tiny\ui\overlay\PopupController.h" />
     <ClInclude Include="include\tiny\ui\ProxyElement.h" />
