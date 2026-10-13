@@ -228,10 +228,10 @@ namespace tiny::ui {
 
 		for (std::size_t i = 0; i < options.size(); ++i) {
 			int index = static_cast<int>(i);
-			items.push_back(radioButton(selectedIndex == index, std::move(options[i].label), [index, selectedIndex, onChanged]() {
+			items.push_back(make<RadioButton>(selectedIndex == index, std::move(options[i].label), [index, selectedIndex, onChanged]() {
 				if (index != selectedIndex && onChanged)
 					onChanged(index);
-			}, style, options[i].enabled, Key("radio-" + std::to_string(index))));
+			}, style, options[i].enabled, Key("radio-" + std::to_string(index)), true));
 		}
 
 		return column(std::move(items), spacing, CrossAxisAlignment::Start, MainAxisAlignment::Start, std::move(key));

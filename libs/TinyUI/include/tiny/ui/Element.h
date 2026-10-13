@@ -16,6 +16,7 @@
 #include <tiny/ui/Key.h>
 #include <tiny/ui/layout/Constraints.h>
 #include <tiny/ui/layout/ParentData.h>
+#include <tiny/ui/focus/FocusReason.h>
 
 namespace tiny {
 	class Canvas;
@@ -53,7 +54,7 @@ namespace tiny {
 
 		bool isEnabled() const;
 
-		bool requestFocus();
+		bool requestFocus(FocusReason reason = FocusReason::Programmatic);
 
 		bool keyDown(const KeyEvent& event);
 		bool keyUp(const KeyEvent& event);

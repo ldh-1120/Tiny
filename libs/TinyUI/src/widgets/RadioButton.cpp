@@ -25,7 +25,7 @@ namespace tiny {
         class RadioButtonElement final : public Element {
         public:
             explicit RadioButtonElement(const RadioButton& widget)
-                : Element(widget), selectedValue(widget.selected()), labelValue(widget.label()), selectedCallback(widget.onSelected()), radioStyle(widget.style()) {
+                : Element(widget), selectedValue(widget.selected()), labelValue(widget.label()), selectedCallback(widget.onSelected()), radioStyle(widget.style()), arrowNavigationValue(widget.arrowNavigation()) {
                 setEnabled(widget.enabled());
             }
 
@@ -37,6 +37,8 @@ namespace tiny {
                 labelValue = radio.label();
                 selectedCallback = radio.onSelected();
                 radioStyle = radio.style();
+
+                arrowNavigationValue = radio.arrowNavigation();
 
                 setEnabled(radio.enabled());
 
@@ -171,6 +173,21 @@ namespace tiny {
             }
 
             bool keyDownOverride(const KeyEvent& event) override {
+                if (arrowNavigationValue && !event.modifiers.control && !event.modifiers.alt && !event.modifiers.shift) {
+                    switch (event.key) {
+                        case KeyCode::Right:
+                        case KeyCode::Down:
+                            return navigateGroup(true);
+
+                        case KeyCode::Left:
+                        case KeyCode::Up:
+                            return navigateGroup(false);
+
+                        default:
+                            break;
+                    }
+                }
+
                 if (event.key == KeyCode::Space) {
                     if (!keyboardPressedState) {
                         keyboardPressedState = true;
@@ -226,11 +243,64 @@ namespace tiny {
                     callback();
             }
 
+            bool navigateGroup(bool forward) {
+                Element* group = parent();
+                if (!group)
+                    return false;
+
+                std::vector<Element*> focusableElements;
+                group->collectFocusableElements(focusableElements);
+
+                std::vector<RadioButtonElement*> radios;
+                for (Element* element : focusableElements) {
+                    RadioButtonElement* radio = dynamic_cast<RadioButtonElement*>(element);
+                    if (!radio)
+                        continue;
+
+                    if (!radio->arrowNavigationValue)
+                        continue;
+
+                    if (!radio->isEnabled())
+                        continue;
+
+                    radios.push_back(radio);
+                }
+
+                if (radios.empty())
+                    return false;
+
+                std::size_t currentIndex = radios.size();
+                for (std::size_t index = 0; index < radios.size(); ++index)
+                    if (radios[index] == this) {
+                        currentIndex = index;
+                        break;
+                    }
+
+                if (currentIndex == radios.size())
+                    return false;
+
+                std::size_t nextIndex;
+                if (forward)
+                    nextIndex = (currentIndex + 1) % radios.size();
+                else
+                    nextIndex = (currentIndex + radios.size() - 1) % radios.size();
+
+                RadioButtonElement* next = radios[nextIndex];
+                if (!next->requestFocus(FocusReason::Keyboard))
+                    return true;
+
+                next->select();
+
+                return true;
+            }
+
         private:
             bool selectedValue = false;
             bool hovered = false;
             bool pointerPressedState = false;
             bool keyboardPressedState = false;
+
+            bool arrowNavigationValue = false;
 
             std::u32string labelValue;
             RadioButton::SelectedCallback selectedCallback;
@@ -240,8 +310,8 @@ namespace tiny {
         };
 	}
 
-    RadioButton::RadioButton(bool selected, std::u32string label, SelectedCallback onSelected, RadioButtonStyle style, bool enabled, Key key)
-        : Widget(std::move(key)), selectedValue(selected), enabledValue(enabled), labelValue(std::move(label)), selectedCallback(std::move(onSelected)), radioStyle(std::move(style)) {}
+    RadioButton::RadioButton(bool selected, std::u32string label, SelectedCallback onSelected, RadioButtonStyle style, bool enabled, Key key, bool arrowNavigation)
+        : Widget(std::move(key)), selectedValue(selected), enabledValue(enabled), labelValue(std::move(label)), selectedCallback(std::move(onSelected)), radioStyle(std::move(style)), arrowNavigationValue(arrowNavigation) {}
 
     bool RadioButton::selected() const {
         return selectedValue;
@@ -249,6 +319,10 @@ namespace tiny {
 
     bool RadioButton::enabled() const {
         return enabledValue;
+    }
+
+    bool RadioButton::arrowNavigation() const {
+        return arrowNavigationValue;
     }
 
     const std::u32string& RadioButton::label() const {

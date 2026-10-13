@@ -81,11 +81,11 @@ namespace tiny {
 		return enabledValue;
 	}
 
-	bool Element::requestFocus() {
+	bool Element::requestFocus(FocusReason reason) {
 		if (!rootOwner)
 			return false;
 
-		return rootOwner->requestFocus(this, FocusReason::Programmatic);
+		return rootOwner->requestFocus(this, reason);
 	}
 
 	bool Element::keyDown(const KeyEvent& event) {

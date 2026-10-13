@@ -38,10 +38,12 @@ namespace tiny {
     public:
         using SelectedCallback = std::function<void()>;
 
-        RadioButton(bool selected, std::u32string label, SelectedCallback onSelected, RadioButtonStyle style = RadioButtonStyle(), bool enabled = true, Key key = Key());
+        RadioButton(bool selected, std::u32string label, SelectedCallback onSelected, RadioButtonStyle style = RadioButtonStyle(), bool enabled = true, Key key = Key(), bool arrowNavigation = false);
 
         bool selected() const;
         bool enabled() const;
+
+        bool arrowNavigation() const;
 
         const std::u32string& label() const;
         const SelectedCallback& onSelected() const;
@@ -52,6 +54,8 @@ namespace tiny {
     private:
         bool selectedValue = false;
         bool enabledValue = true;
+
+        bool arrowNavigationValue = false;
 
         std::u32string labelValue;
         SelectedCallback selectedCallback;
