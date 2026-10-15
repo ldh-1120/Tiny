@@ -40,6 +40,7 @@ namespace {
 		std::u32string text;
 
 		bool addEnabled = true;
+		bool previewEnabled = true;
 
 		int viewerZoomPercent = 100;
 
@@ -116,6 +117,10 @@ tiny::WidgetPtr buildControls(PlaygroundState& state, tiny::UIRoot& uiRoot, cons
 		padding(16.0f,
 			scroll(
 				column(children(
+					toggleSwitch(state.previewEnabled, U"Enable Preview", [&state, &uiRoot](bool enabled) {
+		state.previewEnabled = enabled;
+		uiRoot.requestRebuild();
+	}, SwitchStyle(), true, Key("preview-switch")),
 					text(U"Controls", Color::fromRgb(137, 180, 250), styles.title),
 					text(std::move(countText), Color::fromRgb(166, 173, 200), styles.body),
 					checkBox(state.addEnabled, U"Enable Add", [&state, &uiRoot](bool checked) {

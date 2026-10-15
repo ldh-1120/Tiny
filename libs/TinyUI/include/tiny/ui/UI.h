@@ -46,6 +46,7 @@
 #include <tiny/ui/widgets/PopupButton.h>
 #include <tiny/ui/widgets/CheckBox.h>
 #include <tiny/ui/widgets/RadioButton.h>
+#include <tiny/ui/widgets/Switch.h>
 
 namespace tiny::ui {
 	template <typename WidgetType, typename... Arguments>
@@ -235,5 +236,9 @@ namespace tiny::ui {
 		}
 
 		return column(std::move(items), spacing, CrossAxisAlignment::Start, MainAxisAlignment::Start, std::move(key));
+	}
+
+	inline WidgetPtr toggleSwitch(bool checked, std::u32string label, Switch::ChangedCallback onChanged, SwitchStyle style = SwitchStyle(), bool enabled = true, Key key = Key()) {
+		return make<Switch>(checked, std::move(label), std::move(onChanged), std::move(style), enabled, std::move(key));
 	}
 }

@@ -96,7 +96,7 @@ namespace tiny {
 	}
 
 	bool Element::keyUp(const KeyEvent& event) {
-		if (!mounted)
+		if (!mounted || !enabledValue)
 			return false;
 
 		if (!focused)
@@ -106,7 +106,7 @@ namespace tiny {
 	}
 
 	bool Element::textInput(const TextInputEvent& event) {
-		if (!mounted)
+		if (!mounted || !enabledValue)
 			return false;
 
 		if (!focused)
